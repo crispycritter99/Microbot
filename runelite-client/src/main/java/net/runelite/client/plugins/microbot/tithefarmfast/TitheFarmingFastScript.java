@@ -1,24 +1,25 @@
-package net.runelite.client.plugins.microbot.tithefarm;
+package net.runelite.client.plugins.microbot.tithefarmfast;
 
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmLanes;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmMaterial;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmStateFast;
-import net.runelite.client.plugins.microbot.tithefarm.models.TitheFarmPlant;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmFastLanes;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmMaterial;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast;
+import net.runelite.client.plugins.microbot.tithefarmfast.models.TitheFarmPlant;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
+import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
-
+import net. runelite. client. plugins. microbot. Microbot;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,7 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmStateFast.*;
+import static net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast.*;
 import static net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue.hasSelectAnOption;
 
 /**
@@ -39,7 +40,7 @@ import static net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue.ha
  */
 
 
-public class TitheFarmingScript extends Script {
+public class TitheFarmingFastScript extends Script {
 
     final int FARM_DOOR = 27445;
     final String FERTILISER = "gricoller's fertiliser";
@@ -54,116 +55,128 @@ public class TitheFarmingScript extends Script {
 
     public static final int WATERING_CANS_AMOUNT = 8;
 
-    public static final int DISTANCE_TRESHHOLD_MINIMAP_WALK = 8;
+    public static final int DISTANCE_TRESHHOLD_MINIMAP_WALK = 20;
 
     public static int gricollerCanCharges = -1;
 
     public static boolean init = true;
+int plantnumber;
+    int nextIndex;
+    public void init(TitheFarmingFastConfig config) {
+        TitheFarmFastLanes lane = config.Lanes();
 
-    public void init(TitheFarmingConfig config) {
-        TitheFarmLanes lane = config.Lanes();
-
-        if (lane == TitheFarmLanes.Randomize) {
-            lane = TitheFarmLanes.values()[Random.random(0, TitheFarmLanes.values().length - 1)];
-        }
+//        if (lane == TitheFarmLanes.Randomize) {
+//            lane = TitheFarmLanes.values()[Random.random(0, TitheFarmLanes.values().length - 1)];
+//        }
 
         switch (lane) {
-            case LANE_1_2:
-                plants = new ArrayList<>(Arrays.asList(
-                        new TitheFarmPlant(35, 25, 1),
-                        new TitheFarmPlant(40, 25, 2),
-                        new TitheFarmPlant(35, 28, 3),
-                        new TitheFarmPlant(40, 28, 4),
-                        new TitheFarmPlant(35, 31, 5),
-                        new TitheFarmPlant(40, 31, 6),
-                        new TitheFarmPlant(35, 34, 7),
-                        new TitheFarmPlant(40, 34, 8),
-                        new TitheFarmPlant(35, 40, 9),
-                        new TitheFarmPlant(40, 40, 10),
-                        new TitheFarmPlant(35, 43, 11),
-                        new TitheFarmPlant(40, 43, 12),
-                        new TitheFarmPlant(35, 46, 13),
-                        new TitheFarmPlant(40, 46, 14),
-                        new TitheFarmPlant(35, 49, 15),
-                        new TitheFarmPlant(40, 49, 16),
-                        new TitheFarmPlant(45, 49, 17),
-                        new TitheFarmPlant(45, 46, 18),
-                        new TitheFarmPlant(45, 49, 19),
-                        new TitheFarmPlant(45, 46, 20),
-                        new TitheFarmPlant(45, 43, 21)));
-                break;
+//            case LANE_1_2:
+//                plants = new ArrayList<>(Arrays.asList(
+//                        new TitheFarmPlant(35, 25, 1),
+//                        new TitheFarmPlant(40, 25, 2),
+//                        new TitheFarmPlant(35, 28, 3),
+//                        new TitheFarmPlant(40, 28, 4),
+//                        new TitheFarmPlant(35, 31, 5),
+//                        new TitheFarmPlant(40, 31, 6),
+//                        new TitheFarmPlant(35, 34, 7),
+//                        new TitheFarmPlant(40, 34, 8),
+//                        new TitheFarmPlant(35, 40, 9),
+//                        new TitheFarmPlant(40, 40, 10),
+//                        new TitheFarmPlant(35, 43, 11),
+//                        new TitheFarmPlant(40, 43, 12),
+//                        new TitheFarmPlant(35, 46, 13),
+//                        new TitheFarmPlant(40, 46, 14),
+//                        new TitheFarmPlant(35, 49, 15),
+//                        new TitheFarmPlant(40, 49, 16),
+//                        new TitheFarmPlant(45, 49, 17),
+//                        new TitheFarmPlant(45, 46, 18),
+//                        new TitheFarmPlant(45, 49, 19),
+//                        new TitheFarmPlant(45, 46, 20),
+//                        new TitheFarmPlant(45, 43, 21)
+//                ));
+//                break;
             case LANE_2_3:
                 plants = new ArrayList<>(Arrays.asList(
-                        new TitheFarmPlant(35, 34, -3),
-                        new TitheFarmPlant(35, 31, -2),
-                        new TitheFarmPlant(35, 28, -1),
-                        new TitheFarmPlant(35, 25, 0),
-                        new TitheFarmPlant(40, 25, 1),
-                        new TitheFarmPlant(45, 25, 2),
-                        new TitheFarmPlant(40, 28, 3),
-                        new TitheFarmPlant(45, 28, 4),
-                        new TitheFarmPlant(40, 31, 5),
-                        new TitheFarmPlant(45, 31, 6),
-                        new TitheFarmPlant(40, 34, 7),
-                        new TitheFarmPlant(45, 34, 8),
-                        new TitheFarmPlant(40, 40, 9),
-                        new TitheFarmPlant(45, 40, 10),
-                        new TitheFarmPlant(40, 43, 11),
-                        new TitheFarmPlant(45, 43, 12),
-                        new TitheFarmPlant(40, 46, 13),
-                        new TitheFarmPlant(45, 46, 14),
-                        new TitheFarmPlant(40, 49, 15),
-                        new TitheFarmPlant(45, 49, 16)));
+                        new TitheFarmPlant(45, 34, 0,1819,3499),
+                        new TitheFarmPlant(40, 34, 1,1818,3497),
+                        new TitheFarmPlant(40, 31, 2,1818,3495),
+                        new TitheFarmPlant(40, 28, 3,1818,3493),
+                        new TitheFarmPlant(45, 28, 4,1819,3491),
+                        new TitheFarmPlant(40, 25, 5,1818,3489),
+
+                        new TitheFarmPlant(45, 19, 6,1820,3485),
+
+                        new TitheFarmPlant(50, 25, 7,1824,3488),
+                        new TitheFarmPlant(45, 25, 8,1823,3490),
+                        new TitheFarmPlant(50, 28, 9,1824,3492),
+                        new TitheFarmPlant(50, 31, 10,1824,3494),
+                        new TitheFarmPlant(45, 31, 11,1823,3496),
+                        new TitheFarmPlant(50, 34, 12,1824,3498),
+
+                        new TitheFarmPlant(50, 40, 13,1824,3504),
+                        new TitheFarmPlant(50, 43, 14,1824,3506),
+                        new TitheFarmPlant(45, 43, 15,1823,3508),
+                        new TitheFarmPlant(50, 46, 16,1824,3510),
+                        new TitheFarmPlant(50, 49, 17,1824,3512),
+                        new TitheFarmPlant(45, 49, 18,1823,3514),
+
+                        new TitheFarmPlant(40, 49, 19,1818,3514),
+                        new TitheFarmPlant(40, 46, 20,1818,3511),
+                        new TitheFarmPlant(45, 46, 21,1819,3509),
+                        new TitheFarmPlant(40, 43, 22,1818,3507),
+                        new TitheFarmPlant(40, 40, 23,1818,3505),
+                        new TitheFarmPlant(45, 40, 24,1819,3503)
+                ));
                 break;
-            case LANE_3_4:
-                plants = new ArrayList<>(Arrays.asList(
-                        new TitheFarmPlant(40, 31, -2),
-                        new TitheFarmPlant(40, 28, -1),
-                        new TitheFarmPlant(40, 25, 0),
-                        new TitheFarmPlant(45, 25, 1),
-                        new TitheFarmPlant(50, 25, 2),
-                        new TitheFarmPlant(45, 28, 3),
-                        new TitheFarmPlant(50, 28, 4),
-                        new TitheFarmPlant(45, 31, 5),
-                        new TitheFarmPlant(50, 31, 6),
-                        new TitheFarmPlant(45, 34, 7),
-                        new TitheFarmPlant(50, 34, 8),
-                        new TitheFarmPlant(45, 40, 9),
-                        new TitheFarmPlant(50, 40, 10),
-                        new TitheFarmPlant(45, 43, 11),
-                        new TitheFarmPlant(50, 43, 12),
-                        new TitheFarmPlant(45, 46, 13),
-                        new TitheFarmPlant(50, 46, 14),
-                        new TitheFarmPlant(45, 49, 15),
-                        new TitheFarmPlant(50, 49, 16)));
-                break;
-            case LANE_4_5:
-                plants = new ArrayList<>(Arrays.asList(
-                        new TitheFarmPlant(45, 31, 0),
-                        new TitheFarmPlant(45, 28, 1),
-                        new TitheFarmPlant(45, 25, 2),
-                        new TitheFarmPlant(50, 25, 3),
-                        new TitheFarmPlant(55, 25, 4),
-                        new TitheFarmPlant(50, 28, 5),
-                        new TitheFarmPlant(55, 28, 6),
-                        new TitheFarmPlant(50, 31, 7),
-                        new TitheFarmPlant(55, 31, 8),
-                        new TitheFarmPlant(50, 34, 9),
-                        new TitheFarmPlant(55, 34, 10),
-                        new TitheFarmPlant(50, 40, 11),
-                        new TitheFarmPlant(55, 40, 12),
-                        new TitheFarmPlant(50, 43, 13),
-                        new TitheFarmPlant(55, 43, 14),
-                        new TitheFarmPlant(50, 46, 15),
-                        new TitheFarmPlant(55, 46, 16),
-                        new TitheFarmPlant(50, 49, 17),
-                        new TitheFarmPlant(55, 49, 18)));
-                break;
+//            case LANE_3_4:
+//                plants = new ArrayList<>(Arrays.asList(
+//                        new TitheFarmPlant(40, 31, -2),
+//                        new TitheFarmPlant(40, 28, -1),
+//                        new TitheFarmPlant(40, 25, 0),
+//                        new TitheFarmPlant(45, 25, 1),
+//                        new TitheFarmPlant(50, 25, 2),
+//                        new TitheFarmPlant(45, 28, 3),
+//                        new TitheFarmPlant(50, 28, 4),
+//                        new TitheFarmPlant(45, 31, 5),
+//                        new TitheFarmPlant(50, 31, 6),
+//                        new TitheFarmPlant(45, 34, 7),
+//                        new TitheFarmPlant(50, 34, 8),
+//                        new TitheFarmPlant(45, 40, 9),
+//                        new TitheFarmPlant(50, 40, 10),
+//                        new TitheFarmPlant(45, 43, 11),
+//                        new TitheFarmPlant(50, 43, 12),
+//                        new TitheFarmPlant(45, 46, 13),
+//                        new TitheFarmPlant(50, 46, 14),
+//                        new TitheFarmPlant(45, 49, 15),
+//                        new TitheFarmPlant(50, 49, 16)));
+//                break;
+//            case LANE_4_5:
+//                plants = new ArrayList<>(Arrays.asList(
+//                        new TitheFarmPlant(45, 31, 0),
+//                        new TitheFarmPlant(45, 28, 1),
+//                        new TitheFarmPlant(45, 25, 2),
+//                        new TitheFarmPlant(50, 25, 3),
+//                        new TitheFarmPlant(55, 25, 4),
+//                        new TitheFarmPlant(50, 28, 5),
+//                        new TitheFarmPlant(55, 28, 6),
+//                        new TitheFarmPlant(50, 31, 7),
+//                        new TitheFarmPlant(55, 31, 8),
+//                        new TitheFarmPlant(50, 34, 9),
+//                        new TitheFarmPlant(55, 34, 10),
+//                        new TitheFarmPlant(50, 40, 11),
+//                        new TitheFarmPlant(55, 40, 12),
+//                        new TitheFarmPlant(50, 43, 13),
+//                        new TitheFarmPlant(55, 43, 14),
+//                        new TitheFarmPlant(50, 46, 15),
+//                        new TitheFarmPlant(55, 46, 16),
+//                        new TitheFarmPlant(50, 49, 17),
+//                        new TitheFarmPlant(55, 49, 18)));
+//                break;
         }
     }
 
 
-    public boolean run(TitheFarmingConfig config) {
+    public boolean run(TitheFarmingFastConfig config) {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn()) return;
@@ -172,7 +185,7 @@ public class TitheFarmingScript extends Script {
                 if (init) {
                     state = STARTING;
                     plants = new ArrayList<>();
-                    Rs2ItemModel rs2ItemSeed = Rs2Inventory.get(TitheFarmMaterial.getSeedForLevel().getFruitId());
+                    Rs2Item rs2ItemSeed = Rs2Inventory.get(TitheFarmMaterial.getSeedForLevel().getFruitId());
                     initialFruit = rs2ItemSeed == null ? 0 : rs2ItemSeed.quantity;
                     init = false;
                     sleep(2000); //extra sleep to have the game initialize correctly
@@ -263,7 +276,7 @@ public class TitheFarmingScript extends Script {
      * ALL PRIVATE SCRIPT METHODS
      */
 
-    private void coreLoop(TitheFarmingConfig config) {
+    private void coreLoop(TitheFarmingFastConfig config) {
         if (Rs2Player.isMoving()) return;
         Comparator<TitheFarmPlant> sortByIndex = Comparator.comparingInt(TitheFarmPlant::getIndex);
         TitheFarmPlant plant = null;
@@ -312,21 +325,49 @@ public class TitheFarmingScript extends Script {
                     plant.regionX,
                     plant.regionY,
                     Microbot.getClient().getPlane());
+
             Rs2Walker.walkMiniMap(w, 1);
             return;
         }
-
+        WorldPoint p = new WorldPoint (plant.plantX, plant.plantY, 0);
+        Microbot.log(Rs2Player.distanceTo(p)+"");
+//        shutdown();
         if (plant.isEmptyPatch()) { //start planting seeds
+            if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
+                sleepUntil(() -> Rs2Player.distanceTo(p)==0);
+            }
             Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             clickPatch(plant);
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
+            Rs2Inventory.interact("gricoller's can", "Use");
+            TileObject gameObject = Rs2GameObject.findObjectByLocation(WorldPoint.fromRegion(Microbot.getClient().getLocalPlayer().getWorldLocation().getRegionID(),
+                    plant.regionX,
+                    plant.regionY,
+                    Microbot.getClient().getPlane()));
+            Rs2GameObject.hoverOverObject(gameObject);
             if (Rs2Player.isAnimating()) {
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isEmptyPatch()));
             }
         }
 
         if (plant.isValidToWater()) {
-            clickPatch(plant, "water");
+
+            if (Rs2Inventory.isItemSelected()){
+                clickPatch(plant, "use");
+
+
+            }
+            else {
+                if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
+                    sleepUntil(() -> Rs2Player.distanceTo(p)==0);
+                }
+                clickPatch(plant, "water");
+                plantnumber=plant.getIndex();
+                nextIndex = (plantnumber + 1) % plants.size();
+                TitheFarmPlant nextPlant = null;
+                nextPlant=plants.get(plantnumber+1);
+
+            }
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterWateringSeed());
             if (Rs2Player.isAnimating()) {
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isValidToWater()));
@@ -336,6 +377,9 @@ public class TitheFarmingScript extends Script {
 
 
         if (plant.isValidToHarvest()) {
+            if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
+                sleepUntil(() -> Rs2Player.distanceTo(p)==0);
+            }
             clickPatch(plant, "harvest");
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterHarvestingSeed());
             if (Rs2Player.isAnimating()) {
@@ -403,7 +447,7 @@ public class TitheFarmingScript extends Script {
         }
     }
 
-    private void refillWaterCans(TitheFarmingConfig config) {
+    private void refillWaterCans(TitheFarmingFastConfig config) {
         if (TitheFarmMaterial.hasGricollersCan()) {
             checkGricollerCharges();
             sleepUntil(() -> gricollerCanCharges != -1);

@@ -22,16 +22,16 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package net.runelite.client.plugins.microbot.tithefarm.models;
+package net.runelite.client.plugins.microbot.tithefarmfast.models;
 
 import lombok.Getter;
 import lombok.Setter;
 import net.runelite.api.ObjectID;
 import net.runelite.api.TileObject;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.tithefarm.TitheFarmingScript;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmMaterial;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmStateFast;
+import net.runelite.client.plugins.microbot.tithefarmfast.TitheFarmingFastScript;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmMaterial;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.tithefarm.TitheFarmPlantState;
 
@@ -63,25 +63,29 @@ public class TitheFarmPlant {
 
     public int regionX;
     public int regionY;
+    public int plantX;
+    public int plantY;
 
-    public TitheFarmPlant(int regionX, int regionY, int index) {
+    public TitheFarmPlant(int regionX, int regionY, int index,int plantX, int plantY) {
         this.planted = Instant.now();
         this.state = TitheFarmPlantState.UNWATERED;
         this.gameObject = Rs2GameObject.findGameObjectByLocation(fromRegion(Microbot.getClient().getLocalPlayer().getWorldLocation().getRegionID(), regionX, regionY, 0));
         this.regionX = regionX;
         this.regionY = regionY;
+        this.plantX = plantX;
+        this.plantY = plantY;
         this.index = index;
     }
 
     public int[] expectedPatchGameObject() {
-        if (Objects.requireNonNull(TitheFarmingScript.state) == TitheFarmStateFast.PLANTING_SEEDS) {
+        if (Objects.requireNonNull(TitheFarmingFastScript.state) == TitheFarmStateFast.PLANTING_SEEDS) {
             return new int[]{ObjectID.TITHE_PATCH, BOLOGANO_SEEDLING, ObjectID.LOGAVANO_SEEDLING, ObjectID.GOLOVANOVA_SEEDLING};
         }
         return new int[]{};
     }
 
     public int[] expectedWateredObject() {
-        switch (TitheFarmingScript.state) {
+        switch (TitheFarmingFastScript.state) {
             case PLANTING_SEEDS:
                 if (TitheFarmMaterial.getSeedForLevel() == TitheFarmMaterial.BOLOGANO_SEED) {
                     return new int[]{BOLOGANO_SEEDLING, ObjectID.BOLOGANO_PLANT, ObjectID.BOLOGANO_PLANT_27401};

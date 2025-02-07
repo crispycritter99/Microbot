@@ -17,6 +17,7 @@ public interface JewelryConfig extends Config {
     String completionAction = "completionAction";
     String staff = "staff";
     String useRunePouch = "useRunePouch";
+    String useCutGems = "useCutGems";
 
     @ConfigSection(
             name = "General",
