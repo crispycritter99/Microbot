@@ -188,7 +188,7 @@ public class MahoganyHomesScript extends Script {
                 String newAction = Objects.requireNonNull(Hotspot.getByObjectId(object.getId())).getRequiredAction();
                 return !newAction.equals(action);
             }, 5000);
-            sleep(200, 600);
+//            sleep(200, 600);
         }
 
     }
@@ -361,7 +361,13 @@ public class MahoganyHomesScript extends Script {
                             Rs2Inventory.waitForInventoryChanges(5000);
                         }
                         if (steelBarsInInventory() < 4) {
-                            Rs2Bank.withdrawX(ItemID.STEEL_BAR, 4 - steelBarsInInventory());
+                            if (Rs2Inventory.getEmptySlots()==1)
+                            {
+                                Rs2Bank.withdrawOne(ItemID.STEEL_BAR);
+                            }
+                            else {
+                                Rs2Bank.withdrawX(ItemID.STEEL_BAR, 4 - steelBarsInInventory());
+                            }
                             Rs2Inventory.waitForInventoryChanges(5000);
                         }
 
@@ -397,7 +403,13 @@ public class MahoganyHomesScript extends Script {
                             Rs2Bank.withdrawX(plugin.getConfig().currentTier().getPlankSelection().getPlankId(), Rs2Inventory.getEmptySlots() - steelBarsNeeded());
                         sleep(600, 1200);
                         if (steelBarsNeeded() > steelBarsInInventory()) {
-                            Rs2Bank.withdrawX(ItemID.STEEL_BAR, steelBarsNeeded());
+                            if (steelBarsNeeded()==1)
+                            {
+                                Rs2Bank.withdrawOne(ItemID.STEEL_BAR);
+                            }
+                            else {
+                                Rs2Bank.withdrawX(ItemID.STEEL_BAR, steelBarsNeeded());
+                            }
                             sleep(600, 1200);
                         }
                     }
@@ -414,7 +426,7 @@ public class MahoganyHomesScript extends Script {
         if (currentHome != null
                 && plugin.distanceBetween(currentHome.getArea(), Rs2Player.getWorldLocation()) > 0
                 && !isMissingItems()) {
-            Rs2Walker.walkWithState(plugin.getCurrentHome().getLocation(), 3);
+            Rs2Walker.walkWithState(plugin.getCurrentHome().getLocation(), 2);
         }
     }
 

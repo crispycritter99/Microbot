@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.tithefarm;
+package net.runelite.client.plugins.microbot.tithefarmfast;
 
 
 import com.google.inject.Provides;
@@ -15,9 +15,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmMaterial;
-import net.runelite.client.plugins.microbot.tithefarm.enums.TitheFarmStateFast;
-import net.runelite.client.plugins.microbot.tithefarm.models.TitheFarmPlant;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmMaterial;
+import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast;
+import net.runelite.client.plugins.microbot.tithefarmfast.models.TitheFarmPlant;
 import net.runelite.client.plugins.microbot.util.mouse.VirtualMouse;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -28,20 +28,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Mocrosoft + "Tithe Farm",
+        name = PluginDescriptor.Mocrosoft + "Tithe Farm Fast",
         description = "Plays the Tithe farm minigame for you!",
         tags = {"tithe farming", "microbot", "skills", "minigame"},
         enabledByDefault = false
 )
 @Slf4j
-public class TitheFarmingPlugin extends Plugin {
+public class TitheFarmingFastPlugin extends Plugin {
 
     @Inject
-    public TitheFarmingConfig config;
+    public TitheFarmingFastConfig config;
 
     @Provides
-    TitheFarmingConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(TitheFarmingConfig.class);
+    TitheFarmingFastConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(TitheFarmingFastConfig.class);
     }
 
     @Inject
@@ -53,9 +53,9 @@ public class TitheFarmingPlugin extends Plugin {
     @Inject
     private OverlayManager overlayManager;
     @Inject
-    private TitheFarmingOverlay titheFarmOverlay;
+    private TitheFarmingFastOverlay titheFarmOverlay;
 
-    private final TitheFarmingScript titheFarmScript = new TitheFarmingScript();
+    private final TitheFarmingFastScript titheFarmScript = new TitheFarmingFastScript();
 
     @Override
     protected void startUp() throws AWTException {
@@ -77,7 +77,7 @@ public class TitheFarmingPlugin extends Plugin {
 
     @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event) {
-        for (TitheFarmPlant plant : TitheFarmingScript.plants) {
+        for (TitheFarmPlant plant : TitheFarmingFastScript.plants) {
             if (event.getGameObject().getWorldLocation().equals(plant.getGameObject().getWorldLocation())) {
                 plant.setGameObject(event.getGameObject());
             }
@@ -89,7 +89,7 @@ public class TitheFarmingPlugin extends Plugin {
         if (TitheFarmMaterial.getSeedForLevel() != null) {
             Item fruit = Arrays.stream(event.getItemContainer().getItems()).filter(x -> x.getId() == TitheFarmMaterial.getSeedForLevel().getFruitId()).findFirst().orElse(null);
             if (fruit != null) {
-                TitheFarmingScript.fruits = fruit.getQuantity() - TitheFarmingScript.initialFruit;
+                TitheFarmingFastScript.fruits = fruit.getQuantity() - TitheFarmingFastScript.initialFruit;
             }
         }
     }
@@ -104,12 +104,12 @@ public class TitheFarmingPlugin extends Plugin {
 
             if (matcher.find()) {
                 String percentage = matcher.group(1);
-                TitheFarmingScript.gricollerCanCharges = (int) (Float.parseFloat(percentage));
+                TitheFarmingFastScript.gricollerCanCharges = (int) (Float.parseFloat(percentage));
             }
         } else if (message.equalsIgnoreCase("Gricoller's can is already full.")) {
-            TitheFarmingScript.gricollerCanCharges = 100;
+            TitheFarmingFastScript.gricollerCanCharges = 100;
         } else if (message.equalsIgnoreCase("You don't have a suitable vessel of water for watering the plant.")) {
-            TitheFarmingScript.state = TitheFarmStateFast.REFILL_WATERCANS;
+            TitheFarmingFastScript.state = TitheFarmStateFast.REFILL_WATERCANS;
         }
     }
 }

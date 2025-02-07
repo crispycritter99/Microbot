@@ -77,10 +77,11 @@ public class JewelryScript extends Script {
                         
                         if (!isBankOpen || !Rs2Bank.isOpen()) return;
                         
-                        boolean shouldCutGems = plugin.getJewelry().getGem() != Gem.NONE 
+                        boolean shouldCutGems =  plugin.getJewelry().getGem() != Gem.NONE
                                 && Rs2Bank.hasItem(plugin.getJewelry().getGem().getUncutItemID());
                         
                         if (shouldCutGems) {
+
                             if (!Rs2Inventory.isEmpty()) {
                                 Rs2Bank.depositAllExcept(ItemID.CHISEL);
                                 Rs2Inventory.waitForInventoryChanges(1800);
@@ -403,17 +404,24 @@ public class JewelryScript extends Script {
                     return State.BANKING;
             }
         }
+
         return null;
     }
     
     private boolean shouldBank() {
+       /* Microbot.log(""+hasFinishedCutting());
+        Microbot.log(""+hasFinishedCrafting());
+        Microbot.log(""+hasFinishedAlching());
+        Microbot.log(""+hasFinishedEnchanting());*/
         return hasFinishedCutting() || hasFinishedCrafting() || hasFinishedAlching() || hasFinishedEnchanting();
     }
     
     private boolean hasFinishedCutting() {
         if (plugin.getJewelry().getGem() == Gem.NONE) return false;
+
         if(!Rs2Inventory.hasItem(ItemID.CHISEL)) return false;
-        return Rs2Inventory.hasItem(plugin.getJewelry().getGem().getCutItemID()) && !Rs2Inventory.hasItem(plugin.getJewelry().getGem().getUncutItemID());
+
+        return   Rs2Inventory.hasItem(plugin.getJewelry().getGem().getCutItemID()) && !Rs2Inventory.hasItem(plugin.getJewelry().getGem().getUncutItemID());
     }
     
     private boolean hasFinishedCrafting() {
@@ -424,7 +432,7 @@ public class JewelryScript extends Script {
         boolean hasCutGem = Rs2Inventory.hasItem(plugin.getJewelry().getGem().getCutItemID());
 
         return Rs2Inventory.hasItem(plugin.getJewelry().getItemID()) 
-                && hasNoGem ? !hasCraftingItem : !hasCraftingItem && !hasCutGem;
+                && hasNoGem ? !hasCraftingItem : !hasCraftingItem;
     }
     
     private boolean hasFinishedEnchanting() {
