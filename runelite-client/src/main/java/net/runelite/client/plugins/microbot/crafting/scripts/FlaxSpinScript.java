@@ -2,15 +2,18 @@ package net.runelite.client.plugins.microbot.crafting.scripts;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
+import net.runelite.api.ObjectID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.crafting.CraftingConfig;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Random;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -54,32 +57,45 @@ public class FlaxSpinScript extends Script {
 
                 switch (state) {
                     case SPINNING:
-                        if (!Rs2Inventory.hasItem(ItemID.FLAX)) {
+                        Microbot.log("hi");
+                        if (!Rs2Inventory.hasItem(ItemID.JUTE_FIBRE)) {
                             state = State.BANKING;
                             return;
                         }
-                        Rs2Inventory.useItemOnObject(ItemID.FLAX, config.flaxSpinLocation().getObjectID());
+                        GameObject loom = Rs2GameObject.findObject("Loom", false, 30, false, Rs2Player.getWorldLocation());
+
+                        Microbot.log("hi");
+//                        Rs2Inventory.useItemOnObject(ItemID.JUTE_FIBRE, config.flaxSpinLocation().getObjectID());
+                        Rs2Inventory.use(ItemID.JUTE_FIBRE);
+                        Rs2GameObject.interact(loom, "use");
+                        sleep(Random.random(2000, 3000));
+                        //Rs2Inventory.useItemOnObject(ItemID.JUTE_FIBRE, config.flaxSpinLocation().getObjectID());
+                        Microbot.log("ha");
                         sleepUntil(() -> !Rs2Player.isMoving());
                         Rs2Widget.sleepUntilHasWidget("how many do you wish to make?");
                         Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
-                        sleepUntilTrue(() -> !Rs2Inventory.hasItem(ItemID.FLAX), 600, 150000);
+                        sleepUntilTrue(() -> !Rs2Inventory.hasItem(ItemID.JUTE_FIBRE), 600, 150000);
                         state = State.BANKING;
                         break;
                     case BANKING:
-                        boolean isBankOpen = Rs2Bank.walkToBankAndUseBank();
-                        if (!isBankOpen || !Rs2Bank.isOpen()) return;
+                        GameObject chest = Rs2GameObject.findObject("Bank Chest", false, 30, false, Rs2Player.getWorldLocation());
 
-                        Rs2Bank.depositAll(ItemID.BOW_STRING);
-                        sleep(Random.random(600, 800));
-                        Rs2Bank.withdrawAll(ItemID.FLAX);
-                        sleep(Random.random(600, 800));
+                        boolean isBankOpen = Rs2Bank.walkToBankAndUseBank(BankLocation.FOSSIL_ISLAND);
+                        if (!Rs2Bank.useBank() || !Rs2Bank.isOpen()) return;
+
+                        Rs2Bank.depositAll(ItemID.DRIFT_NET);
+                        sleep(Rs2Random.randomGaussian(800,1.5));
+                        Rs2Bank.withdrawAll(ItemID.JUTE_FIBRE);
+                        sleep(Rs2Random.randomGaussian(800,1.5));
+
                         Rs2Bank.closeBank();
-                        state = State.WALKING;
+                        state = State.SPINNING;
                         break;
                     case WALKING:
-                        Rs2Walker.walkTo(config.flaxSpinLocation().getWorldPoint(), 4);
-                        sleepUntilTrue(() -> isNearSpinningWheel(config, 4) && !Rs2Player.isMoving(), 600, 300000);
-                        if (!isNearSpinningWheel(config, 4)) return;
+                        Microbot.log("hi32342");
+//                        Rs2Walker.walkTo(config.flaxSpinLocation().getWorldPoint(), 4);
+                        sleepUntilTrue(() -> isNearSpinningWheel(config, 30) && !Rs2Player.isMoving(), 600, 300000);
+//                        if (!isNearSpinningWheel(config, 4)) return;
                         Optional<GameObject> spinningWheel = Rs2GameObject.getGameObjects().stream()
                                 .filter(obj -> obj.getId() == config.flaxSpinLocation().getObjectID())
                                 .sorted(Comparator.comparingInt(obj -> Rs2Player.getWorldLocation().distanceTo(obj.getWorldLocation())))
@@ -109,16 +125,16 @@ public class FlaxSpinScript extends Script {
     }
 
     private void getState(CraftingConfig config) {
-        if (!Rs2Inventory.hasItem(ItemID.FLAX)) {
+        if (!Rs2Inventory.hasItem(ItemID.JUTE_FIBRE)) {
             state = State.BANKING;
             init = false;
             return;
         }
-        if (!isNearSpinningWheel(config, 4)) {
-            state = State.WALKING;
-            init = false;
-            return;
-        }
+       // if (!isNearSpinningWheel(config, 4)) {
+      //      state = State.WALKING;
+      //      init = false;
+       //     return;
+       // }
 
         state = State.SPINNING;
         init = false;

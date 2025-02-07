@@ -33,8 +33,8 @@ public class DefaultScript extends Script {
         Microbot.enableAutoRunOn = false;
         initialPlayerLocation = null;
         Rs2Antiban.resetAntibanSettings();
-        applyAntiBanSettings();
-        Rs2Antiban.setActivity(Activity.GENERAL_COLLECTING);
+//        applyAntiBanSettings();
+//        Rs2Antiban.setActivity(Activity.GENERAL_COLLECTING);
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!super.run()) return;

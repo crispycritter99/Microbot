@@ -1,6 +1,6 @@
-package net.runelite.client.plugins.microbot.tithefarm.enums;
+package net.runelite.client.plugins.microbot.tithefarmfast.enums;
 
-public enum TitheFarmState {
+public enum TitheFarmStateFast {
     STARTING,
     RECHARING_RUN_ENERGY,
     TAKE_SEEDS,

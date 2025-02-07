@@ -26,7 +26,7 @@ public class PotionManagerScript extends Script {
                         Rs2Player.waitForAnimation();
                 }
                 if (config.togglePrayerPotions()) {
-                    Rs2Player.drinkPrayerPotionAt(Rs2Random.randomGaussian(25,10));
+                    Rs2Player.drinkPrayerPotionAt(Rs2Random.nextInt(10,20,1,true));
                 }
                 if (config.toggleRangingPotion()) {
                     if(Rs2Player.drinkCombatPotionAt(Skill.RANGED, false))

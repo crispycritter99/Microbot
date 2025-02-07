@@ -30,7 +30,8 @@ public class Rs2Potion
                 "Prayer potion",
                 "Super restore",
                 "Moonlight moth mix",
-                "Egniol potion"
+                "Egniol potion",
+                "Moonlight potion"
         );
     }
 
