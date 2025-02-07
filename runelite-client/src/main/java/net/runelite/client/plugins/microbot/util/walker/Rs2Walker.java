@@ -1230,7 +1230,7 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
         String destination = hasMultipleDestination
                 ? transport.getDisplayInfo().split(":")[1].trim().toLowerCase()
                 : transport.getDisplayInfo().trim().toLowerCase();
-
+//        Microbot.log("destination "+destination);
         // Check location keywords based on multiple destinations
         String itemAction = hasMultipleDestination
                 ? Arrays.stream(rs2Item.getInventoryActions())
@@ -1242,7 +1242,7 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
                 .filter(action -> action != null && locationKeyWords.stream().anyMatch(keyword -> action.toLowerCase().contains(keyword.toLowerCase())))
                 .findFirst()
                 .orElse(null);
-
+//        Microbot.log("item action "+itemAction);
         // If no location-based action found, try generic actions
         if (itemAction == null) {
 
@@ -1259,7 +1259,7 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
         }
 
         if (itemAction == null) return false;
-
+//        Microbot.log("item action "+itemAction);
         if (Rs2Inventory.interact(itemId, itemAction)) {
             if (itemAction.equalsIgnoreCase("rub") && (itemId == ItemID.XERICS_TALISMAN || transport.getDisplayInfo().toLowerCase().contains("skills necklace"))) {
                 return interactWithAdventureLog(transport);
@@ -1521,7 +1521,11 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
         }
 
         char key = transport.getDisplayInfo().charAt(0);
+//        Microbot.log("key to press is"+key);
+//        sleep(500);
+//        Microbot.log("adventure log is visible?"+ isAdventureLogVisible);
         Rs2Keyboard.keyPress(key);
+//        Microbot.log("pressed "+key);
         Microbot.log("Traveling to " + transport.getDisplayInfo());
         return sleepUntilTrue(() -> Rs2Player.getWorldLocation().distanceTo2D(transport.getDestination()) < OFFSET, 100, 5000);
     }
