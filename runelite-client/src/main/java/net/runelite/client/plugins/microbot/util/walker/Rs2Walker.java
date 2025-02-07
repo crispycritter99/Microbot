@@ -500,7 +500,8 @@ public class Rs2Walker {
 
         int canvasX = canv != null ? canv.getX() : -1;
         int canvasY = canv != null ? canv.getY() : -1;
-
+        canvasX+=Rs2Random.nextInt(-10,10,1,true);
+        canvasY+=Rs2Random.nextInt(-10,10,1,true);
         //if the tile is not on screen, use minimap
         if (!Rs2Camera.isTileOnScreen(localPoint) || canvasX < 0 || canvasY < 0) {
             return Rs2Walker.walkMiniMap(worldPoint);

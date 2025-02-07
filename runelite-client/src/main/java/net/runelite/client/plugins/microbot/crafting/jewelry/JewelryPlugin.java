@@ -41,6 +41,7 @@ public class JewelryPlugin extends Plugin {
     private Staff staff;
     @Getter
     private boolean useRunePouch;
+
     
     @Provides
     JewelryConfig provideConfig(ConfigManager configManager) {
@@ -54,7 +55,6 @@ public class JewelryPlugin extends Plugin {
         completionAction = config.completionAction();
         staff = config.staff();
         useRunePouch = config.useRunePouch();
-        
         jewelryScript.run();
         if (overlayManager != null) {
             overlayManager.add(jewelryOverlay);
@@ -89,5 +89,6 @@ public class JewelryPlugin extends Plugin {
         if (event.getKey().equals(JewelryConfig.useRunePouch)) {
             useRunePouch = config.useRunePouch();
         }
+
     }
 }
