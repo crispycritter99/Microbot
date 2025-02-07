@@ -8,12 +8,14 @@ import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmFastLan
 import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmMaterial;
 import net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast;
 import net.runelite.client.plugins.microbot.tithefarmfast.models.TitheFarmPlant;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Random;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
@@ -21,6 +23,9 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net. runelite. client. plugins. microbot. Microbot;
 import java.time.Instant;
+import java.util.Set;
+import java.util.HashSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -58,7 +63,7 @@ public class TitheFarmingFastScript extends Script {
     public static final int DISTANCE_TRESHHOLD_MINIMAP_WALK = 20;
 
     public static int gricollerCanCharges = -1;
-
+    Set<Integer> skipnumbers = new HashSet<>(Arrays.asList(0,3,6,7,10,14,17,19,20,23));
     public static boolean init = true;
 int plantnumber;
     int nextIndex;
@@ -301,6 +306,7 @@ int plantnumber;
         }
 
         if (state == TitheFarmStateFast.HARVEST && hasAllEmptyPatches()) {
+            Rs2Antiban.takeMicroBreakByChance();
             state = STARTING;
         }
 
@@ -314,7 +320,6 @@ int plantnumber;
         }
 
         if (plant == null) return;
-
         final TitheFarmPlant finalPlant = plant;
 
         if (plant.getGameObject().getWorldLocation().distanceTo2D(Microbot.getClient().getLocalPlayer().getWorldLocation()) > DISTANCE_TRESHHOLD_MINIMAP_WALK) {
@@ -330,16 +335,22 @@ int plantnumber;
             return;
         }
         WorldPoint p = new WorldPoint (plant.plantX, plant.plantY, 0);
-        Microbot.log(Rs2Player.distanceTo(p)+"");
-//        shutdown();
+
+
         if (plant.isEmptyPatch()) { //start planting seeds
-            if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
-                sleepUntil(() -> Rs2Player.distanceTo(p)==0);
-            }
+            if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
+                Rs2Walker.walkFastCanvas(p);
             Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
+            sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
+        }
+            else if (!Rs2Inventory.isItemSelected()){
+                Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
+            }
+            sleep(Rs2Random.nextInt(200,400,1,true));
             clickPatch(plant);
-            sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
             Rs2Inventory.interact("gricoller's can", "Use");
+            sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
+
             TileObject gameObject = Rs2GameObject.findObjectByLocation(WorldPoint.fromRegion(Microbot.getClient().getLocalPlayer().getWorldLocation().getRegionID(),
                     plant.regionX,
                     plant.regionY,
@@ -358,31 +369,44 @@ int plantnumber;
 
             }
             else {
-                if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
-                    sleepUntil(() -> Rs2Player.distanceTo(p)==0);
+                if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
+                    Rs2Walker.walkFastCanvas(p);
+                    sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
+                    sleep(Rs2Random.nextInt(200,400,1,true));
+
                 }
                 clickPatch(plant, "water");
-                plantnumber=plant.getIndex();
-                nextIndex = (plantnumber + 1) % plants.size();
-                TitheFarmPlant nextPlant = null;
-                nextPlant=plants.get(plantnumber+1);
 
             }
+//            Microbot.log(""+plant.getIndex());
+//            plantnumber=plant.getIndex();
+//            nextIndex = (plantnumber + 1) % plants.size();
+//            TitheFarmPlant nextPlant = null;
+//            nextPlant=plants.get(plantnumber+1);
+
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterWateringSeed());
+//            Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));
             if (Rs2Player.isAnimating()) {
+//                Microbot.log(""+plant.isValidToWater());
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isValidToWater()));
+//                Microbot.log(""+plant.isValidToWater());
             }
             plant.setPlanted(Instant.now());
         }
 
 
         if (plant.isValidToHarvest()) {
-            if (Microbot.getClient().getLocalPlayer().getWorldLocation()!=p){Rs2Walker.walkFastCanvas(p);
-                sleepUntil(() -> Rs2Player.distanceTo(p)==0);
+            if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
+                Rs2Walker.walkFastCanvas(p);
+                sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
+                sleep(Rs2Random.nextInt(200,400,1,true));
+
             }
             clickPatch(plant, "harvest");
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterHarvestingSeed());
             if (Rs2Player.isAnimating()) {
+//                if (skipnumbers.contains((plant.getIndex()+1)% plants.size())){            Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
+//                }
                 sleepUntil(() -> plants.stream().anyMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isEmptyPatch()));
             }
         }
