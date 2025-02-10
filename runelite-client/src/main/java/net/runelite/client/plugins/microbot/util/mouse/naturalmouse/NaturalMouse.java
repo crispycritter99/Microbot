@@ -149,11 +149,11 @@ public class NaturalMouse {
             int vertical = random.nextBoolean() ? -1 : client.getCanvasHeight() + 1;
 
             boolean exitHorizontally = random.nextBoolean();
-            if (exitHorizontally) {
+//            if (exitHorizontally) {
                 moveTo(horizontal, random.nextInt(0, client.getCanvasHeight() + 1));
-            } else {
-                moveTo(random.nextInt(0, client.getCanvasWidth() + 1), vertical);
-            }
+//            } else {
+//                moveTo(random.nextInt(0, client.getCanvasWidth() + 1), vertical);
+//            }
         }
     }
 

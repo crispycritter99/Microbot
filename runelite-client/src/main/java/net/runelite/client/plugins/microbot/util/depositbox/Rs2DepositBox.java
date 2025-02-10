@@ -83,7 +83,7 @@ public class Rs2DepositBox {
                 action = Rs2GameObject.interact(depositBox, "Deposit");
             }
             if (action) {
-                sleepUntil(Rs2DepositBox::isOpen, 2500);
+                sleepUntil(Rs2DepositBox::isOpen, 5000);
             }
             return action;
         } catch (Exception e) {
