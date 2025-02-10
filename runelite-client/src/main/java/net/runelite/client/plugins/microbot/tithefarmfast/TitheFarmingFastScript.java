@@ -57,7 +57,7 @@ public class TitheFarmingFastScript extends Script {
 
     public static int initialFruit = 0;
     public static int fruits = 0;
-
+public boolean plantcycle;
     public static final int WATERING_CANS_AMOUNT = 8;
 
     public static final int DISTANCE_TRESHHOLD_MINIMAP_WALK = 20;
@@ -344,10 +344,16 @@ int plantnumber;
             sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
         }
             else if (!Rs2Inventory.isItemSelected()){
+
+                Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
+            }
+            if (Rs2Inventory.getSelectedItemId()!=13425){
+                Rs2Inventory.deselect();
                 Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             }
             sleep(Rs2Random.nextInt(200,400,1,true));
             clickPatch(plant);
+            sleep(Rs2Random.nextInt(200,400,1,true));
             Rs2Inventory.interact("gricoller's can", "Use");
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
 
@@ -357,6 +363,7 @@ int plantnumber;
                     Microbot.getClient().getPlane()));
             Rs2GameObject.hoverOverObject(gameObject);
             if (Rs2Player.isAnimating()) {
+
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isEmptyPatch()));
             }
         }
@@ -365,7 +372,7 @@ int plantnumber;
 
             if (Rs2Inventory.isItemSelected()){
                 clickPatch(plant, "use");
-
+            plantcycle = true;
 
             }
             else {
@@ -373,7 +380,7 @@ int plantnumber;
                     Rs2Walker.walkFastCanvas(p);
                     sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
                     sleep(Rs2Random.nextInt(200,400,1,true));
-
+                    plantcycle = false;
                 }
                 clickPatch(plant, "water");
 
@@ -387,7 +394,7 @@ int plantnumber;
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterWateringSeed());
 //            Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));
             if (Rs2Player.isAnimating()) {
-//                Microbot.log(""+plant.isValidToWater());
+                if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == true){Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");}
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isValidToWater()));
 //                Microbot.log(""+plant.isValidToWater());
             }
@@ -409,7 +416,9 @@ int plantnumber;
 //                }
                 sleepUntil(() -> plants.stream().anyMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isEmptyPatch()));
             }
+
         }
+
     }
 
         // Helper method to validate inventory items

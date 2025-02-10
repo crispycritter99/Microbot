@@ -16,6 +16,7 @@ import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -180,7 +181,7 @@ public class MotherloadMineScript extends Script
 
     private boolean hasRequiredTools()
     {
-        boolean hasHammer = Rs2Inventory.hasItem("hammer");
+        boolean hasHammer = Rs2Inventory.hasItem("hammer")||Rs2Equipment.isWearing("imcando");
         boolean hasPickaxe = !config.pickAxeInInventory() || Rs2Inventory.hasItem(pickaxeName);
         return hasHammer && hasPickaxe;
     }
@@ -235,23 +236,27 @@ public class MotherloadMineScript extends Script
 
     private boolean hasOreInInventory()
     {
+//        return Rs2Inventory.contains(
+//                ItemID.RUNITE_ORE, ItemID.ADAMANTITE_ORE, ItemID.MITHRIL_ORE,
+//                ItemID.GOLD_ORE, ItemID.COAL, ItemID.UNCUT_SAPPHIRE,
+//                ItemID.UNCUT_EMERALD, ItemID.UNCUT_RUBY, ItemID.UNCUT_DIAMOND,
+//                ItemID.UNCUT_DRAGONSTONE
+//        );
         return Rs2Inventory.contains(
                 ItemID.RUNITE_ORE, ItemID.ADAMANTITE_ORE, ItemID.MITHRIL_ORE,
-                ItemID.GOLD_ORE, ItemID.COAL, ItemID.UNCUT_SAPPHIRE,
-                ItemID.UNCUT_EMERALD, ItemID.UNCUT_RUBY, ItemID.UNCUT_DIAMOND,
-                ItemID.UNCUT_DRAGONSTONE
+                ItemID.GOLD_ORE, ItemID.COAL
         );
     }
 
     private void fixWaterwheel()
     {
         ensureLowerFloor();
-        if (Rs2Walker.walkTo(new WorldPoint(3741, 5666, 0), 15))
+//        if (Rs2Walker.walkTo(new WorldPoint(3741, 5666, 0), 15))
         {
             Microbot.isGainingExp = false;
             if (Rs2GameObject.interact(ObjectID.BROKEN_STRUT))
             {
-                sleepUntil(() -> Microbot.isGainingExp);
+                sleepUntil(() -> Microbot.isGainingExp,10000);
             }
         }
     }
@@ -281,13 +286,15 @@ public class MotherloadMineScript extends Script
 
     private void bankItems()
     {
-        if (Rs2Bank.useBank())
+        if (!Rs2Equipment.isWearing("imcando"))
         {
+            Rs2Bank.useBank();
             sleepUntil(Rs2Bank::isOpen);
-            Rs2Bank.depositAllExcept("hammer", pickaxeName);
+//            Rs2Bank.depositAllExcept("hammer", pickaxeName);
+            Rs2Bank.depositAll();
             sleep(100, 300);
 
-            if (!Rs2Inventory.hasItem("hammer"))
+            if (!Rs2Inventory.hasItem("hammer")&& !Rs2Equipment.isWearing("imcando"))
             {
                 if (!Rs2Bank.hasItem("hammer"))
                 {
@@ -304,6 +311,13 @@ public class MotherloadMineScript extends Script
             }
             sleep(600);
         }
+        else if (Rs2DepositBox.openDepositBox()){
+            sleepUntil(Rs2DepositBox::isOpen,10000);
+            Rs2DepositBox.depositAll();
+            sleep(100, 300);
+//            sleep(600);
+        }
+
         status = MLMStatus.IDLE;
     }
 
