@@ -18,6 +18,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.inventory.RunePouch;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -35,7 +36,7 @@ public class JewelryScript extends Script {
     private final JewelryPlugin plugin;
     public static State state;
     private int staffItemID;
-    List<Rs2Item> inventorySlots;
+
     @Inject
     public JewelryScript(JewelryPlugin plugin) {
         this.plugin = plugin;
@@ -175,7 +176,7 @@ public class JewelryScript extends Script {
                                 int enchantJewelryInInventory = getNotedJewelryInInventory();
                                 int enchantJewelryInBank = Rs2Bank.bankItems().stream()
                                         .filter(item -> item.getId() == plugin.getJewelry().getItemID())
-                                        .mapToInt(Rs2Item::getQuantity)
+                                        .mapToInt(Rs2ItemModel::getQuantity)
                                         .sum();
 
                                 int totalEnchantJewelry = enchantJewelryInInventory + enchantJewelryInBank;
@@ -354,9 +355,7 @@ public class JewelryScript extends Script {
                             Rs2Inventory.equip(staffItemID);
                             Rs2Random.waitEx(900, 100);
                         }
-                        List<Rs2Item> filteredItems = Rs2Inventory.all().stream()
-                                .filter(item -> item.getName().contains("Ruby"))
-                                .collect(Collectors.toList());
+
 //                        Microbot.log(""+filteredItems.size());
 
 //                        for (Rs2Item itemToInteract : filteredItems) {
