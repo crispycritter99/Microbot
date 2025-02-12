@@ -1,11 +1,14 @@
 package net.runelite.client.plugins.microbot.example;
 
+import net.runelite.api.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Item;
 
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +26,8 @@ public class ExampleScript extends Script {
 
                 //CODE HERE
 //                Rs2DepositBox.openDepositBox();
-                Microbot.log(""+Rs2DepositBox.isOpen());
+
+                System.out.println("Inventory size: " + Rs2Inventory.all().size());
 shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
