@@ -351,9 +351,9 @@ int plantnumber;
                 Rs2Inventory.deselect();
                 Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             }
-            sleep(Rs2Random.nextInt(200,400,1,true));
+//            sleep(Rs2Random.nextInt(200,400,1,true));
             clickPatch(plant);
-            sleep(Rs2Random.nextInt(200,400,1,true));
+//            sleep(Rs2Random.nextInt(200,400,1,true));
             Rs2Inventory.interact("gricoller's can", "Use");
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
 
@@ -379,7 +379,7 @@ int plantnumber;
                 if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
                     Rs2Walker.walkFastCanvas(p);
                     sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
-                    sleep(Rs2Random.nextInt(200,400,1,true));
+//                    sleep(Rs2Random.nextInt(200,400,1,true));
                     plantcycle = false;
                 }
                 clickPatch(plant, "water");
@@ -406,7 +406,7 @@ int plantnumber;
             if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
                 Rs2Walker.walkFastCanvas(p);
                 sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
-                sleep(Rs2Random.nextInt(200,400,1,true));
+//                sleep(Rs2Random.nextInt(200,400,1,true));
 
             }
             clickPatch(plant, "harvest");

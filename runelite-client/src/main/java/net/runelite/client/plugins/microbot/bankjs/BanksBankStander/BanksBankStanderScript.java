@@ -171,6 +171,7 @@ public class BanksBankStanderScript extends Script {
             if (!missingItem.isBlank()) {
                 Microbot.log("Insufficient " + missingItem);
                 sleep(2500, 5000);
+                shutdown();
                 return false;
             }
         }
@@ -198,12 +199,16 @@ public class BanksBankStanderScript extends Script {
 
         // using our items from the config string and the selected interaction order.
         timeValue = System.currentTimeMillis();
-        interactOrder(firstItemId);
+        if (secondItemId == null && thirdItemId == null && fourthItemId == null && Rs2Inventory.hasItemAmount(firstItemId, config.firstItemQuantity())) {
+            interactOrder(firstItemId);
+        }
         randomNum = calculateSleepDuration(0.5);
         if (System.currentTimeMillis()-timeValue<randomNum) { sleep((int) (randomNum-(System.currentTimeMillis()-timeValue))); } else { sleep(Rs2Random.between(14, 28)); }
-        if (config.secondItemQuantity() > 0) {
+        if (config.secondItemQuantity() > 0&&config.firstItemQuantity() > 0) {
             timeValue = System.currentTimeMillis();
-            interactOrder(secondItemId);
+//            interactOrder(secondItemId);
+//            if (config.needPromptEntry())
+            Rs2Inventory.combineClosest(firstItemId,secondItemId);
             randomNum = calculateSleepDuration(0.5);
             if (System.currentTimeMillis()-timeValue<randomNum) { sleep((int) (randomNum-(System.currentTimeMillis()-timeValue))); } else { sleep(Rs2Random.between(14, 28)); }
         }

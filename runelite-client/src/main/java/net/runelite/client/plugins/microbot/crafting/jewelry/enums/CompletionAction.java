@@ -6,5 +6,5 @@ import lombok.Getter;
 public enum CompletionAction {
     NONE,
     ALCH,
-//    ENCHANT,
+    ENCHANT,
 }
