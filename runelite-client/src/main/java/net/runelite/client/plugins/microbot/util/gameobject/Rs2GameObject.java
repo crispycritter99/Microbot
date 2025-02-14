@@ -53,7 +53,10 @@ public class Rs2GameObject {
     public static boolean interact(GameObject gameObject, String action) {
         return clickObject(gameObject, action);
     }
-
+    public static boolean interact(int id, int index) {
+        TileObject object = findObjectById(id);
+        return clickObject(object, index);
+    }
     public static boolean interact(int id) {
         TileObject object = findObjectById(id);
         return clickObject(object);
@@ -1250,6 +1253,8 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
                 for (int i = 0; i < actions.length; i++) {
                     if (actions[i] == null) continue;
                     if (action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
+//            if (action.equalsIgnoreCase(actions[i])) {
+
                         index = i;
                         break;
                     }
@@ -1259,6 +1264,106 @@ public static GameObject findReachableObject(String objectName, boolean exact, i
                     index = 0;
             }
 
+            if (index == -1) {
+                Microbot.log("Failed to interact with object " + object.getId() + " " + action);
+            }
+
+
+            if (Microbot.getClient().isWidgetSelected()) {
+                menuAction = MenuAction.WIDGET_TARGET_ON_GAME_OBJECT;
+            } else if (index == 0) {
+                menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
+            } else if (index == 1) {
+                menuAction = MenuAction.GAME_OBJECT_SECOND_OPTION;
+            } else if (index == 2) {
+                menuAction = MenuAction.GAME_OBJECT_THIRD_OPTION;
+            } else if (index == 3) {
+                menuAction = MenuAction.GAME_OBJECT_FOURTH_OPTION;
+            } else if (index == 4) {
+                menuAction = MenuAction.GAME_OBJECT_FIFTH_OPTION;
+            }
+
+            if (!Rs2Camera.isTileOnScreen(object.getLocalLocation())) {
+                Rs2Camera.turnTo(object);
+            }
+
+            // both hands must be free before using MINECART
+            if (objComp.getName().toLowerCase().contains("train cart")) {
+                Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
+                Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
+                sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
+            }
+
+
+            Microbot.doInvoke(new NewMenuEntry(param0, param1, menuAction.getId(), object.getId(), -1, action, objComp.getName(), object), Rs2UiHelper.getObjectClickbox(object));
+// MenuEntryImpl(getOption=Use, getTarget=Barrier, getIdentifier=43700, getType=GAME_OBJECT_THIRD_OPTION, getParam0=53, getParam1=51, getItemId=-1, isForceLeftClick=true, getWorldViewId=-1, isDeprioritized=false)
+            //Rs2Reflection.invokeMenu(param0, param1, menuAction.getId(), object.getId(),-1, "", "", -1, -1);
+
+        } catch (Exception ex) {
+            Microbot.log("Failed to interact with object " + ex.getMessage());
+        }
+
+        return true;
+    }
+
+    private static boolean clickObject(TileObject object, int index) {
+        if (object == null) return false;
+        if (Microbot.getClient().getLocalPlayer().getWorldLocation().distanceTo(object.getWorldLocation()) > 51) {
+            Microbot.log("Object with id " + object.getId() + " is not close enough to interact with. Walking to the object....");
+            Rs2Walker.walkTo(object.getWorldLocation());
+            return false;
+        }
+
+        try {
+
+            int param0;
+            int param1;
+            MenuAction menuAction = MenuAction.WALK;
+
+            ObjectComposition objComp = convertGameObjectToObjectComposition(object);
+            if (objComp == null) return false;
+
+
+
+            if (object instanceof GameObject) {
+                GameObject obj = (GameObject) object;
+                if (obj.sizeX() > 1) {
+                    param0 = obj.getLocalLocation().getSceneX() - obj.sizeX() / 2;
+                } else {
+                    param0 = obj.getLocalLocation().getSceneX();
+                }
+
+                if (obj.sizeY() > 1) {
+                    param1 = obj.getLocalLocation().getSceneY() - obj.sizeY() / 2;
+                } else {
+                    param1 = obj.getLocalLocation().getSceneY();
+                }
+            } else {
+                // Default objects like walls, groundobjects, decorationobjects etc...
+                param0 = object.getLocalLocation().getSceneX();
+                param1 = object.getLocalLocation().getSceneY();
+            }
+
+//            int index = 0;
+//            if (action != null) {
+                String[] actions;
+                if (objComp.getImpostorIds() != null && objComp.getImpostor() != null) {
+                    actions = objComp.getImpostor().getActions();
+                } else {
+                    actions = objComp.getActions();
+                }
+                String action=actions[index];
+                for (int i = 0; i < actions.length; i++) {
+                    if (actions[i] == null) continue;
+                    if (action.equalsIgnoreCase(actions[i])) {
+                        index = i;
+                        break;
+                    }
+                }
+//                if (index == actions.length)
+//                    index = 0;
+//            }
+//            Microbot.status = action + " " + objComp.getName();
             if (index == -1) {
                 Microbot.log("Failed to interact with object " + object.getId() + " " + action);
             }
