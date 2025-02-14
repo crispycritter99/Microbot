@@ -78,7 +78,8 @@ public class FornBirdhouseRunsScript extends Script {
                         }
                         break;
                     case DISMANTLE_HOUSE_1:
-                        dismantleBirdhouse(30568, states.BUILD_HOUSE_1);
+//                        dismantleBirdhouse(30568, states.BUILD_HOUSE_1);
+                        dismantleBirdhouse(30568, states.SEED_HOUSE_1);
                         break;
                     case BUILD_HOUSE_1:
                         buildBirdhouse(birdhouseLocation1, states.SEED_HOUSE_1);
@@ -86,7 +87,8 @@ public class FornBirdhouseRunsScript extends Script {
                     case SEED_HOUSE_1:
                         seedHouse(birdhouseLocation1, states.DISMANTLE_HOUSE_2);
                     case DISMANTLE_HOUSE_2:
-                        dismantleBirdhouse(30567, states.BUILD_HOUSE_2);
+//                        dismantleBirdhouse(30567, states.BUILD_HOUSE_2);
+                        dismantleBirdhouse(30567, states.SEED_HOUSE_2);
                         break;
                     case BUILD_HOUSE_2:
                         buildBirdhouse(birdhouseLocation2, states.SEED_HOUSE_2);
@@ -103,7 +105,8 @@ public class FornBirdhouseRunsScript extends Script {
                         }
                         break;
                     case DISMANTLE_HOUSE_3:
-                        dismantleBirdhouse(30565, states.BUILD_HOUSE_3);
+//                        dismantleBirdhouse(30565, states.BUILD_HOUSE_3);
+                        dismantleBirdhouse(30565, states.SEED_HOUSE_3);
                         break;
                     case BUILD_HOUSE_3:
                         buildBirdhouse(birdhouseLocation3, states.SEED_HOUSE_3);
@@ -113,7 +116,8 @@ public class FornBirdhouseRunsScript extends Script {
                         break;
                     case DISMANTLE_HOUSE_4:
                         Rs2Walker.walkTo(new WorldPoint(3680, 3813, 0));
-                        dismantleBirdhouse(30566, states.BUILD_HOUSE_4);
+//                        dismantleBirdhouse(30566, states.BUILD_HOUSE_4);
+                        dismantleBirdhouse(30566, states.SEED_HOUSE_4);
                         break;
                     case BUILD_HOUSE_4:
                         buildBirdhouse(birdhouseLocation4, states.SEED_HOUSE_4);
@@ -260,14 +264,22 @@ public class FornBirdhouseRunsScript extends Script {
     }
 
     private void dismantleBirdhouse(int itemId, states status) {
-        if (Rs2Inventory.hasItem(ItemID.CLOCKWORK)) {
-            botStatus = status;
-        } else if (!Rs2Player.isMoving() &&
-                !Rs2Player.isAnimating() &&
-                !Rs2Player.isInteracting()
-        ) {
-
-            Rs2GameObject.interact(itemId, "empty");
+//        if (Rs2Inventory.hasItem(ItemID.CLOCKWORK)) {
+//            botStatus = status;
+//        } else if (!Rs2Player.isMoving() &&
+//                !Rs2Player.isAnimating() &&
+//                !Rs2Player.isInteracting()
+//        ) {
+//
+//            Rs2GameObject.interact(itemId, "empty");
+//        }
+        Rs2GameObject.interact(itemId, "reset");
+        while (!Rs2Inventory.hasItem(ItemID.CLOCKWORK)){
+            sleep(600);
         }
+        while (Rs2Player.isAnimating()){
+            sleep(600);
+        }
+        botStatus = status;
     }
 }

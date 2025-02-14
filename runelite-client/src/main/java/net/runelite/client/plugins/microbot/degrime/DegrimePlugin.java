@@ -49,34 +49,7 @@ public class DegrimePlugin extends Plugin {
         }
         degrimeScript.run(config);
     }
-    ///* Added by Storm
-    @Subscribe
-    public void onItemContainerChanged(ItemContainerChanged inventory){
-        if(inventory.getContainerId()==93){
-            if (!Rs2Bank.isOpen()) {
-                DegrimeScript.itemsProcessed++;
-            }
-            if (DegrimeScript.secondItemId != null) { // Use secondItemId if it's available
-                if (Arrays.stream(inventory.getItemContainer().getItems())
-                        .anyMatch(x -> x.getId() == DegrimeScript.secondItemId)) {
-                    // average is 1800, max is 2400~
-                    DegrimeScript.previousItemChange = System.currentTimeMillis();
-                    //System.out.println("still processing items");
-                } else {
-                    DegrimeScript.previousItemChange = (System.currentTimeMillis() - 2500);
-                }
-            } else { // Use secondItemIdentifier if secondItemId is null
-                Rs2ItemModel item = Rs2Inventory.get(config.secondItemIdentifier());
-                if (item != null) {
-                    // average is 1800, max is 2400~
-                    DegrimeScript.previousItemChange = System.currentTimeMillis();
-                    //System.out.println("still processing items");
-                } else {
-                    DegrimeScript.previousItemChange = (System.currentTimeMillis() - 2500);
-                }
-            }
-        }
-    }
+
     @Subscribe
     public void onWidgetLoaded(WidgetLoaded widget){
         if (widget.getGroupId()==270) {
