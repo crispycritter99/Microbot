@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.mining;
+package net.runelite.client.plugins.microbot.gemmining;
 
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
@@ -6,7 +6,7 @@ import net.runelite.api.NpcID;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.mining.enums.Rocks;
+import net.runelite.client.plugins.microbot.gemmining.enums.Rocks;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -39,7 +39,7 @@ public class AutoMiningScript extends Script {
         initialPlayerLocation = null;
         Rs2Antiban.resetAntibanSettings();
         Rs2Antiban.antibanSetupTemplates.applyMiningSetup();
-        Rs2AntibanSettings.actionCooldownChance = 0.1;
+//        Rs2AntibanSettings.actionCooldownChance = 0.1;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!super.run()) return;
@@ -57,7 +57,7 @@ public class AutoMiningScript extends Script {
                 if (Rs2Equipment.isWearing("Dragon pickaxe"))
                     Rs2Combat.setSpecState(true, 1000);
 
-                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts) return;
+//                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts) return;
 
                 switch (state) {
                     case MINING:
@@ -66,14 +66,21 @@ public class AutoMiningScript extends Script {
                             return;
                         }
 
-                        GameObject rock = Rs2GameObject.findReachableObject(config.ORE().getName(), true, config.distanceToStray(), initialPlayerLocation);
+                        GameObject rock = Rs2GameObject.findReachableObject(config.ORE().getName(), true, config.distanceToStray(), Rs2Player.getWorldLocation());
 
                         if (rock != null) {
+
                             if (Rs2GameObject.interact(rock)) {
+                                Rs2Inventory.interact("swamp tar","use");
+//                                Rs2Inventory.interact(249);
                                 Rs2Player.waitForXpDrop(Skill.MINING, true);
-                                Rs2Inventory.dropAll(1627);
-                                Rs2Antiban.actionCooldown();
-                                Rs2Antiban.takeMicroBreakByChance();
+                                Rs2Inventory.interact(249,"use");
+                                Rs2Inventory.drop(1627);
+                                Rs2Inventory.dropAll("iron ore");
+
+
+//                                Rs2Antiban.actionCooldown();
+//                                Rs2Antiban.takeMicroBreakByChance();
                             }
                         }
                         break;
@@ -83,8 +90,11 @@ public class AutoMiningScript extends Script {
                         if (config.useBank()) {
                             if (config.ORE() == Rocks.GEM && Rs2Player.getWorldLocation().getRegionID() == GEM_MINE_UNDERGROUND) {
                                 if (Rs2DepositBox.openDepositBox()) {
-                                    Rs2DepositBox.depositAll();
+//                                    Rs2DepositBox.depositAll();
+                                    Rs2DepositBox.depositAll(1625,1629,1623,1619,1621,1617);
+                                    Rs2Inventory.waitForInventoryChanges(1800);
                                     Rs2DepositBox.closeDepositBox();
+
                                 }
                             }
                             if (config.ORE() == Rocks.BASALT && Rs2Player.getWorldLocation().getRegionID() == BASALT_MINE) {

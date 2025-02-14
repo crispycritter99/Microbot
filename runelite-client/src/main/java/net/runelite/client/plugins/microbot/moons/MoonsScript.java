@@ -153,8 +153,8 @@ public class MoonsScript extends Script {
                             if (Rs2Player.getWorldLocation().getY() != 9695) {
                                 Rs2Walker.walkFastCanvas(new WorldPoint(1512,9695,0));
                             }
-
-                            Microbot.doInvoke(new NewMenuEntry("Take-from <col=00ffff>Fishing", "<col=ffff>Supply crates", 51371, MenuAction.GAME_OBJECT_SECOND_OPTION, 39, 79, false), new Rectangle(1, 1));
+//                            Rs2GameObject.interact()
+                            Rs2GameObject.interact(51371,"Take-from Fishing");
                             sleep(600);
                         }
 
@@ -164,7 +164,7 @@ public class MoonsScript extends Script {
                                 Rs2Walker.walkFastCanvas(new WorldPoint(1512,9695,0));
                             }
 
-                            Microbot.doInvoke(new NewMenuEntry("Take-from <col=00ffff>Herblore", "<col=ffff>Supply crates", 51371, MenuAction.GAME_OBJECT_FOURTH_OPTION, 39, 79, false), new Rectangle(1, 1));
+                            Rs2GameObject.interact(51371,"Take-from Herblore");
                             sleep(600);
                         }
                         else if (Rs2Inventory.hasItemAmount(vialOfWater, config.prayerAmount() + 2)) {
