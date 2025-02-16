@@ -78,7 +78,7 @@ public class PestControlScript extends Script {
                         }
                     }
                     if (!walkToCenter) {
-                        WorldPoint worldPoint = WorldPoint.fromRegion(Rs2Player.getWorldLocation().getRegionID(), 32, 17, Microbot.getClient().getPlane());
+                        WorldPoint worldPoint = WorldPoint.fromRegion(Rs2Player.getWorldLocation().getRegionID(), 32, 33, Microbot.getClient().getPlane());
                         Rs2Walker.walkTo(worldPoint, 3);
                         if (worldPoint.distanceTo(Rs2Player.getWorldLocation()) > 4) {
                             return;
@@ -90,17 +90,17 @@ public class PestControlScript extends Script {
                     Rs2Combat.setSpecState(true, config.specialAttackPercentage() * 10);
                     Widget activity = Rs2Widget.getWidget(26738700); //145 = 100%
                     if (activity != null && activity.getChild(0).getWidth() <= 20 && !Rs2Combat.inCombat()) {
-                        Stream<Rs2NpcModel> npcs = Rs2Npc.getAttackableNpcs();
-                        Rs2Npc.attack(npcs.findFirst().get().getId());
+                        Optional<Rs2NpcModel> attackableNpc = Rs2Npc.getAttackableNpcs().findFirst();
+                        attackableNpc.ifPresent(rs2NpcModel -> Rs2Npc.interact(rs2NpcModel.getId(),"attack"));
                         return;
                     }
 
-                    var brawler = Rs2Npc.getNpc("brawler");
-                    if (brawler != null && brawler.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 3) {
-                        Rs2Npc.attack(brawler);
-                        sleepUntil(() -> !Rs2Combat.inCombat());
-                        return;
-                    }
+//                    var brawler = Rs2Npc.getNpc("brawler");
+//                    if (brawler != null && brawler.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < 3) {
+//                        Rs2Npc.interact(brawler,"attack");
+//                        sleepUntil(() -> !Rs2Combat.inCombat());
+//                        return;
+//                    }
 
                     if (Microbot.getClient().getLocalPlayer().isInteracting())
                         return;
@@ -123,15 +123,15 @@ public class PestControlScript extends Script {
                             || handleAttack(PestControlNpc.SPINNER, 3)) {
                         return;
                     }
-                    net.runelite.api.NPC portal = Arrays.stream(Rs2Npc.getPestControlPortals()).findFirst().orElse(null);
+                    Rs2NpcModel portal = Arrays.stream(Rs2Npc.getPestControlPortals()).findFirst().orElse(null);
                     if (portal != null) {
                         if (Rs2Npc.attack(portal.getId())) {
                             sleepUntil(() -> !Microbot.getClient().getLocalPlayer().isInteracting());
                         }
                     } else {
                         if (!Microbot.getClient().getLocalPlayer().isInteracting()) {
-                            Stream<Rs2NpcModel> npcs = Rs2Npc.getAttackableNpcs();
-                            Rs2Npc.attack(npcs.findFirst().get().getId());
+                            Optional<Rs2NpcModel> attackableNpc = Rs2Npc.getAttackableNpcs().findFirst();
+                            attackableNpc.ifPresent(rs2NpcModel -> Rs2Npc.attack(rs2NpcModel.getId()));
                         }
                     }
 
@@ -175,6 +175,7 @@ public class PestControlScript extends Script {
                 } else if (npcType == PestControlNpc.PORTAL) {
                     return attackPortals();
                 } else if (npcType == PestControlNpc.SPINNER) {
+//                    Microbot.log("priority attack spinner");
                     return attackSpinner();
                 }
             }
@@ -210,19 +211,25 @@ public class PestControlScript extends Script {
                 distancesToPortal.add(Pair.of(portal, distanceToRegion(portal.getRegionX(), portal.getRegionY())));
             }
         }
+        if (distancesToPortal.size()!=0) {
+            Pair<Portal, Integer> closestPortal = distancesToPortal.stream().min(Map.Entry.comparingByValue()).get();
 
-        Pair<Portal, Integer> closestPortal = distancesToPortal.stream().min(Map.Entry.comparingByValue()).get();
-
-        return closestPortal.getKey();
+            return closestPortal.getKey();
+        }
+        return null;
     }
 
     private static boolean attackPortal() {
         if (!Microbot.getClient().getLocalPlayer().isInteracting()) {
-            net.runelite.api.NPC npcPortal = Rs2Npc.getNpc("portal");
+            Rs2NpcModel npcPortal = Rs2Npc.getNpc("portal");
             if (npcPortal == null) return false;
             NPCComposition npc = Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getNpcDefinition(npcPortal.getId()));
             if (Arrays.stream(npc.getActions()).anyMatch(x -> x != null && x.equalsIgnoreCase("attack"))) {
-                return Rs2Npc.attack("portal");
+                if (npcPortal == null) return false;
+                if (Rs2Combat.inCombat()) return false;
+                if (npcPortal.isInteracting() && npcPortal.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti())
+                    return false;
+                if (Rs2Npc.interact(npcPortal,"attack")){Microbot.log("portal was attacked");};
             } else {
                 return false;
             }
@@ -230,7 +237,10 @@ public class PestControlScript extends Script {
         return false;
     }
 
-
+//Microbot.log("attacking portal");
+    //                Microbot.log(""+(npcPortal == null));
+//                Microbot.log(""+!Rs2Npc.hasLineOfSight(npcPortal));
+//                Microbot.log(""+(npcPortal.isInteracting() && npcPortal.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti()));
     private boolean attackPortals() {
         Portal closestAttackablePortal = getClosestAttackablePortal();
         for (Portal portal : portals) {
@@ -249,9 +259,21 @@ public class PestControlScript extends Script {
 
     private boolean attackSpinner() {
         for (int spinner : SPINNER_IDS) {
-            if (Rs2Npc.interact(spinner, "attack")) {
-                sleepUntil(() -> !Microbot.getClient().getLocalPlayer().isInteracting());
-                return true;
+            Rs2NpcModel npcSpinner = Rs2Npc.getNpc("portal");
+            if (npcSpinner != null) {
+//                                Microbot.log(""+(npcSpinner == null));
+//                Microbot.log(""+!Rs2Npc.hasLineOfSight(npcSpinner));
+//                Microbot.log(""+(npcSpinner.isInteracting() && npcSpinner.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti()));
+                if (npcSpinner == null) return false;
+                if (Rs2Combat.inCombat()) return false;
+                if (npcSpinner.isInteracting() && npcSpinner.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti())
+                    return false;
+//            if (Rs2Npc.attack(spinner)) {
+                if (Rs2Npc.interact(npcSpinner, "attack")) {
+                    Microbot.log("attacking spinner");
+                    sleepUntil(() -> !Microbot.getClient().getLocalPlayer().isInteracting());
+                    return true;
+                }
             }
         }
         return false;
