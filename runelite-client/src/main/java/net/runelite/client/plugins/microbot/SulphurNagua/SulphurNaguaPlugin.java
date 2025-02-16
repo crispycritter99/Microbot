@@ -73,8 +73,6 @@ public class SulphurNaguaPlugin extends Plugin {
         Microbot.pauseAllScripts = false;
         cooldown = 0;
 
-        lootScript.run((AIOFighterConfig) config);
-
         attackNpc.run((AIOFighterConfig) config);
         //combatPotion.run(config);
 

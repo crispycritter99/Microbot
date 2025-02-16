@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.cooking.scripts;
 
 import net.runelite.api.AnimationID;
 import net.runelite.api.NPC;
+import net.runelite.api.Skill;
 import net.runelite.api.TileObject;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -95,12 +96,44 @@ public class AutoCookingScript extends Script {
                                 Rs2Camera.turnTo(cookingObject.getLocalLocation());
                                 return;
                             }
-                            Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
-                            sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to cook?", null, false) != null);
+//                            if (cookingItem.getCookedItemName() == "cooked karambwan") {
+//                                Rs2Inventory.slotInteract(27,"use");
+//                                while (Rs2Inventory.contains(cookingItem.getRawItemName())) {
+//                                Rs2Keyboard.keyHold(KeyEvent.VK_SPACE);
+////                            for(int i = 0; i < 27; ++i){
+////                                    int numberRawBefore=Rs2Inventory.count(cookingItem.getRawItemName());
+//
+//                                    Rs2GameObject.interact(cookingObject.getId(),"use");
+////                            sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to cook?", null, false) != null);
+////                            Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+////                                    Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+//                                Rs2Inventory.slotInteract(27,"use");
+////                                Rs2GameObject.hoverOverObject(cookingObject);
+//                                    Rs2Player.waitForXpDrop(Skill.COOKING, 601);
+//                                    sleep(Rs2Random.randomGaussian(100,3));
+////                                    Rs2Inventory.waitForInventoryChanges(600);
+////                                    while(Rs2Inventory.count(cookingItem.getRawItemName())==numberRawBefore){sleep(100);}
+//                                    Rs2Keyboard.keyRelease(KeyEvent.VK_SPACE);
+//
+//                                    Microbot.status = "Cooking " + cookingItem.getRawItemName();
+//                        }
+//                                Rs2GameObject.interact(cookingObject.getId(),"use");
+////                                sleepUntil(() -> !Rs2Player.isMoving() && Rs2Widget.findWidget("How many would you like to cook?", null, false) != null);
+////                                Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+////                                    Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+//
+//                                Rs2Player.waitForXpDrop(Skill.COOKING, 1200);
+////                                Rs2Inventory.waitForInventoryChanges(800);
+//                                Microbot.status = "Cooking " + cookingItem.getRawItemName();
+//                            }
+//                            else {
+                                Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+                            sleepUntil(() -> Rs2Widget.getWidget(17694725) != null);
+                            sleep(Rs2Random.nextInt(300,600,1,true));
+                                Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                                Microbot.status = "Cooking " + cookingItem.getRawItemName();
+//                            }
 
-                            Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
-                            Microbot.status = "Cooking " + cookingItem.getRawItemName();
-                            
                             Rs2Antiban.actionCooldown();
                             Rs2Antiban.takeMicroBreakByChance();
 
@@ -110,10 +143,10 @@ public class AutoCookingScript extends Script {
                             if (hasRawItem(cookingItem)) {
                                 break;
                             }
-                            if (hasBurntItem(cookingItem) && !cookingItem.getBurntItemName().isEmpty()) {
-                                state = CookingState.DROPPING;
-                                return;
-                            }
+//                            if (hasBurntItem(cookingItem) && !cookingItem.getBurntItemName().isEmpty()) {
+//                                state = CookingState.DROPPING;
+//                                return;
+//                            }
 
                             state = CookingState.BANKING;
                             break;
@@ -135,8 +168,9 @@ public class AutoCookingScript extends Script {
                         }
 
                         if (hasCookedItem(cookingItem)) {
-                            Rs2Bank.depositAll(cookingItem.getCookedItemName(), true);
-                            Rs2Random.wait(800, 1600);
+                            Rs2Bank.depositAll();
+//                            Rs2Random.wait(800, 1600);
+                            Rs2Inventory.waitForInventoryChanges(1600);
                         }
                         
                         if (!hasRawItem(cookingItem)) {
@@ -145,7 +179,8 @@ public class AutoCookingScript extends Script {
                             return;
                         }
                         Rs2Bank.withdrawAll(cookingItem.getRawItemName(), true);
-                        Rs2Random.wait(800, 1600);
+                        Rs2Inventory.waitForInventoryChanges(1600);
+//                        Rs2Random.wait(800, 1600);
                         state = CookingState.WALKING;
                         Rs2Bank.closeBank();
                         break;
