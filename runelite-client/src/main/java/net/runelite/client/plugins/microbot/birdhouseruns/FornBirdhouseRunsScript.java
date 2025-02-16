@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.birdhouseruns;
 
 import net.runelite.api.ItemID;
 import net.runelite.api.MenuAction;
+import net.runelite.api.TileObject;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.Notifier;
 import net.runelite.client.config.Notification;
@@ -241,7 +242,12 @@ public class FornBirdhouseRunsScript extends Script {
     }
 
     private void seedHouse(WorldPoint worldPoint, states status) {
-        if (Rs2Inventory.use(selectedSeed) && Rs2GameObject.interact(worldPoint)) {
+        if (Rs2Inventory.isItemSelected()){
+            Rs2GameObject.interact(worldPoint);
+            sleep(1500, 2000);
+            botStatus = status;
+        }
+        else if (Rs2Inventory.use(selectedSeed) && Rs2GameObject.interact(worldPoint)) {
             sleep(1500, 2000);
             botStatus = status;
         }
@@ -273,13 +279,19 @@ public class FornBirdhouseRunsScript extends Script {
 //
 //            Rs2GameObject.interact(itemId, "empty");
 //        }
+        TileObject birdhouse = Rs2GameObject.findObjectById(itemId);
         Rs2GameObject.interact(itemId, "reset");
+        Rs2Inventory.interact(selectedSeed,"use");
+        Rs2GameObject.hoverOverObject(birdhouse);
         while (!Rs2Inventory.hasItem(ItemID.CLOCKWORK)){
-            sleep(600);
+            sleep(100);
         }
-        while (Rs2Player.isAnimating()){
-            sleep(600);
+        while (Rs2Inventory.hasItem(ItemID.CLOCKWORK)){
+            sleep(100);
         }
+//        while (Rs2Player.isAnimating()){
+//            sleep(600);
+//        }
         botStatus = status;
     }
 }
