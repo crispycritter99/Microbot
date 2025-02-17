@@ -130,6 +130,24 @@ public class LootScript extends Script {
         }
     }
 
+    // loot runes
+    private void lootHerbs(AIOFighterConfig config) {
+        if (config.toggleLootRunes()) {
+            LootingParameters herbsParams = new LootingParameters(
+                    config.attackRadius(),
+                    1,
+                    1,
+                    config.minFreeSlots(),
+                    config.toggleDelayedLooting(),
+                    config.toggleOnlyLootMyItems(),
+                    "grimy "
+            );
+            if (Rs2GroundItem.lootItemsBasedOnNames(herbsParams)) {
+                Microbot.pauseAllScripts = false;
+            }
+        }
+    }
+
     // loot coins
     private void lootCoins(AIOFighterConfig config) {
         if (config.toggleLootCoins()) {
