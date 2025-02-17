@@ -282,11 +282,12 @@ public class FornBirdhouseRunsScript extends Script {
         TileObject birdhouse = Rs2GameObject.findObjectById(itemId);
         Rs2GameObject.interact(itemId, "reset");
         Rs2Inventory.interact(selectedSeed,"use");
-        Rs2GameObject.hoverOverObject(birdhouse);
-        while (!Rs2Inventory.hasItem(ItemID.CLOCKWORK)){
+
+        while (!Rs2Inventory.hasItem(birdhouseType)){
             sleep(100);
         }
-        while (Rs2Inventory.hasItem(ItemID.CLOCKWORK)){
+//        Rs2GameObject.hoverOverObject(birdhouse);
+        while (Rs2Inventory.hasItem(birdhouseType)){
             sleep(100);
         }
 //        while (Rs2Player.isAnimating()){
