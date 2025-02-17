@@ -342,6 +342,18 @@ public interface AIOFighterConfig extends Config {
         return false;
     }
 
+    // toggle loot runes
+    @ConfigItem(
+            keyName = "Loot Herbs",
+            name = "Loot herbs",
+            description = "Enable/disable loot herbs",
+            position = 30,
+            section = lootSection
+    )
+    default boolean toggleLootHerbs() {
+        return false;
+    }
+
     // toggle loot coins
     @ConfigItem(
             keyName = "Loot coins",
