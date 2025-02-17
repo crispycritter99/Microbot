@@ -386,15 +386,22 @@ int plantnumber;
 
             }
 //            Microbot.log(""+plant.getIndex());
-//            plantnumber=plant.getIndex();
-//            nextIndex = (plantnumber + 1) % plants.size();
-//            TitheFarmPlant nextPlant = null;
-//            nextPlant=plants.get(plantnumber+1);
+            plantnumber=plant.getIndex();
+            nextIndex = (plantnumber + 1) % plants.size();
+            TitheFarmPlant nextPlant = null;
+            nextPlant=plants.get(plantnumber+1);
+
+            TileObject gameObjectNext = Rs2GameObject.findObjectByLocation(WorldPoint.fromRegion(Microbot.getClient().getLocalPlayer().getWorldLocation().getRegionID(),
+                    nextPlant.regionX,
+                    nextPlant.regionY,
+                    Microbot.getClient().getPlane()));
 
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterWateringSeed());
 //            Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));
             if (Rs2Player.isAnimating()) {
-                if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == true){Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");}
+                if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == true){Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");Rs2GameObject.hoverOverObject(gameObjectNext);}
+                else if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == false){Rs2GameObject.hoverOverObject(gameObjectNext);}
+                else if (!skipnumbers.contains(plant.getIndex()+1)){Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));}
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isValidToWater()));
 //                Microbot.log(""+plant.isValidToWater());
             }
