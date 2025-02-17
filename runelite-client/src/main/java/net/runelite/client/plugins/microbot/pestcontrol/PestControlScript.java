@@ -91,6 +91,7 @@ public class PestControlScript extends Script {
                     Widget activity = Rs2Widget.getWidget(26738700); //145 = 100%
                     if (activity != null && activity.getChild(0).getWidth() <= 20 && !Rs2Combat.inCombat()) {
                         Optional<Rs2NpcModel> attackableNpc = Rs2Npc.getAttackableNpcs().findFirst();
+//                        Microbot.log(attackableNpc.toString()+"");
                         attackableNpc.ifPresent(rs2NpcModel -> Rs2Npc.interact(rs2NpcModel.getId(),"attack"));
                         return;
                     }
@@ -125,13 +126,14 @@ public class PestControlScript extends Script {
                     }
                     Rs2NpcModel portal = Arrays.stream(Rs2Npc.getPestControlPortals()).findFirst().orElse(null);
                     if (portal != null) {
-                        if (Rs2Npc.attack(portal.getId())) {
+                        if (Rs2Npc.interact(portal.getId(),"attack")) {
                             sleepUntil(() -> !Microbot.getClient().getLocalPlayer().isInteracting());
                         }
                     } else {
                         if (!Microbot.getClient().getLocalPlayer().isInteracting()) {
                             Optional<Rs2NpcModel> attackableNpc = Rs2Npc.getAttackableNpcs().findFirst();
-                            attackableNpc.ifPresent(rs2NpcModel -> Rs2Npc.attack(rs2NpcModel.getId()));
+//                            Microbot.log(attackableNpc.toString()+"");
+                            attackableNpc.ifPresent(rs2NpcModel -> Rs2Npc.interact(rs2NpcModel.getId(),"attack"));
                         }
                     }
 
@@ -246,7 +248,7 @@ public class PestControlScript extends Script {
         for (Portal portal : portals) {
             if (!portal.isHasShield() && !portal.getHitPoints().getText().trim().equals("0") && closestAttackablePortal == portal) {
                 if (!Rs2Walker.isCloseToRegion(distanceToPortal, portal.getRegionX(), portal.getRegionY())) {
-                    Rs2Walker.walkTo(WorldPoint.fromRegion(Rs2Player.getWorldLocation().getRegionID(), portal.getRegionX(), portal.getRegionY(), Microbot.getClient().getPlane()), 5);
+                    Rs2Walker.walkTo(WorldPoint.fromRegion(Rs2Player.getWorldLocation().getRegionID(), portal.getRegionX(), portal.getRegionY(), Microbot.getClient().getPlane()), 10);
                     attackPortal();
                 } else {
                     attackPortal();
@@ -259,7 +261,7 @@ public class PestControlScript extends Script {
 
     private boolean attackSpinner() {
         for (int spinner : SPINNER_IDS) {
-            Rs2NpcModel npcSpinner = Rs2Npc.getNpc("portal");
+            Rs2NpcModel npcSpinner = Rs2Npc.getNpc(spinner);
             if (npcSpinner != null) {
 //                                Microbot.log(""+(npcSpinner == null));
 //                Microbot.log(""+!Rs2Npc.hasLineOfSight(npcSpinner));
