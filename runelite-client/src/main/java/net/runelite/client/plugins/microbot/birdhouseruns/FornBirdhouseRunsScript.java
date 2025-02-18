@@ -116,7 +116,7 @@ public class FornBirdhouseRunsScript extends Script {
                         seedHouse(birdhouseLocation3, states.DISMANTLE_HOUSE_4);
                         break;
                     case DISMANTLE_HOUSE_4:
-                        Rs2Walker.walkTo(new WorldPoint(3680, 3813, 0));
+                        Rs2Walker.walkTo(new WorldPoint(3680, 3813, 0),10);
 //                        dismantleBirdhouse(30566, states.BUILD_HOUSE_4);
                         dismantleBirdhouse(30566, states.SEED_HOUSE_4);
                         break;
