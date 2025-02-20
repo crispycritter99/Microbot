@@ -89,7 +89,7 @@ public class TemporossScript extends Script {
                         determineWorkArea();
                         sleep(300, 600);
                     } else {
-
+                        sleep(300, 600);
                         handleMinigame();
                         handleStateLoop();
                         handleFires();
@@ -193,10 +193,10 @@ public class TemporossScript extends Script {
 
     private void handleMinigame() {
 
-
+Microbot.log("1");
         if (getPhase() >= 2)
             return;
-
+        Microbot.log("2");
         harpoonType = temporossConfig.harpoonType();
 
         if (!hasHarpoon()) {
@@ -214,7 +214,7 @@ public class TemporossScript extends Script {
             }
             return;
         }
-
+        Microbot.log("3");
         // Get bucket counts (empty and full)
         int bucketCount = Rs2Inventory.count(item -> item.getId() == ItemID.BUCKET || item.getId() == ItemID.BUCKET_OF_WATER);
         if ((bucketCount < temporossConfig.buckets() && state == State.INITIAL_CATCH) || bucketCount == 0) {
@@ -228,7 +228,7 @@ public class TemporossScript extends Script {
             }
             return;
         }
-
+        Microbot.log("4");
         int fullBucketCount = Rs2Inventory.count(ItemID.BUCKET_OF_WATER);
         if (fullBucketCount <= 0) {
             if (Rs2Player.isMoving() || Rs2Player.isInteracting())
@@ -244,14 +244,14 @@ public class TemporossScript extends Script {
         if (temporossConfig.rope() && !temporossConfig.spiritAnglers() && !Rs2Inventory.contains(ItemID.ROPE)) {
             if (Rs2Player.isMoving() || Rs2Player.isInteracting())
                 return;
-
+            Microbot.log("5");
             if (Rs2GameObject.interact(workArea.getRopeCrate(), "Take")) {
                 log("Taking rope");
                 sleepUntil(() -> Rs2Inventory.waitForInventoryChanges(10000));
             }
             return;
         }
-
+        Microbot.log("6");
         if (temporossConfig.hammer() && !Rs2Inventory.contains(ItemID.HAMMER)) {
             if (Rs2Player.isMoving() || Rs2Player.isInteracting())
                 return;

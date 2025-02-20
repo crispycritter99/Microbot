@@ -27,6 +27,8 @@ public class LootScript extends Script {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
+                if (!config.toggleLootItems()) return;
+
                 minFreeSlots = config.bank() ? config.minFreeSlots() : 0;
                 if (!super.run()) return;
                 if (!Microbot.isLoggedIn()) return;
@@ -36,7 +38,7 @@ public class LootScript extends Script {
 
 
 
-                if (!config.toggleLootItems()) return;
+
                 if (config.looterStyle().equals(DefaultLooterStyle.MIXED) || config.looterStyle().equals(DefaultLooterStyle.ITEM_LIST)) {
                     lootItemsOnName(config);
                 }

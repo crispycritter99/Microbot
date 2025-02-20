@@ -1,6 +1,7 @@
 package net.runelite.client.plugins.microbot.prayer;
 
 import net.runelite.api.ObjectID;
+import net.runelite.api.Skill;
 import net.runelite.api.TileObject;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
@@ -8,7 +9,9 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
@@ -26,7 +29,7 @@ public class GildedAltarScript extends Script {
     private Widget toggleArrow;
     public Widget targetWidget;
     public String houseOwner;
-
+//    public int skillExp = Microbot.getClient().getSkillExperience(Skill.PRAYER);
     public WorldPoint portalCoords;
     public WorldPoint altarCoords;
     public Boolean usePortal;
@@ -110,9 +113,9 @@ public class GildedAltarScript extends Script {
 
     public void leaveHouse() {
         System.out.println("Attempting to leave house...");
-
         // We should only rely on using the settings menu if the portal is several rooms away from the portal. Bringing up 3 different interfaces when we can see the portal on screen is unnecessary.
-        if(usePortal) {
+//        Microbot.log(Rs2Player.distanceTo(portalCoords)+"");
+        if(Rs2Player.distanceTo(portalCoords)<20) {
             TileObject portalObject = Rs2GameObject.findObjectById(HOUSE_PORTAL_OBJECT);
             if (portalObject == null) {
                 System.out.println("Not in house, HOUSE_PORTAL_OBJECT not found.");
@@ -123,6 +126,7 @@ public class GildedAltarScript extends Script {
             return;
         }
 
+        if(Rs2GameObject.interact("Portal",true)){Rs2Player.waitForWalking();return;}
         // Switch to Settings tab
         Rs2Tab.switchToSettingsTab();
         sleep(1200);
@@ -247,9 +251,46 @@ public class GildedAltarScript extends Script {
         if (altar == null) {
             altar = Rs2GameObject.findObjectById(ObjectID.ALTAR_13197);
         }
+        Rs2ItemModel item = Rs2Inventory.items().get(27);
+//        Rs2Inventory.useUnNotedItemOnObject("bones", altar);
+//        Rs2Player.waitForAnimation();
+//        sleep(Rs2Random.randomGaussian(100,3));
+        Rs2Inventory.interact(item,"use");
+        Rs2GameObject.interact(altar);
+        Rs2Inventory.interact(item,"use");
+//        Rs2Inventory.slotInteract(27,"use");
+        Rs2Player.waitForXpDrop(Skill.PRAYER, 6010);
+        Microbot.log(""+Rs2Inventory.contains(536));
+                                while (Rs2Inventory.contains(536)) {
+//                                    Microbot.log(""+Rs2Inventory.contains(536));
+//                                    Microbot.log("0");
+//                                    Rs2Inventory.useUnNotedItemOnObject("bones", altar);
+//                            for(int i = 0; i < 26; ++i){
+//                                    int numberRawBefore=Rs2Inventory.count(cookingItem.getRawItemName());
+//                                    Rs2Inventory.slotInteract(27,"use");
+//                                    Rs2GameObject.interact(altar,"use");
 
-        Rs2Inventory.useUnNotedItemOnObject("bones", altar);
-        Rs2Player.waitForAnimation();
+//                                    Microbot.log("1");
+                                    int skillExp = Microbot.getClient().getSkillExperience(Skill.PRAYER);
+                                    Rs2GameObject.interact(altar);
+//                                    Microbot.log("2");
+//                                    Rs2Inventory.useUnNotedItemOnObject("bones", altar);
+//                                    sleep(Rs2Random.randomGaussian(100,3));
+//                                    Rs2Inventory.slotInteract(27, "use");
+                                    if (Rs2Inventory.count(536)>1) {
+                                        Rs2Inventory.interact(item, "use");
+                                        Rs2GameObject.hoverOverObject(altar);
+                                    }
+                                    while(Microbot.getClient().getSkillExperience(Skill.PRAYER)==skillExp){sleep(50);}
+//                                    Rs2Player.waitForXpDrop(Skill.PRAYER, 601);
+//                                    Microbot.log("3");
+                                    sleep(Rs2Random.randomGaussian(50,2));
+//                                    Microbot.log("4");
+//                                    sleep(Rs2Random.randomGaussian(100,3));
+
+
+                        }
+
 
         // Use bones on the altar if it's valid
         if(altarCoords == null){

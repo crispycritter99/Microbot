@@ -1,4 +1,6 @@
-package net.runelite.client.plugins.microbot.SulphurNagua;
+package net.runelite.client.plugins.microbot.salamander;
+
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -7,9 +9,10 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 import javax.inject.Inject;
 import java.awt.*;
 
-public class SulphurNaguaOverlay extends OverlayPanel {
+public class SalamanderOverlay extends OverlayPanel {
+
     @Inject
-    SulphurNaguaOverlay(SulphurNaguaPlugin plugin)
+    SalamanderOverlay(SalamanderPlugin plugin)
     {
         super(plugin);
         setPosition(OverlayPosition.TOP_LEFT);
@@ -20,14 +23,14 @@ public class SulphurNaguaOverlay extends OverlayPanel {
         try {
             panelComponent.setPreferredSize(new Dimension(200, 300));
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("Neon Moon V1.0.0")
+                    .text("Micro Auto Hunter " + SalamanderScript.version)
                     .color(Color.GREEN)
                     .build());
 
             panelComponent.getChildren().add(LineComponent.builder().build());
 
             panelComponent.getChildren().add(LineComponent.builder()
-                    .left(SulphurNaguaScript.state.toString())
+                    .left(Microbot.status)
                     .build());
 
 
