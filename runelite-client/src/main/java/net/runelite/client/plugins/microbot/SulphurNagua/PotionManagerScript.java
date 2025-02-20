@@ -16,39 +16,9 @@ public class PotionManagerScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
 
-                if (config.useAntiPoison()) {
-                    if(Rs2Player.drinkAntiPoisonPotion())
-                        Rs2Player.waitForAnimation();
-                }
-                if (config.useAntifirePotion())
-                {
-                    if (Rs2Player.drinkAntiFirePotion())
-                        Rs2Player.waitForAnimation();
-                }
-                if (config.togglePrayerPotions()) {
-                    Rs2Player.drinkPrayerPotionAt(Rs2Random.nextInt(10,20,1,true));
-                }
-                if (config.toggleRangingPotion()) {
-                    if(Rs2Player.drinkCombatPotionAt(Skill.RANGED, false))
-                        Rs2Player.waitForAnimation();
-                }
-                if (config.toggleMagicPotion()) {
-                    if (Rs2Player.drinkCombatPotionAt(Skill.MAGIC, false))
-                        Rs2Player.waitForAnimation();
-                }
-                if (config.toggleCombatPotion()) {
-                    if(Rs2Player.drinkCombatPotionAt(Skill.STRENGTH))
-                        Rs2Player.waitForAnimation();
-                    if (Rs2Player.drinkCombatPotionAt(Skill.ATTACK))
-                        Rs2Player.waitForAnimation();
-                    if (Rs2Player.drinkCombatPotionAt(Skill.DEFENCE))
-                        Rs2Player.waitForAnimation();
-                }
 
-                if (config.useGoadingPotion()) {
-                    if (Rs2Player.drinkGoadingPotion())
-                        Rs2Player.waitForAnimation();
-                }
+
+
 
             } catch(Exception ex) {
                 System.out.println(ex.getMessage());
