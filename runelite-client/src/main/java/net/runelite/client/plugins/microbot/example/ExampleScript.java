@@ -34,9 +34,9 @@ public class ExampleScript extends Script {
                         Rs2Inventory.contains(item -> item.getName().contains("platelegs")) &&
                         Rs2Inventory.contains(item -> item.getName().contains("full helm"));
                 if(hasArmorPieces) {
-
+                    animateArmor();
                 } else {
-
+                    loot();
                 }
 
                 long endTime = System.currentTimeMillis();
@@ -50,6 +50,31 @@ public class ExampleScript extends Script {
         return true;
     }
 
+    public void animateArmor() {
+        WorldPoint armorStandLocation = new WorldPoint(2851,3536,0);
+        GameObject armorStand = Rs2GameObject.getGameObject(armorStandLocation);
+        if(armorStand != null) {
+            Rs2GameObject.interact(armorStand);
+            Rs2Player.waitForAnimation();
+        }
+
+    }
+
+
+    public void loot(){
+        LootingParameters valueParams = new LootingParameters(
+                5,
+                1,
+                1,
+                1,
+                false,
+                true,
+                "platebody,platelegs,full helm,Warrior guild token".split(",")
+        );
+        if (Rs2GroundItem.lootItemsBasedOnNames(valueParams)) {
+            Microbot.pauseAllScripts = false;
+        }
+    }
 
     @Override
     public void shutdown() {
