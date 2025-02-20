@@ -268,6 +268,8 @@ public class MixologyScript extends Script {
                                 }
                                 agitatorQuickActionTicks = 0;
                             } else if (alembicQuickActionTicks > 0  && config.useQuickActionOnAlembic()) {
+                                Microbot.log("diddy");
+//                                Rs2GameObject.hoverOverObject(Rs2GameObject.findObjectById(AlchemyObject.ALEMBIC.objectId()));
                                 quickActionProcessPotion(nonFulfilledPotion);
                                 alembicQuickActionTicks = 0;
                             }
@@ -349,6 +351,8 @@ public class MixologyScript extends Script {
                 } else {
                     Rs2Inventory.useItemOnObject(nonFulfilledPotion.potionType().itemId(), AlchemyObject.AGITATOR.objectId());
                 }
+
+
                 break;
             case CONCENTRATED:
                 GameObject retort = (GameObject) Rs2GameObject.findObjectById(AlchemyObject.RETORT.objectId());
@@ -365,6 +369,8 @@ public class MixologyScript extends Script {
                 } else {
                     Rs2Inventory.useItemOnObject(nonFulfilledPotion.potionType().itemId(), AlchemyObject.ALEMBIC.objectId());
                 }
+
+
                 break;
         }
     }
