@@ -5,6 +5,8 @@ import net.runelite.api.NPC;
 import net.runelite.api.ObjectID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -50,6 +52,7 @@ public class DriftNetScript extends Script {
                 if (!super.run()) {
                     return;
                 }
+                long startTime = System.currentTimeMillis();
 
                 // 2) Stop script if too many attempts were made to fetch nets
                 if (netFetchAttempts > MAX_FETCH_ATTEMPTS) {
@@ -57,7 +60,10 @@ public class DriftNetScript extends Script {
                     shutdown();
                     return;
                 }
-
+                if (Rs2Equipment.isWearing("dragon harpoon"))
+                {
+                    Rs2Combat.setSpecState(true, 1000);
+                }
                 // 3) Ensure we have drift nets in inventory; if not, try to fetch
                 if (!Rs2Inventory.hasItem(ItemID.DRIFT_NET)) {
                     Microbot.log("No nets in inventory");
@@ -81,12 +87,14 @@ public class DriftNetScript extends Script {
 
                 // 5) If no nets require attention, chase fish
                 chaseNearbyFish(DriftNetPlugin.getFish());
-
+                long endTime = System.currentTimeMillis();
+                long totalTime = endTime - startTime;
+                System.out.println("Total time for loop " + totalTime);
             } catch (Exception ex) {
                 // You might want more robust logging here
                 System.out.println(ex.getMessage());
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
 
         return true;
     }
@@ -147,12 +155,13 @@ public class DriftNetScript extends Script {
 
                 boolean initialWidgetLoaded = sleepUntil(
                         () -> Rs2Widget.getWidget(39780359) != null,
-                        10000
+                        2000
                 );
+                if (Rs2Widget.getWidget(39780359) != null) {
                     Rs2Widget.clickWidget(39780359);
                     sleepUntil(() -> Rs2Widget.isWidgetVisible(39780365));
                     Rs2Widget.clickWidget(39780365);
-
+                }
 
             }
     }
@@ -192,7 +201,10 @@ public class DriftNetScript extends Script {
 
             // Interact with the fish to "Chase" it
             Rs2Npc.interact(npc, "Chase");
-            sleepGaussian(1500, 300);
+//            Microbot.log("1");
+            sleepUntil(() -> DriftNetPlugin.getTaggedFish().containsKey(fishIndex));
+//            Microbot.log("2");
+            sleepGaussian(200, 30);
             break;
         }
     }
