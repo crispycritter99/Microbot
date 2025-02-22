@@ -1,20 +1,19 @@
-package net.runelite.client.plugins.microbot.SulphurNagua;
+package net.runelite.client.plugins.microbot.SulphurNagua.combat;
 
 import net.runelite.api.Actor;
 import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.aiofighter.AIOFighterConfig;
-import net.runelite.client.plugins.microbot.aiofighter.AIOFighterPlugin;
-import net.runelite.client.plugins.microbot.aiofighter.enums.AttackStyle;
-import net.runelite.client.plugins.microbot.aiofighter.enums.AttackStyleMapper;
-import net.runelite.client.plugins.microbot.aiofighter.enums.State;
+import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
+import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyle;
+import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyleMapper;
+import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
 import net.runelite.client.plugins.microbot.util.ActorModel;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcManager;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
@@ -48,10 +47,11 @@ public class AttackNpcScript extends Script {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (!Microbot.isLoggedIn() || !super.run() )
+                if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
                     return;
 
-                Rs2Player.drinkPrayerPotionAt(Rs2Random.nextInt(10,20,1,true));
+                if(config.state().equals(State.BANKING))
+                    return;
 
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())
@@ -78,8 +78,8 @@ public class AttackNpcScript extends Script {
                                 .thenComparingInt(npc -> Rs2Player.getRs2WorldPoint().distanceToPath(npc.getWorldLocation())))
                         .collect(Collectors.toList());
 
-                if (AIOFighterPlugin.getCooldown() > 0 || Rs2Combat.inCombat()) {
-                    AIOFighterPlugin.setState(State.COMBAT);
+                if (SulphurNaguaPlugin.getCooldown() > 0 || Rs2Combat.inCombat()) {
+                    SulphurNaguaPlugin.setState(State.COMBAT);
                     handleItemOnNpcToKill();
                     return;
                 }
@@ -92,7 +92,7 @@ public class AttackNpcScript extends Script {
 
                     Rs2Npc.interact(npc, "attack");
                     Microbot.status = "Attacking " + npc.getName();
-                    AIOFighterPlugin.setCooldown(config.playStyle().getRandomTickInterval());
+                    SulphurNaguaPlugin.setCooldown(config.playStyle().getRandomTickInterval());
                     sleepUntil(Rs2Player::isInteracting, 1000);
 //                    sleepUntil(() -> Microbot.getClient().getLocalPlayer().isInteracting()
 //                            && Microbot.getClient().getLocalPlayer().getInteracting() instanceof NPC);
