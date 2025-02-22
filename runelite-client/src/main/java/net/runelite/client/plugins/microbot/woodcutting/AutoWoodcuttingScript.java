@@ -12,6 +12,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
@@ -102,6 +103,14 @@ public class AutoWoodcuttingScript extends Script {
 
                         if (tree != null) {
                             if (Rs2GameObject.interact(tree, config.TREE().getAction())) {
+//                                int skillExp = Microbot.getClient().getSkillExperience(Skill.WOODCUTTING);
+
+//                                Rs2Inventory.use("teak logs");
+//                                Rs2ItemModel knife = Rs2Inventory.get("knife");
+//                                Rs2Inventory.hover(knife);
+//                                sleepUntil(() -> Microbot.getClient().getSkillExperience(Skill.WOODCUTTING) != skillExp, 1800);
+//                                Rs2Inventory.use(knife);
+//                                Rs2Inventory.drop("blisterwood",false);
                                 Rs2Player.waitForAnimation();
                                 Rs2Antiban.actionCooldown();
 

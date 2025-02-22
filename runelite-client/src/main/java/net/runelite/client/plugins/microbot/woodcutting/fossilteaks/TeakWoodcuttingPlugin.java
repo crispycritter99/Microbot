@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Mocrosoft + "Auto Woodcutting",
+        name = PluginDescriptor.Mocrosoft + "3tick teaks",
         description = "Microbot woodcutting plugin",
         tags = {"Woodcutting", "microbot", "skilling"},
         enabledByDefault = false

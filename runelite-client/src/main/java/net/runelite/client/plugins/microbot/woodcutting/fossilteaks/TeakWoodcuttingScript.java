@@ -12,6 +12,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
@@ -54,6 +55,7 @@ public class TeakWoodcuttingScript extends Script {
         Rs2Antiban.antibanSetupTemplates.applyWoodcuttingSetup();
         Rs2AntibanSettings.dynamicActivity = true;
         Rs2AntibanSettings.dynamicIntensity = true;
+
         initialPlayerLocation = null;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -76,11 +78,11 @@ public class TeakWoodcuttingScript extends Script {
                     return;
                 }
 
-                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts)
-                    return;
+//                if (Rs2Player.isMoving() || Rs2Player.isAnimating() || Microbot.pauseAllScripts)
+//                    return;
 
-                if (Rs2AntibanSettings.actionCooldownActive)
-                    return;
+//                if (Rs2AntibanSettings.actionCooldownActive)
+//                    return;
 
                 switch (state) {
                     case WOODCUTTING:
@@ -97,15 +99,25 @@ public class TeakWoodcuttingScript extends Script {
                             return;
                         }
 
-                        GameObject tree = Rs2GameObject.findReachableObject(config.TREE().getName(), true, config.distanceToStray(), getInitialPlayerLocation(), config.TREE().equals(WoodcuttingTree.REDWOOD),config.TREE().getAction());
+//                        GameObject tree = Rs2GameObject.findReachableObject(config.TREE().getName(), true, config.distanceToStray(), getInitialPlayerLocation(), config.TREE().equals(WoodcuttingTree.REDWOOD),config.TREE().getAction());
 
-                        if (tree != null) {
-                            if (Rs2GameObject.interact(tree, config.TREE().getAction())) {
+//                        if (tree != null) {
+                            int skillExp = Microbot.getClient().getSkillExperience(Skill.WOODCUTTING);
+
+//                            if (Rs2GameObject.interact(tree, config.TREE().getAction())) {
+                        if (Rs2GameObject.interact(40758) ){
+                                Rs2Inventory.use("teak logs");
+
+                                Rs2ItemModel knife = Rs2Inventory.get("knife");
+                                Rs2Inventory.hover(knife);
+                                sleepUntil(() -> Microbot.getClient().getSkillExperience(Skill.WOODCUTTING) != skillExp, 3000);
+                                Rs2Inventory.use(knife);
+                                Rs2Inventory.drop("blisterwood",false);
                                 if (config.walkBack().equals(WoodcuttingWalkBack.LAST_LOCATION)) {
                                     returnPoint = Rs2Player.getWorldLocation();
                                 }
                             }
-                        }
+//                        }
                         break;
                     case RESETTING:
                         resetInventory(config);
@@ -114,7 +126,7 @@ public class TeakWoodcuttingScript extends Script {
             } catch (Exception ex) {
                 Microbot.log(ex.getMessage());
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
 
