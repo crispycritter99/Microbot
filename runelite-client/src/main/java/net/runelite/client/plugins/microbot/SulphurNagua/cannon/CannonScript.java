@@ -1,29 +1,25 @@
-package net.runelite.client.plugins.microbot.SulphurNagua;
+package net.runelite.client.plugins.microbot.SulphurNagua.cannon;
 
-import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.aiofighter.AIOFighterConfig;
-import net.runelite.client.plugins.microbot.util.math.Rs2Random;
-import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2Cannon;
 
 import java.util.concurrent.TimeUnit;
 
-public class PotionManagerScript extends Script {
+public class CannonScript extends Script {
     public boolean run(AIOFighterConfig config) {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn()) return;
-                if (!super.run()) return;
-
-
-
-
-
+                if (!super.run() || !config.toggleCannon()) return;
+               if (Rs2Cannon.repair())
+                   return;
+               Rs2Cannon.refill();
             } catch(Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 2000, TimeUnit.MILLISECONDS);
         return true;
     }
 }
