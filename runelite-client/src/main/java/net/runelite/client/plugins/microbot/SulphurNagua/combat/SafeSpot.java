@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.SulphurNagua.combat;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -21,7 +21,7 @@ public class SafeSpot extends Script {
     public WorldPoint currentSafeSpot = null;
     private boolean messageShown = false;
 
-public boolean run(AIOFighterConfig config) {
+public boolean run(SulphurNaguaConfig config) {
     AtomicReference<List<String>> npcsToAttack = new AtomicReference<>(Arrays.stream(Arrays.stream(config.attackableNpcs().split(",")).map(String::trim).toArray(String[]::new)).collect(Collectors.toList()));
     mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
         try {

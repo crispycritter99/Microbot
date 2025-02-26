@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.SulphurNagua.loot;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.DefaultLooterStyle;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
@@ -23,7 +23,7 @@ public class LootScript extends Script {
     }
 
 
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -62,7 +62,7 @@ public class LootScript extends Script {
         return true;
     }
 
-    private void lootArrows(AIOFighterConfig config) {
+    private void lootArrows(SulphurNaguaConfig config) {
         if (config.toggleLootArrows()) {
             LootingParameters arrowParams = new LootingParameters(
                     config.attackRadius(),
@@ -79,7 +79,7 @@ public class LootScript extends Script {
         }
     }
 
-    private void lootBones(AIOFighterConfig config) {
+    private void lootBones(SulphurNaguaConfig config) {
         if (config.toggleBuryBones()) {
             LootingParameters bonesParams = new LootingParameters(
                     config.attackRadius(),
@@ -96,7 +96,7 @@ public class LootScript extends Script {
         }
     }
 
-    private void lootAshes(AIOFighterConfig config) {
+    private void lootAshes(SulphurNaguaConfig config) {
         if (config.toggleScatter()) {
             LootingParameters ashesParams = new LootingParameters(
                     config.attackRadius(),
@@ -114,7 +114,7 @@ public class LootScript extends Script {
     }
 
     // loot runes
-    private void lootRunes(AIOFighterConfig config) {
+    private void lootRunes(SulphurNaguaConfig config) {
         if (config.toggleLootRunes()) {
             LootingParameters runesParams = new LootingParameters(
                     config.attackRadius(),
@@ -132,7 +132,7 @@ public class LootScript extends Script {
     }
 
     // loot runes
-    private void lootHerbs(AIOFighterConfig config) {
+    private void lootHerbs(SulphurNaguaConfig config) {
         if (config.toggleLootRunes()) {
             LootingParameters herbsParams = new LootingParameters(
                     config.attackRadius(),
@@ -150,7 +150,7 @@ public class LootScript extends Script {
     }
 
     // loot coins
-    private void lootCoins(AIOFighterConfig config) {
+    private void lootCoins(SulphurNaguaConfig config) {
         if (config.toggleLootCoins()) {
             LootingParameters coinsParams = new LootingParameters(
                     config.attackRadius(),
@@ -168,7 +168,7 @@ public class LootScript extends Script {
     }
 
     // loot untreadable items
-    private void lootUntradeableItems(AIOFighterConfig config) {
+    private void lootUntradeableItems(SulphurNaguaConfig config) {
         if (config.toggleLootUntradables()) {
             LootingParameters untradeableItemsParams = new LootingParameters(
                     config.attackRadius(),
@@ -185,7 +185,7 @@ public class LootScript extends Script {
         }
     }
 
-    private void lootItemsByValue(AIOFighterConfig config) {
+    private void lootItemsByValue(SulphurNaguaConfig config) {
         LootingParameters valueParams = new LootingParameters(
                 config.minPriceOfItemsToLoot(),
                 config.maxPriceOfItemsToLoot(),
@@ -200,7 +200,7 @@ public class LootScript extends Script {
         }
     }
 
-    private void lootItemsOnName(AIOFighterConfig config) {
+    private void lootItemsOnName(SulphurNaguaConfig config) {
         LootingParameters valueParams = new LootingParameters(
                 config.attackRadius(),
                 1,

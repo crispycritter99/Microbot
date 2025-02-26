@@ -11,10 +11,10 @@ import javax.inject.Inject;
 import java.awt.*;
 
 public class SulphurNaguaInfoOverlay extends OverlayPanel {
-    private final AIOFighterConfig config;
+    private final SulphurNaguaConfig config;
 
     @Inject
-    SulphurNaguaInfoOverlay(SulphurNaguaPlugin plugin, AIOFighterConfig config) {
+    SulphurNaguaInfoOverlay(SulphurNaguaPlugin plugin, SulphurNaguaConfig config) {
         super(plugin);
         this.config = config;
         setPosition(OverlayPosition.TOP_LEFT);

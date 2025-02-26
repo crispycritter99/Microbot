@@ -3,13 +3,13 @@ package net.runelite.client.plugins.microbot.SulphurNagua.combat;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 
 import java.util.concurrent.TimeUnit;
 
 public class PotionManagerScript extends Script {
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn()) return;

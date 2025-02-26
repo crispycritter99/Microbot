@@ -28,10 +28,10 @@ public class SulphurNaguaOverlay extends OverlayPanel {
     private final int diameter = 100;
     private final Color borderColor = Color.WHITE;
     private final Stroke stroke = new BasicStroke(1);
-    AIOFighterConfig config;
+    SulphurNaguaConfig config;
 
     @Inject
-    private SulphurNaguaOverlay(ModelOutlineRenderer modelOutlineRenderer, AIOFighterConfig config) {
+    private SulphurNaguaOverlay(ModelOutlineRenderer modelOutlineRenderer, SulphurNaguaConfig config) {
         this.modelOutlineRenderer = modelOutlineRenderer;
         setPosition(OverlayPosition.DYNAMIC);
         setLayer(OverlayLayer.ABOVE_SCENE);

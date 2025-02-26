@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.SulphurNagua.combat;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.PrayerStyle;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PrayerScript extends Script {
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
         try {
             Rs2NpcManager.loadJson();
         } catch (Exception e) {
@@ -32,7 +32,7 @@ public class PrayerScript extends Script {
         return true;
     }
 
-    private void handlePrayer(AIOFighterConfig config) {
+    private void handlePrayer(SulphurNaguaConfig config) {
         if (!Microbot.isLoggedIn() || !config.togglePrayer()) return;
         if (config.prayerStyle() != PrayerStyle.CONTINUOUS && config.prayerStyle() != PrayerStyle.ALWAYS_ON) return;
         if (config.prayerStyle() == PrayerStyle.CONTINUOUS) {

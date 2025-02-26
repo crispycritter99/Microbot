@@ -6,7 +6,7 @@ import net.runelite.api.*;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
@@ -54,14 +54,14 @@ public class AttackStyleScript extends Script {
     private int attackStyleChangeDelay = 0;
     long lastAttackStyleChangeTime = System.currentTimeMillis();
 
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
         attackStyleChangeDelay = config.attackStyleChangeDelay();
         lastAttackStyleChangeTime = System.currentTimeMillis();
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> scheduledTask(config), 0, 1, TimeUnit.SECONDS);
         return true;
     }
 
-    private void scheduledTask(AIOFighterConfig config) {
+    private void scheduledTask(SulphurNaguaConfig config) {
         // Early exit conditions
         if (!Microbot.isLoggedIn() || !super.run() || !config.toggleEnableSkilling() || disableIfMaxed(config.toggleDisableOnMaxCombat()))
             return;
@@ -154,7 +154,7 @@ public class AttackStyleScript extends Script {
         initializedLevels = true;
     }
 
-    private void changeAttackStyle(AIOFighterConfig config, WidgetInfo attackStyleWidgetInfo) {
+    private void changeAttackStyle(SulphurNaguaConfig config, WidgetInfo attackStyleWidgetInfo) {
         if (Rs2Tab.getCurrentTab() != InterfaceTab.COMBAT) {
             Rs2Tab.switchToCombatOptionsTab();
             sleepUntil(() -> Rs2Tab.getCurrentTab() == InterfaceTab.COMBAT, 2000);
@@ -231,7 +231,7 @@ public class AttackStyleScript extends Script {
         return getSkillLevel(skill) < levelRequired;
     }
 
-    private void selectSkills(AIOFighterConfig config) {
+    private void selectSkills(SulphurNaguaConfig config) {
         boolean balanceCombatSkills = config.toggleBalanceCombatSkills();
 
         boolean needAttack = needLevel(config.attackSkillTarget(), Skill.ATTACK);
@@ -302,7 +302,7 @@ public class AttackStyleScript extends Script {
         return attackStyle.getSkills().length > 1;
     }
 
-    private WidgetInfo getComponentToDisplay(AIOFighterConfig config) {
+    private WidgetInfo getComponentToDisplay(SulphurNaguaConfig config) {
         List<WidgetInfo> componentsToDisplay = new ArrayList<>();
         AttackStyle[] attackStyles = getWeaponTypeStyles(equippedWeaponTypeVarbit);
         Random random = new Random();

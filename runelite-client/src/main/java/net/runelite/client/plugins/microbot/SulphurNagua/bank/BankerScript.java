@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.constants.Constants;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
@@ -16,7 +16,6 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.*;
@@ -25,43 +24,43 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 enum ItemToKeep {
-    TELEPORT(Constants.TELEPORT_IDS, AIOFighterConfig::ignoreTeleport, AIOFighterConfig::staminaValue),
-    STAMINA(Constants.STAMINA_POTION_IDS, AIOFighterConfig::useStamina, AIOFighterConfig::staminaValue),
-    PRAYER(Constants.PRAYER_RESTORE_POTION_IDS, AIOFighterConfig::usePrayer, AIOFighterConfig::prayerValue),
-    FOOD(Rs2Food.getIds(), AIOFighterConfig::useFood, AIOFighterConfig::foodValue),
-    ANTIPOISON(Constants.ANTI_POISON_POTION_IDS, AIOFighterConfig::useAntipoison, AIOFighterConfig::antipoisonValue),
-    ANTIFIRE(Constants.ANTI_FIRE_POTION_IDS, AIOFighterConfig::useAntifire, AIOFighterConfig::antifireValue),
-    COMBAT(Constants.STRENGTH_POTION_IDS, AIOFighterConfig::useCombat, AIOFighterConfig::combatValue),
-    RESTORE(Constants.RESTORE_POTION_IDS, AIOFighterConfig::useRestore, AIOFighterConfig::restoreValue);
+    TELEPORT(Constants.TELEPORT_IDS, SulphurNaguaConfig::ignoreTeleport, SulphurNaguaConfig::staminaValue),
+    STAMINA(Constants.STAMINA_POTION_IDS, SulphurNaguaConfig::useStamina, SulphurNaguaConfig::staminaValue),
+    PRAYER(Constants.PRAYER_RESTORE_POTION_IDS, SulphurNaguaConfig::usePrayer, SulphurNaguaConfig::prayerValue),
+    FOOD(Rs2Food.getIds(), SulphurNaguaConfig::useFood, SulphurNaguaConfig::foodValue),
+    ANTIPOISON(Constants.ANTI_POISON_POTION_IDS, SulphurNaguaConfig::useAntipoison, SulphurNaguaConfig::antipoisonValue),
+    ANTIFIRE(Constants.ANTI_FIRE_POTION_IDS, SulphurNaguaConfig::useAntifire, SulphurNaguaConfig::antifireValue),
+    COMBAT(Constants.STRENGTH_POTION_IDS, SulphurNaguaConfig::useCombat, SulphurNaguaConfig::combatValue),
+    RESTORE(Constants.RESTORE_POTION_IDS, SulphurNaguaConfig::useRestore, SulphurNaguaConfig::restoreValue);
 
     @Getter
     private final List<Integer> ids;
-    private final Function<AIOFighterConfig, Boolean> useConfig;
-    private final Function<AIOFighterConfig, Integer> valueConfig;
+    private final Function<SulphurNaguaConfig, Boolean> useConfig;
+    private final Function<SulphurNaguaConfig, Integer> valueConfig;
 
-    ItemToKeep(Set<Integer> ids, Function<AIOFighterConfig, Boolean> useConfig, Function<AIOFighterConfig, Integer> valueConfig) {
+    ItemToKeep(Set<Integer> ids, Function<SulphurNaguaConfig, Boolean> useConfig, Function<SulphurNaguaConfig, Integer> valueConfig) {
         this.ids = new ArrayList<>(ids);
         this.useConfig = useConfig;
         this.valueConfig = valueConfig;
     }
 
-    public boolean isEnabled(AIOFighterConfig config) {
+    public boolean isEnabled(SulphurNaguaConfig config) {
         return useConfig.apply(config);
     }
 
-    public int getValue(AIOFighterConfig config) {
+    public int getValue(SulphurNaguaConfig config) {
         return valueConfig.apply(config);
     }
 }
 
 @Slf4j
 public class BankerScript extends Script {
-    AIOFighterConfig config;
+    SulphurNaguaConfig config;
 
 
     boolean initialized = false;
 
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
         this.config = config;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -91,7 +90,7 @@ public class BankerScript extends Script {
         return (!Rs2Inventory.contains(29083,29082,29081,29080));
     }
 
-    public boolean withdrawUpkeepItems(AIOFighterConfig config) {
+    public boolean withdrawUpkeepItems(SulphurNaguaConfig config) {
         if (config.useInventorySetup()) {
             Rs2InventorySetup inventorySetup = new Rs2InventorySetup(config.inventorySetup().getName(), mainScheduledFuture);
             if (!inventorySetup.doesEquipmentMatch()) {
@@ -132,7 +131,7 @@ public class BankerScript extends Script {
         return !isUpkeepItemDepleted(config);
     }
 
-    public boolean depositAllExcept(AIOFighterConfig config) {
+    public boolean depositAllExcept(SulphurNaguaConfig config) {
         List<Integer> ids = Arrays.stream(ItemToKeep.values())
                 .filter(item -> item.isEnabled(config))
                 .flatMap(item -> item.getIds().stream())
@@ -141,7 +140,7 @@ public class BankerScript extends Script {
         return Rs2Bank.isOpen();
     }
 
-    public boolean isUpkeepItemDepleted(AIOFighterConfig config) {
+    public boolean isUpkeepItemDepleted(SulphurNaguaConfig config) {
         return Arrays.stream(ItemToKeep.values())
                 .filter(item -> item != ItemToKeep.TELEPORT && item.isEnabled(config))
                 .anyMatch(item -> item.getIds().stream().mapToInt(Rs2Inventory::count).sum() == 0);

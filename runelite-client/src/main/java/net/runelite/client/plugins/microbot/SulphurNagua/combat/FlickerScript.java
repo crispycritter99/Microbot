@@ -5,7 +5,7 @@ import net.runelite.api.NPC;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyle;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyleMapper;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.PrayerStyle;
@@ -44,7 +44,7 @@ public class FlickerScript extends Script {
      * @param config The configuration for the player assist.
      * @return true if the script is successfully started, false otherwise.
      */
-    public boolean run(AIOFighterConfig config) {
+    public boolean run(SulphurNaguaConfig config) {
         try {
             Rs2NpcManager.loadJson();
         } catch (Exception e) {

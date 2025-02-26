@@ -78,7 +78,7 @@ public class SulphurNaguaPlugin extends Plugin {
     private final SafetyScript safetyScript = new SafetyScript();
     //private final SlayerScript slayerScript = new SlayerScript();
     @Inject
-    private AIOFighterConfig config;
+    private SulphurNaguaConfig config;
     @Inject
     private ConfigManager configManager;
     @Inject
@@ -92,8 +92,8 @@ public class SulphurNaguaPlugin extends Plugin {
     private WorldPoint trueTile;
 
     @Provides
-    AIOFighterConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(AIOFighterConfig.class);
+    SulphurNaguaConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(SulphurNaguaConfig.class);
     }
 
     @Override

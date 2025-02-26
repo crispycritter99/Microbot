@@ -5,7 +5,7 @@ import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.SulphurNagua.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyle;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.AttackStyleMapper;
@@ -38,7 +38,7 @@ public class AttackNpcScript extends Script {
         currentNpc = null;
     }
 
-    public void run(AIOFighterConfig config) {
+    public void run(SulphurNaguaConfig config) {
         try {
             Rs2NpcManager.loadJson();
         } catch (Exception e) {
