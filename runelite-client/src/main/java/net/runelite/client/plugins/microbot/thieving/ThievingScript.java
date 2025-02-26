@@ -8,7 +8,6 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.thieving.enums.ThievingNpc;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
-import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -22,7 +21,6 @@ import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -62,12 +60,12 @@ public class ThievingScript extends Script {
                 if (config.shadowVeil()) {
                     handleShadowVeil();
                 }
-                
+
                 // Randomize coinpouch threshold +-3 between 1 & 28
                 int threshold = config.coinPouchTreshHold();
                 threshold += (int) (Math.random() * 7 - 3);
                 threshold = Math.max(1, Math.min(28, threshold));
-                  
+
                 openCoinPouches(threshold);
                 wearDodgyNecklace();
                 pickpocket();
@@ -108,14 +106,17 @@ public class ThievingScript extends Script {
                 "Nellas", "Nerdanel", "Nimloth", "Oropher", "Orophin", "Saeros",
                 "Salgant", "Tatie", "Thingol", "Turgon", "Vaire", "Goreu"
         );
+
         var npc = Rs2Npc.getNpcs()
-                .filter(x -> names.stream()
-                        .anyMatch(n -> n.equalsIgnoreCase(x.getName())))
+                .map(Rs2NpcModel::new) // Convert to Rs2NpcModel
+                .filter(x -> names.stream().anyMatch(n -> n.equalsIgnoreCase(x.getNpc().getName())))
                 .findFirst()
                 .orElse(null);
-        Map<NPC, HighlightedNpc> highlightedNpcs =  net.runelite.client.plugins.npchighlight.NpcIndicatorsPlugin.getHighlightedNpcs();
+
+        Map<NPC, HighlightedNpc> highlightedNpcs = net.runelite.client.plugins.npchighlight.NpcIndicatorsPlugin.getHighlightedNpcs();
+
         if (highlightedNpcs.isEmpty()) {
-            if (Rs2Npc.pickpocket(npc)) {
+            if (npc != null && Rs2Npc.pickpocket(npc)) {
                 Rs2Walker.setTarget(null);
                 sleep(50, 250);
             }
@@ -125,6 +126,7 @@ public class ThievingScript extends Script {
             }
         }
     }
+
 
     private void openCoinPouches(int amt) {
         if (config.THIEVING_NPC() == ThievingNpc.WEALTHY_CITIZEN && Rs2Player.isAnimating(3000)) return;
@@ -145,14 +147,18 @@ public class ThievingScript extends Script {
         } else if (config.THIEVING_NPC() == ThievingNpc.ELVES) {
             handleElves();
         } else {
-            Map<NPC, HighlightedNpc> highlightedNpcs =  net.runelite.client.plugins.npchighlight.NpcIndicatorsPlugin.getHighlightedNpcs();
+            Map<NPC, HighlightedNpc> highlightedNpcs = net.runelite.client.plugins.npchighlight.NpcIndicatorsPlugin.getHighlightedNpcs();
+
             if (highlightedNpcs.isEmpty()) {
-                if (Rs2Npc.getNpc(config.THIEVING_NPC().getName()) == null) {
-                    Rs2Walker.walkTo(initialPlayerLocation);
-                }
-                else if (Rs2Npc.pickpocket(config.THIEVING_NPC().getName())) {
+                List<Rs2NpcModel> npcList = Rs2Npc.getNpcs(config.THIEVING_NPC().getName(), true)
+                        .map(Rs2NpcModel::new) // Convert to Rs2NpcModel
+                        .collect(Collectors.toList());
+
+                if (!npcList.isEmpty() && Rs2Npc.pickpocket(npcList.get(0))) {
                     Rs2Walker.setTarget(null);
                     sleep(50, 250);
+                } else if (npcList.isEmpty() && Rs2Npc.getNpc(config.THIEVING_NPC().getName()) == null) {
+                    Rs2Walker.walkTo(initialPlayerLocation);
                 }
             } else {
                 if (Rs2Npc.pickpocket(highlightedNpcs)) {
@@ -164,23 +170,28 @@ public class ThievingScript extends Script {
 
     private void handleWealthyCitizen() {
         List<Rs2NpcModel> wealthyCitizenInteracting = Rs2Npc.getNpcs("Wealthy citizen", true)
-                .filter(x -> x.isInteracting()
-                        && x.getInteracting() != null)
+                .map(Rs2NpcModel::new)
+                .filter(npc -> npc.getNpc().getInteracting() != null)
                 .collect(Collectors.toList());
-        Optional<Rs2NpcModel> wealthyCitizenToPickpocket = wealthyCitizenInteracting.stream().findFirst();
-        if (wealthyCitizenToPickpocket.isPresent()) {
-            Rs2NpcModel pickpocketnpc = wealthyCitizenToPickpocket.get();
-            if (!Rs2Player.isAnimating(3000) && Rs2Npc.pickpocket(pickpocketnpc)) {
-                Microbot.status = "Pickpocketting " + pickpocketnpc.getName();
-                sleep(300, 600);
+
+        Rs2NpcModel wealthyCitizenToPickpocket = wealthyCitizenInteracting.stream().findFirst().orElse(null);
+
+        if (wealthyCitizenToPickpocket != null) {
+            if (!Rs2Player.isAnimating(3000)) {
+                boolean interacted = Rs2Npc.interact(wealthyCitizenToPickpocket);
+                if (interacted) {
+                    Microbot.status = "Pickpocketing " + wealthyCitizenToPickpocket.getNpc().getName();
+                    sleep(300, 600);
+                }
             }
         }
     }
 
+
     private void handleShadowVeil() {
         if (!Rs2Magic.isShadowVeilActive() && Rs2Magic.isArceeus() &&
-            Rs2Player.getBoostedSkillLevel(Skill.MAGIC) >= MagicAction.SHADOW_VEIL.getLevel() &&
-            Microbot.getVarbitValue(Varbits.SHADOW_VEIL_COOLDOWN) == 0
+                Rs2Player.getBoostedSkillLevel(Skill.MAGIC) >= MagicAction.SHADOW_VEIL.getLevel() &&
+                Microbot.getVarbitValue(Varbits.SHADOW_VEIL_COOLDOWN) == 0
         ) {
             Rs2Magic.cast(MagicAction.SHADOW_VEIL);
         }
@@ -189,9 +200,8 @@ public class ThievingScript extends Script {
     private void bank() {
         Microbot.status = "Getting food from bank...";
 
-        BankLocation nearestBank = Rs2Bank.getNearestBank();
-        boolean isBankOpen = Rs2Bank.isNearBank(nearestBank, 15) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(nearestBank);
-        if (!isBankOpen || !Rs2Bank.isOpen()) return;
+        boolean isBankOpen = Rs2Bank.isNearBank(15) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank();
+        if (!isBankOpen) return;
         Rs2Bank.depositAll();
 
         boolean successfullyWithdrawFood = Rs2Bank.withdrawX(true, config.food().getName(), config.foodAmount(), true);
@@ -201,7 +211,7 @@ public class ThievingScript extends Script {
             return;
         }
 
-        Rs2Bank.withdrawDeficit("dodgy necklace", config.dodgyNecklaceAmount());
+        Rs2Bank.withdrawX(true, "dodgy necklace", config.dodgyNecklaceAmount());
         if (config.shadowVeil()) {
             Rs2Bank.withdrawAll(true, "Fire rune", true);
             Rs2Inventory.waitForInventoryChanges(5000);
