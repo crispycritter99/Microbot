@@ -65,7 +65,8 @@ public class BankerScript extends Script {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 if (!Microbot.isLoggedIn()) return;
-                if (config.bank() && needsBanking()) {
+//                if (config.bank() && needsBanking()) {
+                    if (needsBanking()) {
                     if (config.eatFoodForSpace())
                         if (Rs2Player.eatAt(100))
                             return;
@@ -73,9 +74,9 @@ public class BankerScript extends Script {
                     if(handleBanking()){
                         SulphurNaguaPlugin.setState(State.IDLE);
                     }
-                } else if (!needsBanking() && config.centerLocation().distanceTo(Rs2Player.getWorldLocation()) > config.attackRadius() && !Objects.equals(config.centerLocation(), new WorldPoint(0, 0, 0))) {
+                } else if (!needsBanking() && new WorldPoint(1355, 9569, 0).distanceTo(Rs2Player.getWorldLocation()) > config.attackRadius() && !Objects.equals(new WorldPoint(1355, 9569, 0), new WorldPoint(0, 0, 0))) {
                     SulphurNaguaPlugin.setState(State.WALKING);
-                    if (Rs2Walker.walkTo(config.centerLocation())) {
+                    if (Rs2Walker.walkTo(new WorldPoint(1355, 9569, 0))) {
                         SulphurNaguaPlugin.setState(State.IDLE);
                     }
                 }

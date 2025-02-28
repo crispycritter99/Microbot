@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.SulphurNagua.combat;
 import net.runelite.api.Actor;
 import net.runelite.api.ItemID;
 import net.runelite.api.Skill;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
@@ -52,11 +53,11 @@ public class AttackNpcScript extends Script {
 
                 if(config.state().equals(State.BANKING))
                     return;
-
+//Microbot.log(""+config.state());
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())
                         .collect(Collectors.toList());
-
+//Microbot.log(""+config.attackableNpcs());
                 double healthPercentage = (double) Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) * 100
                         / Microbot.getClient().getRealSkillLevel(Skill.HITPOINTS);
                 if (Rs2Inventory.getInventoryFood().isEmpty() && healthPercentage < 10)
@@ -73,17 +74,17 @@ public class AttackNpcScript extends Script {
                 messageShown = false;
 
                 attackableNpcs = Rs2Npc.getAttackableNpcs(config.attackReachableNpcs())
-                        .filter(npc -> npc.getWorldLocation().distanceTo(config.centerLocation()) <= config.attackRadius() && npcsToAttack.contains(npc.getName().toLowerCase()))
+                        .filter(npc -> npc.getWorldLocation().distanceTo(new WorldPoint(1355, 9569, 0)) <= config.attackRadius() && npcsToAttack.contains(npc.getName().toLowerCase()))
                         .sorted(Comparator.comparingInt((Rs2NpcModel npc) -> npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1)
                                 .thenComparingInt(npc -> Rs2Player.getRs2WorldPoint().distanceToPath(npc.getWorldLocation())))
                         .collect(Collectors.toList());
-
+//                Microbot.log(""+attackableNpcs.size());
                 if (SulphurNaguaPlugin.getCooldown() > 0 || Rs2Combat.inCombat()) {
                     SulphurNaguaPlugin.setState(State.COMBAT);
                     handleItemOnNpcToKill();
                     return;
                 }
-
+//Microbot.log(""+config.centerLocation());
                 if (!attackableNpcs.isEmpty()) {
                     Rs2NpcModel npc = attackableNpcs.stream().findFirst().orElse(null);
 

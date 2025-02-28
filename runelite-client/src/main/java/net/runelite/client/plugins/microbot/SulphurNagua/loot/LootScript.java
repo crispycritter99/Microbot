@@ -29,7 +29,9 @@ public class LootScript extends Script {
             try {
                 if (!config.toggleLootItems()) return;
 
-                minFreeSlots = config.bank() ? config.minFreeSlots() : 0;
+//                minFreeSlots = config.bank() ? config.minFreeSlots() : 0;
+                minFreeSlots = 0;
+
                 if (!super.run()) return;
                 if (!Microbot.isLoggedIn()) return;
                 if (SulphurNaguaPlugin.getState().equals(State.BANKING) || SulphurNaguaPlugin.getState().equals(State.WALKING)) return;

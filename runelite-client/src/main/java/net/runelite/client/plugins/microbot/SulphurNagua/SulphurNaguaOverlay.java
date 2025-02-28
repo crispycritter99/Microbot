@@ -4,6 +4,7 @@ import net.runelite.api.Client;
 import net.runelite.api.Perspective;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.aiofighter.model.Monster;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
@@ -53,7 +54,7 @@ public class SulphurNaguaOverlay extends OverlayPanel {
     public Dimension render(Graphics2D graphics) {
         if (attackableNpcs == null) return null;
 
-        LocalPoint lp =  LocalPoint.fromWorld(Microbot.getClient(), config.centerLocation());
+        LocalPoint lp =  LocalPoint.fromWorld(Microbot.getClient(), new WorldPoint(1355, 9569, 0));
         if (lp != null) {
             Polygon poly = Perspective.getCanvasTileAreaPoly(Microbot.getClient(), lp, config.attackRadius() * 2);
 

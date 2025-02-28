@@ -997,7 +997,7 @@ public interface SulphurNaguaConfig extends Config {
             hidden = true
     )
     default WorldPoint centerLocation() {
-        return new WorldPoint(0, 0, 0);
+        return new WorldPoint(1355, 9569, 0);
     }
 
     //hidden config item for safe spot location

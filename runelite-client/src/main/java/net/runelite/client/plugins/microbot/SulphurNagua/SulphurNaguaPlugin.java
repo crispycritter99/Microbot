@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 @PluginDescriptor(
         name = PluginDescriptor.Mocrosoft + "Sulphur Nagua",
         description = "Microbot Fighter plugin",
-        tags = {"fight", "microbot", "misc", "combat", "playerassistant"},
+        tags = {"fight", "microbot", "misc", "combat", "SulphurNagua"},
         enabledByDefault = false
 )
 @Slf4j
@@ -160,7 +160,7 @@ public class SulphurNaguaPlugin extends Plugin {
     public static void setCenter(WorldPoint worldPoint)
     {
         Microbot.getConfigManager().setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "centerLocation",
                 worldPoint
         );
@@ -169,7 +169,7 @@ public class SulphurNaguaPlugin extends Plugin {
     public static void setSafeSpot(WorldPoint worldPoint)
     {
         Microbot.getConfigManager().setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "safeSpotLocation",
                 worldPoint
         );
@@ -179,7 +179,7 @@ public class SulphurNaguaPlugin extends Plugin {
     //set Inventory Setup
     private void setInventorySetup(InventorySetup inventorySetup) {
         configManager.setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "inventorySetupHidden",
                 inventorySetup
         );
@@ -187,7 +187,7 @@ public class SulphurNaguaPlugin extends Plugin {
 
     public static State getState() {
         return Microbot.getConfigManager().getConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "state",
                 State.class
         );
@@ -195,7 +195,7 @@ public class SulphurNaguaPlugin extends Plugin {
 
     public static void setState(State state) {
         Microbot.getConfigManager().setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "state",
                 state
         );
@@ -203,7 +203,7 @@ public class SulphurNaguaPlugin extends Plugin {
 
     private void addNpcToList(String npcName) {
         configManager.setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "monster",
                 config.attackableNpcs() + npcName + ","
         );
@@ -211,7 +211,7 @@ public class SulphurNaguaPlugin extends Plugin {
     }
     private void removeNpcFromList(String npcName) {
         configManager.setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "monster",
                 Arrays.stream(config.attackableNpcs().split(","))
                         .filter(n -> !n.equalsIgnoreCase(npcName))
@@ -222,7 +222,7 @@ public class SulphurNaguaPlugin extends Plugin {
     // set attackable npcs
     public static void setAttackableNpcs(String npcNames) {
         Microbot.getConfigManager().setConfiguration(
-                "PlayerAssistant",
+                "SulphurNagua",
                 "monster",
                 npcNames
         );
