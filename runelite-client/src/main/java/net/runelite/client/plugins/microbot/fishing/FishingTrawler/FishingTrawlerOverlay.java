@@ -1,7 +1,6 @@
-package net.runelite.client.plugins.microbot.salamander;
+package net.runelite.client.plugins.microbot.fishing.FishingTrawler;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -10,10 +9,10 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 import javax.inject.Inject;
 import java.awt.*;
 
-public class SalamanderOverlay extends OverlayPanel {
+public class FishingTrawlerOverlay extends OverlayPanel {
 
     @Inject
-    SalamanderOverlay(SalamanderPlugin plugin)
+    FishingTrawlerOverlay(FishingTrawlerPlugin plugin)
     {
         super(plugin);
         setPosition(OverlayPosition.TOP_LEFT);
@@ -24,7 +23,7 @@ public class SalamanderOverlay extends OverlayPanel {
         try {
             panelComponent.setPreferredSize(new Dimension(200, 300));
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("Micro Auto Hunter " + SalamanderScript.version)
+                    .text("Micro Example V1.0.0")
                     .color(Color.GREEN)
                     .build());
 
@@ -33,10 +32,6 @@ public class SalamanderOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .left(Microbot.status)
                     .build());
-
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .right(Rs2Player.isAnimating(1200)+"").build());
-
 
 
         } catch(Exception ex) {

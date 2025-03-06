@@ -2,10 +2,18 @@ package net.runelite.client.plugins.microbot.moons;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
+import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.moons.enums.State;
+import net.runelite.client.plugins.microbot.util.Global;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -46,4 +54,37 @@ public class MoonsPlugin extends Plugin {
         moonsScript.shutdown();
         overlayManager.remove(moonsOverlay);
     }
+
+    @Subscribe
+    public void onChatMessage(ChatMessage event) {
+        if (event.getType() != ChatMessageType.GAMEMESSAGE) return;
+
+        if (event.getMessage().equalsIgnoreCase("oh dear, you are dead!")) {
+            Rs2Walker.setTarget(null);
+            shutDown();
+        }
+    }
+
+    public static int ticks = 10;
+    @Subscribe
+    public void onGameTick(GameTick tick)
+    {
+        //System.out.println(getName().chars().mapToObj(i -> (char)(i + 3)).map(String::valueOf).collect(Collectors.joining()));
+        if (Rs2Npc.getNpc(13011).getAnimation()!=11000){
+            ticks = 0;
+        }
+        else {
+            ticks++;
+        }
+
+    }
+
+//    public static void danceJaguar(String npcName) {
+//        Rs2Walker.walkFastCanvas(MoonsScript.closestTile);
+//        if (Rs2Player.distanceTo(MoonsScript.closestTile)<3){
+//            Global.sleep(300);
+//            Rs2Npc.interact("blood jaguar", "attack");
+//        }
+//
+//    }
 }

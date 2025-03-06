@@ -61,6 +61,10 @@ public class AIOMagicPlugin extends Plugin {
 	private TeleAlchScript teleAlchScript;
 	@Inject
 	private StunAlchScript stunAlchScript;
+	@Inject
+	private FlaxSpinScript flaxSpinScript;
+	@Inject
+	private DegrimeScript degrimeScript;
 
 	public static String version = "1.1.0";
 	
@@ -78,6 +82,8 @@ public class AIOMagicPlugin extends Plugin {
 	private StunSpell stunSpell;
 	@Getter
 	private String stunNpcName;
+	@Getter
+	private int herb;
 
 	@Override
 	protected void startUp() throws AWTException {
@@ -88,7 +94,7 @@ public class AIOMagicPlugin extends Plugin {
 		teleportSpell = config.teleportSpell();
 		stunSpell = config.stunSpell();
 		stunNpcName = config.stunNpcName();
-
+		herb = config.Herb().getGrimyItemID();
 		if (overlayManager != null) {
 			overlayManager.add(aioMagicOverlay);
 		}
@@ -112,6 +118,12 @@ public class AIOMagicPlugin extends Plugin {
 			case STUNALCH:
 				stunAlchScript.run();
 				break;
+			case SPINFLAX:
+				flaxSpinScript.run();
+				break;
+			case DEGRIME:
+				degrimeScript.run();
+				break;
 		}
 	}
 
@@ -122,6 +134,8 @@ public class AIOMagicPlugin extends Plugin {
 		teleportScript.shutdown();
 		teleAlchScript.shutdown();
 		stunAlchScript.shutdown();
+		flaxSpinScript.shutdown();
+		degrimeScript.shutdown();
 		overlayManager.remove(aioMagicOverlay);
 	}
 

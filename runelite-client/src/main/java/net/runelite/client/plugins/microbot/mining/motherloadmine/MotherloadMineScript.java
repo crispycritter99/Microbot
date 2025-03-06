@@ -158,7 +158,7 @@ public class MotherloadMineScript extends Script
             resetMiningState();
             if (Rs2Inventory.hasItem(ItemID.PAYDIRT))
             {
-                if (Rs2GameObject.getGameObjects(ObjectID.BROKEN_STRUT).size() > 1 && Rs2Inventory.hasItem("hammer"))
+                if (Rs2GameObject.getGameObjects(ObjectID.BROKEN_STRUT).size() > 1 && (Rs2Inventory.hasItem("hammer")||Rs2Equipment.isWearing("hammer")))
                 {
                     status = MLMStatus.FIXING_WATERWHEEL;
                 }
@@ -218,6 +218,10 @@ public class MotherloadMineScript extends Script
 
         while (Microbot.getVarbitValue(Varbits.SACK_NUMBER) > 0)
         {
+            if (Rs2GameObject.getGameObjects(ObjectID.BROKEN_STRUT).size() > 1 && (Rs2Inventory.hasItem("hammer")||Rs2Equipment.isWearing("hammer")))
+            {
+                fixWaterwheel();
+            }
             if (Rs2Inventory.size() <= 2)
             {
                 Rs2GameObject.interact(SACK_ID);

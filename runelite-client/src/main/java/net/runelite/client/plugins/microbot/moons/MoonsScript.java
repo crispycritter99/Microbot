@@ -1,6 +1,5 @@
 package net.runelite.client.plugins.microbot.moons;
 import net.runelite.api.*;
-import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -10,14 +9,13 @@ import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +35,9 @@ public class MoonsScript extends Script {
     private static final int moonlightGrubPaste = 29079;
     private static final int pestleAndMortar = 233;
     private static final int grubbySapling = 51365;
-
+    boolean lootable;
     private long lastEatTime = -1;
+    public static WorldPoint closestTile;
     private long lastPrayerTime = -1;
     private static final int EAT_COOLDOWN_MS = 2000;
     private static final int PRAYER_COOLDOWN_MS = 2000;
@@ -113,24 +112,28 @@ public class MoonsScript extends Script {
                     state = State.GOING_TO_BLOOD;
                 } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1376, 9710, 0))) {
                     state = State.GOING_TO_LOOT;
+                    lootable=true;
                 } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1526, 9671, 0))) {
                     state = State.GETTING_SUPPLIES;
                 }
 
                 switch (state) {
                     case CHAMBER:
-                        if (Rs2Player.isWalking() || Rs2Player.isInteracting()) break;
+                        if (Rs2Player.isMoving() || Rs2Player.isInteracting()) break;
 
                         Rs2GameObject.interact(new WorldPoint(1458,9650,1),"Pass-through"); // Pass-though
                         break;
                     case GOING_TO_COOKER:
-                        if (Rs2Player.isWalking() || Rs2Player.isInteracting()) break;
+                        if (Rs2Player.isMoving() || Rs2Player.isInteracting()) break;
 
                         Rs2Walker.walkTo(new WorldPoint(1511, 9693, 0));
                         break;
                     case GETTING_SUPPLIES:
-                        if (Rs2Player.isWalking() || Rs2Player.isInteracting()) break;
-
+                        if (Rs2Player.isMoving() || Rs2Player.isInteracting()) break;
+                        if (Rs2GameObject.exists(51346)){
+                            Rs2GameObject.interact(new WorldPoint(1513,9598,0),"Pass-through");
+                            sleepUntil(()->!Rs2GameObject.exists(51346),10000);
+                        }
                         if (Rs2Inventory.hasItem("Vial")) {
                             Rs2Inventory.dropAll("Vial");
                         }
@@ -171,11 +174,12 @@ public class MoonsScript extends Script {
                             Rs2Inventory.drop(vialOfWater);
                             Rs2Inventory.drop(vialOfWater);
                         }
-                        else if (Rs2Inventory.itemQuantity(vialOfWater) >= (Rs2Inventory.itemQuantity(moonlightGrub) + Rs2Inventory.itemQuantity(moonlightGrubPaste)) && Rs2Inventory.hasItem(vialOfWater)) {
+                        else if (Rs2Inventory.itemQuantity(vialOfWater) >= (Rs2Inventory.itemQuantity(moonlightGrub) + Rs2Inventory.itemQuantity(moonlightGrubPaste)) && Rs2Inventory.hasItem(vialOfWater)&&!Rs2Inventory.isFull()) {
                             Rs2GameObject.interact(grubbySapling, "Collect-from");
                         }
                         else if (Rs2Inventory.itemQuantity(vialOfWater) != Rs2Inventory.itemQuantity(moonlightGrub) && Rs2Inventory.hasItem(vialOfWater) && Rs2Inventory.hasItem(moonlightGrub)) {
                             Rs2Inventory.combine(pestleAndMortar, moonlightGrub);
+                            sleep(1200);
                         }
                         else if (Rs2Inventory.hasItem(moonlightGrubPaste)) {
                             if (!Rs2Inventory.hasItem(vialOfWater)) { Rs2Inventory.dropAll(moonlightGrubPaste); } else {
@@ -192,11 +196,13 @@ public class MoonsScript extends Script {
                         } else if (Rs2Inventory.isFull() && Rs2Inventory.hasItem(29217) && !Rs2Inventory.hasItem(29216) && Microbot.getClient().getEnergy() != 10_000 && !Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1522, 9718, 0))) {
                             Rs2GameObject.interact(51362, "Make-cuppa");
                         } else if (Rs2Inventory.isFull() && Rs2Inventory.hasItem(29217) && !Rs2Inventory.hasItem(29216) && Microbot.getClient().getEnergy() == 10_000) {
+
                             Rs2Walker.walkFastCanvas(new WorldPoint(1522,9718,0));
 
                             Microbot.log("Done getting supplies, should be going through!");
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1522,9718,0))) {
-                            Rs2GameObject.interact(new WorldPoint(1522,9720,0),"Pass-through");
+                        } else if (Rs2GameObject.interact(new WorldPoint(1522,9720,0),"Pass-through")) {
+                            sleep(1200);
+//                            sleepUntil(()->!Rs2Player.isMoving());
                         }
                         break;
                     case GOING_TO_BLOOD:
@@ -220,10 +226,20 @@ public class MoonsScript extends Script {
                                     .orElse(null);
 
                             if (closestTile != null && !playerLocation.equals(closestTile)) {
-                                Microbot.log("The closest tile to the centre is: " + closestTile);
-                                Microbot.log("Player location: " + playerLocation);
-                                Rs2Walker.walkFastCanvas(closestTile);
+//                                Microbot.log("The closest tile to the centre is: " + closestTile);
+//                                Microbot.log("Player location: " + playerLocation);
+//                                if (Rs2Npc.getNpcs(13021).count()>1&&closestTile.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation())<2){sleep(1800);}
+//                                if (Rs2Npc.getNpcs(13021).count()>1&&Rs2Player.isInteracting()){sleep(1800);}
+                                if (Rs2Npc.getNpcs("blood jaguar").count()==0||MoonsPlugin.ticks==1&&!Rs2Player.isMoving()) {
+                                    Rs2Walker.walkFastCanvas(closestTile);
+                                    if (Rs2Player.distanceTo(closestTile)<3){
+                                        sleep(300);
+                                        Rs2Npc.interact("blood jaguar", "attack");
+                                    }
+                                }
+
                             }
+
                         }
 
                         List<WorldPoint> bloodSpotsWorldPoints = Rs2GameObject.getGameObjects(51046)
@@ -231,33 +247,47 @@ public class MoonsScript extends Script {
                                 .map(GameObject::getWorldLocation)
                                 .collect(Collectors.toList());
 
-                        if (!bloodSpotsWorldPoints.isEmpty() && Rs2Npc.getNpc(13021) == null) {
+                        if (!bloodSpotsWorldPoints.isEmpty() && Rs2Npc.getNpc(13021) == null) { //avoiding blood spot phase
                             if (bloodSpotsWorldPoints.contains(playerLocation)) {
-                                Microbot.log("Player In Blood Spot");
+//                                Microbot.log("Player In Blood Spot");
 
                                 final WorldPoint safeTile = findSafeTile(playerLocation, bloodSpotsWorldPoints);
                                 if (safeTile != null) {
                                     Rs2Walker.walkFastCanvas(safeTile);
-                                    Microbot.log("Dodging dangerous area, moving to safe tile at: " + safeTile);
+//                                    Microbot.log("Dodging dangerous area, moving to safe tile at: " + safeTile);
                                 }
                             }
                         }
 
-                        int maxEat = 30;
+                        int maxEat = 50;
                         int maxPrayer = 50;
 
                         int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
                         if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= maxEat) {
                             Rs2Player.useFood();
+                            if (Rs2Npc.getNpc(13011)!=null) {
+                                Rs2Inventory.wear(4151);
+                                Rs2Inventory.wear(12954  );
+                                //Rs2Npc.interact(npcToAttack, "attack");
+                                attackBoss("Blood moon");
+                            }
                             lastEatTime = currentTime;
                             Microbot.log("Eating food at " + maxEat + "% health.");
                         }
 
                         int currentPrayerPoints = Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER);
-                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS && currentPrayerPoints <= maxPrayer) {
-                            Rs2Inventory.interact("Moonlight potion", "drink");
-                            lastPrayerTime = currentTime;
-                            Microbot.log("Drinking prayer potion at " + maxPrayer + "% prayer points.");
+//                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS && currentPrayerPoints <= maxPrayer&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
+                            if (Rs2Npc.getNpcs("blood jaguar").count()==0) {
+                                if (Rs2Player.drinkPrayerPotion()) {
+                                    if (Rs2Npc.getNpc(13011) != null) {
+                                        Rs2Inventory.wear(4151);
+                                        Rs2Inventory.wear(12954);
+                                        //Rs2Npc.interact(npcToAttack, "attack");
+                                        attackBoss("Blood moon");
+                                    }
+                                }
+//                            lastPrayerTime = currentTime;
+//                            Microbot.log("Drinking prayer potion at " + maxPrayer + "% prayer points.");
                         }
 
                         boolean dangerZone = !Rs2GameObject.getGameObjects(51054).isEmpty();
@@ -267,24 +297,25 @@ public class MoonsScript extends Script {
                             Rs2Prayer.toggleQuickPrayer(false);
                         }
 
-                        if (!Rs2Player.isWalking() && !Rs2Player.isInteracting()) {
+                        if (!Rs2Player.isMoving() && !Rs2Player.isInteracting()) {
                             NPC npc13021 = Rs2Npc.getNpc(13021);
                             int npcToAttack = (npc13021 == null) ? 13011 : 13021;
 
                             //Microbot.log("Spec energy = " + Rs2Combat.getSpecEnergy());
 
-                            if (npcToAttack == 13011 && Rs2Combat.getSpecEnergy() >= 500) {
+                            if (npcToAttack == 13011 && Rs2Combat.getSpecEnergy() >= 500&&Rs2Inventory.hasItem("dragon claws")) {
                                 Rs2Inventory.wear(13652); // d claws
                                 Rs2Combat.setSpecState(true);
                                 //Rs2Npc.interact(npcToAttack, "attack");
                                 attackBoss("Blood moon");
-                            } else if (npcToAttack == 13011 && Rs2Combat.getSpecEnergy() < 500) {
-                                Rs2Inventory.wear(29796);
+                            } else if (npcToAttack == 13011) {
+                                Rs2Inventory.wear(4151);
+                                Rs2Inventory.wear(12954  );
                                 //Rs2Npc.interact(npcToAttack, "attack");
                                 attackBoss("Blood moon");
                             } else {
-                                Rs2Inventory.wear(29796);
-                                //Rs2Npc.interact(npcToAttack, "attack");
+                                Rs2Inventory.wear(4151  );
+                                Rs2Inventory.wear(12954  );
                                 attackBoss("Blood jaguar");
                             }
                         }
@@ -299,14 +330,17 @@ public class MoonsScript extends Script {
                             sleep(1200);
 
                             Rs2GameObject.interact(new WorldPoint(1374,9665,0),"Pass-through");
+                            sleep(1200);
                         } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1347, 9590, 0))) {
                             Rs2GameObject.interact(51362, "Make-cuppa");
 
                         } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0)) && Microbot.getClient().getEnergy() == 10_000) {
                             Rs2GameObject.interact(new WorldPoint(1356,9536,0),"Pass-through");
                         }
-                        else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1513, 9563, 0))) {
+//                        else if (Rs2Player.distanceTo(new WorldPoint(1513, 9563, 0))<10) {
+                        else if (Rs2GameObject.exists(51346)&&lootable) {
                             Rs2GameObject.interact(51346,"Claim");
+                            sleepUntil(()->Rs2Widget.getWidget(56885268) != null,10000);
                         } else if (Rs2Widget.getWidget(56885268) != null) {
                             Widget widget = Rs2Widget.getWidget(56885268);
                             if (widget == null) return;
@@ -324,8 +358,10 @@ public class MoonsScript extends Script {
 
                             if (Rs2Inventory.itemQuantity("Cooked bream") >= config.foodAmount() && potionsTotal >= 1) {
                                 state = State.GOING_BACK_TO_BLOOD;
+                                lootable =false;
                             } else {
-                                Rs2GameObject.interact(new WorldPoint(1513,9598,0),"Pass-through");
+                                state = State.GETTING_SUPPLIES;
+                                lootable =false;
                             }
                         }
 
@@ -353,19 +389,20 @@ public class MoonsScript extends Script {
             } catch (Exception e) {
                 Microbot.log("Error: " + e);
             }
-        }, 0, 200, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
 
     public static void attackBoss(String npcName) {
         attackBosser(Collections.singletonList(npcName));
+
     }
     public static void attackBosser(List<String> npcNames) {
         for (String npcName : npcNames) {
-            NPC npc = getNpc(npcName);
+            Rs2NpcModel npc = getNpc(npcName);
             if (npc == null) continue;
             Microbot.log("Sending attack interaction.");
-            interact(npc, "attack");
+            Rs2Npc.interact(npc, "attack");
             return;
         }
     }

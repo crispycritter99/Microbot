@@ -30,6 +30,10 @@ public class MoonsOverlay extends OverlayPanel {
                     .left(MoonsScript.state.toString())
                     .build());
 
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .right(MoonsPlugin.ticks+"")
+                    .build());
+
 
         } catch(Exception ex) {
             System.out.println(ex.getMessage());

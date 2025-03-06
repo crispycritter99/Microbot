@@ -123,7 +123,11 @@ public class LootScript extends Script {
                     minFreeSlots,
                     config.toggleDelayedLooting(),
                     config.toggleOnlyLootMyItems(),
-                    " rune"
+                    "Air rune","Water rune","Earth rune","Fire rune",
+                    "Mind rune","Chaos rune","Death rune","Blood rune","Wrath rune",
+                    "Body rune","Cosmic rune","Nature rune","Law rune",
+                    "Sunfire rune","Astral rune","Soul rune",
+                    "Mist rune","Dust rune", "Mud rune","Smoke rune","Steam rune","Lava rune"
             );
             if (Rs2GroundItem.lootItemsBasedOnNames(runesParams)) {
                 Microbot.pauseAllScripts = false;

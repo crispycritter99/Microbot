@@ -75,6 +75,7 @@ public class DegrimeScript extends Script {
         if (degrimeCurrentStatus != DegrimeCurrentStatus.FETCH_SUPPLIES) {
             degrimeCurrentStatus = DegrimeCurrentStatus.FETCH_SUPPLIES;
         }
+
         if (!Rs2Inventory.hasItem(config.Herb().getGrimyItemID())) {
             if (!Rs2Bank.isOpen()) {
                 Rs2Bank.openBank();

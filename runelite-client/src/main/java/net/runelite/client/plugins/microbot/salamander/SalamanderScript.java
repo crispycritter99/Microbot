@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.salamander;
 import net.runelite.api.GameObject;
 import net.runelite.api.ItemID;
 import net.runelite.api.ObjectID;
+import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -102,7 +103,7 @@ public class SalamanderScript extends Script {
         try {
             // If there are box traps on the floor, interact with them first
 
-            if (Rs2Inventory.interact(10147,"release")||Rs2Inventory.interact(10146,"release")){sleep(Rs2Random.randomGaussian(500,3));}
+            if (Rs2Inventory.interact(10148,"release")||Rs2Inventory.interact(10147,"release")||Rs2Inventory.interact(10146,"release")){sleep(Rs2Random.randomGaussian(500,3));}
             if (Rs2GroundItem.lootItemsBasedOnNames(lootParams)) {
                 Microbot.pauseAllScripts = false;
             }
@@ -121,24 +122,39 @@ public class SalamanderScript extends Script {
 //            }
 
             // If there are shaking boxes, interact with them. ferrets
-            if (Rs2GameObject.interact(ObjectID.NET_TRAP_8986, "reset", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8734, "reset", 10)) {
+            if (Rs2GameObject.interact(ObjectID.NET_TRAP_8996, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8986, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8734, "check", 10)) {
 //                currentState = State.CATCHING;
-//                while (Rs2Player.getAnimation()!=5215){Rs2Inventory.interact(10146,"release");sleep(600);}
-                sleepUntil(() -> Rs2Player.getAnimation()==5215);
-//                Rs2Inventory.interact(10146,"release");
-//                while (Rs2Player.getAnimation()!=-1){sleep(100);}
-                sleepUntil(() -> Rs2Player.getAnimation()==-1);
-//                while (Rs2Player.isMoving()){sleep(100);}
-                sleepUntil(() -> !Rs2Player.isMoving());
+                int placeholder = Rs2Inventory.count("Rope");
+                sleepUntil(() -> Rs2Inventory.count("Rope")!=placeholder);
+//                Rs2Player.waitForXpDrop(Skill.HUNTER);
+
+                    if (Rs2Inventory.contains("small fishing net") && Rs2Inventory.contains("rope")) {
+                        if (Rs2GameObject.interact(9000)||Rs2GameObject.interact(8990) || Rs2GameObject.interact(8732)) {
+//                    currentState = State.LAYING;
+//                    while (Rs2Player.getAnimation()==-1){sleep(100);}
+//                    while (Rs2Player.getAnimation()!=-1){sleep(100);}
+                            sleepUntil(() -> Rs2Player.getAnimation() != -1);
+                            sleepUntil(() -> Rs2Player.getAnimation() == -1);
+                            sleep(Rs2Random.randomGaussian(500, 300));
+//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
+                        }
+                    }
+
+//                sleepUntil(() -> Rs2Player.getAnimation()!=-1);
+//                sleepUntil(() -> Rs2Player.getAnimation()==-1);
+
+//                sleepUntil(() -> !Rs2Player.isMoving());
                 return;
             }
+
             if (Rs2Inventory.contains("small fishing net")&&Rs2Inventory.contains("rope")){
-                if (Rs2GameObject.interact(8990)||Rs2GameObject.interact(8732)){
+                if (Rs2GameObject.interact(9000)||Rs2GameObject.interact(8990)||Rs2GameObject.interact(8732)){
 //                    currentState = State.LAYING;
 //                    while (Rs2Player.getAnimation()==-1){sleep(100);}
 //                    while (Rs2Player.getAnimation()!=-1){sleep(100);}
                     sleepUntil(() -> Rs2Player.getAnimation()!=-1);
                     sleepUntil(() -> Rs2Player.getAnimation()==-1);
+//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
                 }
             }
 //            // If there are shaking boxes, interact with them

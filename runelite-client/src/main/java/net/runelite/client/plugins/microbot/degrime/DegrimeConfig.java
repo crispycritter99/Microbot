@@ -35,7 +35,7 @@ public interface DegrimeConfig extends Config {
     String magicSection = "magic";
 
     @ConfigItem(
-            keyName = jewelry,
+            keyName = "Herb",
             name = "Item",
             description = "Chose the jewelry item you would like to craft",
             position = 0,

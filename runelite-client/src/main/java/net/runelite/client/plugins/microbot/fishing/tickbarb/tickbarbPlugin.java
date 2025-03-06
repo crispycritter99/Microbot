@@ -1,8 +1,9 @@
 package net.runelite.client.plugins.microbot.fishing.tickbarb;
 
 import com.google.inject.Provides;
-import net.runelite.api.Client;
+import net.runelite.api.*;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
@@ -64,5 +65,9 @@ public class tickbarbPlugin extends Plugin {
     protected void shutDown() {
         fishingScript.shutdown();
         overlayManager.remove(fishingOverlay);
+    }
+    @Subscribe
+    public void onHitsplatApplied(HitsplatApplied event) {
+
     }
 }
