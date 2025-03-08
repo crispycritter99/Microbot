@@ -13,7 +13,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Default + "Animated Armour Killer",
+        name = PluginDescriptor.See1Duck + "Animated Armour Killer",
         description = "Builds, Kills, and loots animated armour and warrior guild tokens",
         tags = {"example", "microbot"},
         enabledByDefault = false
