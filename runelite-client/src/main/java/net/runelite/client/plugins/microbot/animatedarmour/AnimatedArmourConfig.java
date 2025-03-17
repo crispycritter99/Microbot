@@ -2,7 +2,7 @@ package net.runelite.client.plugins.microbot.animatedarmour;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
-
+import net.runelite.client.config.ConfigItem;
 @ConfigGroup("animatedarmour")
 public interface AnimatedArmourConfig extends Config {
             @ConfigItem(
