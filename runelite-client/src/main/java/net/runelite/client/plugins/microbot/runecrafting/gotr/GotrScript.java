@@ -346,10 +346,11 @@ public class GotrScript extends Script {
 
     private boolean depositRunesIntoPool() {
         if (Rs2Inventory.hasItem(runeIds.toArray(Integer[]::new)) && !isInLargeMine() && !isInHugeMine() && !Rs2Inventory.isFull()) {
-            if (Rs2Player.isWalking()) return true;
+            if (Rs2Player.isMoving()) return true;
             if (Rs2GameObject.interact(ObjectID.DEPOSIT_POOL)) {
                 log("Deposit runes into pool...");
-                sleep(600, 2400);
+//                sleep(600, 2400);
+                Rs2Inventory.waitForInventoryChanges(5000);
             }
             return true;
         }
@@ -358,7 +359,7 @@ public class GotrScript extends Script {
 
     private boolean enterAltar() {
         GameObject availableAltar = getAvailableAltars().stream().findFirst().orElse(null);
-        if (availableAltar != null && !Rs2Player.isWalking()) {
+        if (availableAltar != null && !Rs2Player.isMoving()) {
             log("Entering with altar " + availableAltar.getId());
             Rs2GameObject.interact(availableAltar);
             state = GotrState.ENTER_ALTAR;
