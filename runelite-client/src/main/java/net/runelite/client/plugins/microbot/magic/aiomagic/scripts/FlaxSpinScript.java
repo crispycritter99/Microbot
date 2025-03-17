@@ -102,13 +102,13 @@ public class FlaxSpinScript extends Script {
                             Rs2Inventory.waitForInventoryChanges(1200);
                         }
                         if (!Rs2Inventory.hasItem(ItemID.ASTRAL_RUNE)) {
-                            if (!Rs2Bank.hasItem(ItemID.NATURE_RUNE)) {
+                            if (!Rs2Bank.hasItem(ItemID.ASTRAL_RUNE)) {
                                 Microbot.showMessage("Astral Runes not found");
                                 shutdown();
                                 return;
                             }
 
-                            Rs2Bank.withdrawAll(ItemID.NATURE_RUNE);
+                            Rs2Bank.withdrawAll(ItemID.ASTRAL_RUNE);
                             Rs2Inventory.waitForInventoryChanges(1200);
                         }
                         if (!Rs2Inventory.hasItem(ItemID.FLAX)) {
@@ -128,8 +128,8 @@ public class FlaxSpinScript extends Script {
                         sleepUntil(() -> !Rs2Bank.isOpen());
                         break;
                     case CASTING:
-                        if (!Rs2Inventory.hasItem(ItemID.RUNE_POUCH)) {
-                            Microbot.showMessage("Nature Runes not found");
+                        if (!Rs2Inventory.hasItem(ItemID.ASTRAL_RUNE)&&!Rs2Inventory.hasItem(ItemID.NATURE_RUNE)) {
+                            Microbot.showMessage("Runes not found");
                             shutdown();
                             return;
                         }
