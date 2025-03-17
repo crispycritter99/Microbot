@@ -75,31 +75,37 @@ int plantnumber;
 //        }
 
         switch (lane) {
-//            case LANE_1_2:
-//                plants = new ArrayList<>(Arrays.asList(
-//                        new TitheFarmPlant(35, 25, 1),
-//                        new TitheFarmPlant(40, 25, 2),
-//                        new TitheFarmPlant(35, 28, 3),
-//                        new TitheFarmPlant(40, 28, 4),
-//                        new TitheFarmPlant(35, 31, 5),
-//                        new TitheFarmPlant(40, 31, 6),
-//                        new TitheFarmPlant(35, 34, 7),
-//                        new TitheFarmPlant(40, 34, 8),
-//                        new TitheFarmPlant(35, 40, 9),
-//                        new TitheFarmPlant(40, 40, 10),
-//                        new TitheFarmPlant(35, 43, 11),
-//                        new TitheFarmPlant(40, 43, 12),
-//                        new TitheFarmPlant(35, 46, 13),
-//                        new TitheFarmPlant(40, 46, 14),
-//                        new TitheFarmPlant(35, 49, 15),
-//                        new TitheFarmPlant(40, 49, 16),
-//                        new TitheFarmPlant(45, 49, 17),
-//                        new TitheFarmPlant(45, 46, 18),
-//                        new TitheFarmPlant(45, 49, 19),
-//                        new TitheFarmPlant(45, 46, 20),
-//                        new TitheFarmPlant(45, 43, 21)
-//                ));
-//                break;
+            case LANE_1_2:
+                plants = new ArrayList<>(Arrays.asList(
+                        new TitheFarmPlant(45, 34, 0,1819,3499),
+                        new TitheFarmPlant(40, 34, 1,1818,3497),
+                        new TitheFarmPlant(40, 31, 2,1818,3495),
+                        new TitheFarmPlant(40, 28, 3,1818,3493),
+                        new TitheFarmPlant(45, 28, 4,1819,3491),
+                        new TitheFarmPlant(40, 25, 5,1818,3489),
+
+                        new TitheFarmPlant(45, 19, 6,1820,3485),
+
+                        new TitheFarmPlant(50, 25, 7,1824,3488),
+                        new TitheFarmPlant(45, 25, 8,1823,3490),
+                        new TitheFarmPlant(50, 28, 9,1824,3492),
+                        new TitheFarmPlant(50, 31, 10,1824,3494),
+                        new TitheFarmPlant(45, 31, 11,1823,3496),
+                        new TitheFarmPlant(50, 34, 12,1824,3498),
+
+                        new TitheFarmPlant(50, 40, 13,1824,3504),
+                        new TitheFarmPlant(45, 40, 14,1823,3503),
+                        new TitheFarmPlant(50, 43, 15,1824,3506),
+                        new TitheFarmPlant(45, 43, 16,1823,3508),
+                        new TitheFarmPlant(50, 46, 17,1824,3510),
+                    new TitheFarmPlant(45, 46, 18,1823,3510),
+                        new TitheFarmPlant(50, 49, 19,1824,3512),
+                        new TitheFarmPlant(45, 49, 20,1823,3514)
+
+
+
+                ));
+                break;
             case LANE_2_3:
                 plants = new ArrayList<>(Arrays.asList(
                         new TitheFarmPlant(45, 34, 0,1819,3499),
@@ -283,7 +289,6 @@ int plantnumber;
 
     private void coreLoop(TitheFarmingFastConfig config) {
         if (Rs2Player.isMoving()) return;
-//        Microbot.log("start");
         Comparator<TitheFarmPlant> sortByIndex = Comparator.comparingInt(TitheFarmPlant::getIndex);
         TitheFarmPlant plant = null;
         if (state != HARVEST) {
@@ -398,14 +403,18 @@ int plantnumber;
                     nextPlant.regionY,
                     Microbot.getClient().getPlane()));
 
+
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterWateringSeed());
+
 //            Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));
 //            if (Rs2Player.isAnimating()) {
                 if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == true){Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");Rs2GameObject.hoverOverObject(gameObjectNext);}
                 else if (skipnumbers.contains(plant.getIndex()+1) && plantcycle == false){Rs2GameObject.hoverOverObject(gameObjectNext);}
                 else if (!skipnumbers.contains(plant.getIndex()+1)){Rs2Tile.hoverOverTile(Rs2Tile.getTile(nextPlant.plantX,nextPlant.plantY));}
+//                sleep(600);
+//                if (plantnumber==24){sleep(600);}
                 sleepUntil(() -> plants.stream().noneMatch(x -> x.getIndex() == finalPlant.getIndex() && x.isValidToWater()));
-//                Microbot.log(""+plant.isValidToWater());
+
 //            }
             plant.setPlanted(Instant.now());
         }
@@ -427,7 +436,7 @@ int plantnumber;
 //            }
 
         }
-//    Microbot.log("end");
+
     }
 
         // Helper method to validate inventory items
