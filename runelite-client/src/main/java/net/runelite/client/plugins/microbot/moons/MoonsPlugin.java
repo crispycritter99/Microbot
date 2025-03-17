@@ -47,6 +47,7 @@ public class MoonsPlugin extends Plugin {
             overlayManager.add(moonsOverlay);
         }
         MoonsScript.state = State.CHAMBER;
+        moonsScript.startup();
         moonsScript.run(config);
     }
 

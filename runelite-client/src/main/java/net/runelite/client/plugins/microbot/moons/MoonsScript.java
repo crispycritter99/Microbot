@@ -9,12 +9,14 @@ import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
+import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
 import java.util.*;
 import java.util.List;
@@ -37,7 +39,9 @@ public class MoonsScript extends Script {
     private static final int grubbySapling = 51365;
     boolean lootable;
     private long lastEatTime = -1;
+    public static long start_time = 0;
     public static WorldPoint closestTile;
+    public static int loots=0;
     private long lastPrayerTime = -1;
     private static final int EAT_COOLDOWN_MS = 2000;
     private static final int PRAYER_COOLDOWN_MS = 2000;
@@ -110,7 +114,9 @@ public class MoonsScript extends Script {
                     state = State.GETTING_SUPPLIES;
                 } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1390, 9676, 0))) {
                     state = State.GOING_TO_BLOOD;
-                } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1376, 9710, 0))) {
+//                } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1376, 9710, 0))) {
+
+                } else if (Rs2Widget.isWidgetVisible(56950788)) {
                     state = State.GOING_TO_LOOT;
                     lootable=true;
                 } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1526, 9671, 0))) {
@@ -130,9 +136,12 @@ public class MoonsScript extends Script {
                         break;
                     case GETTING_SUPPLIES:
                         if (Rs2Player.isMoving() || Rs2Player.isInteracting()) break;
-                        if (Rs2GameObject.exists(51346)){
-                            Rs2GameObject.interact(new WorldPoint(1513,9598,0),"Pass-through");
-                            sleepUntil(()->!Rs2GameObject.exists(51346),10000);
+//                        if (Rs2GameObject.exists(51346)){
+//                            Rs2GameObject.interact(new WorldPoint(1513,9598,0),"Pass-through");
+//                            sleepUntil(()->!Rs2GameObject.exists(51346),10000);
+//                        }
+                        if (!Rs2GameObject.exists(1177)) {
+                            Rs2Walker.walkTo(1512, 9695, 0);
                         }
                         if (Rs2Inventory.hasItem("Vial")) {
                             Rs2Inventory.dropAll("Vial");
@@ -197,22 +206,29 @@ public class MoonsScript extends Script {
                             Rs2GameObject.interact(51362, "Make-cuppa");
                         } else if (Rs2Inventory.isFull() && Rs2Inventory.hasItem(29217) && !Rs2Inventory.hasItem(29216) && Microbot.getClient().getEnergy() == 10_000) {
 
-                            Rs2Walker.walkFastCanvas(new WorldPoint(1522,9718,0));
+//                            Rs2Walker.walkFastCanvas(new WorldPoint(1522,9718,0));
 
                             Microbot.log("Done getting supplies, should be going through!");
-                        } else if (Rs2GameObject.interact(new WorldPoint(1522,9720,0),"Pass-through")) {
-                            sleep(1200);
+                            state = State.GOING_TO_BLOOD;
+//                        } else if (Rs2GameObject.interact(new WorldPoint(1522,9720,0),"Pass-through")) {
+//                            sleep(1200);
 //                            sleepUntil(()->!Rs2Player.isMoving());
                         }
                         break;
                     case GOING_TO_BLOOD:
-                        if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1390, 9676, 0))) {
-                            Rs2GameObject.interact(new WorldPoint(1374,9665,0),"Pass-through");
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1347, 9590, 0))) {
-                            Rs2GameObject.interact(new WorldPoint(1388,9589,0),"Pass-through");
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1418, 9632, 0))) {
-                            Rs2GameObject.interact(51372,"Use");
-                        }
+//                        if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1390, 9676, 0))) {
+//                            Rs2GameObject.interact(new WorldPoint(1374,9665,0),"Pass-through");
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1347, 9590, 0))) {
+//                            Rs2GameObject.interact(new WorldPoint(1388,9589,0),"Pass-through");
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1418, 9632, 0))) {
+//                            Rs2GameObject.interact(51372,"Use");
+//                        }
+                        Rs2Walker.walkTo(1418,9632,0,8);
+                        sleep(1200);
+                        Rs2GameObject.interact(51372,"Use");
+                        sleep(1200);
+//                        Rs2Player.waitForWalking();
+//                        state = State.FIGHTING;
                         break;
                     case FIGHTING:
                         NPC floorTileNPC = Rs2Npc.getNpc(13015);
@@ -261,6 +277,7 @@ public class MoonsScript extends Script {
 
                         int maxEat = 50;
                         int maxPrayer = 50;
+//                        Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_GREATER_THRALL));
 
                         int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
                         if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= maxEat) {
@@ -306,12 +323,14 @@ public class MoonsScript extends Script {
                             if (npcToAttack == 13011 && Rs2Combat.getSpecEnergy() >= 500&&Rs2Inventory.hasItem("dragon claws")) {
                                 Rs2Inventory.wear(13652); // d claws
                                 Rs2Combat.setSpecState(true);
+                                Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_SUPERIOR_ZOMBIE));
                                 //Rs2Npc.interact(npcToAttack, "attack");
                                 attackBoss("Blood moon");
                             } else if (npcToAttack == 13011) {
                                 Rs2Inventory.wear(4151);
                                 Rs2Inventory.wear(12954  );
                                 //Rs2Npc.interact(npcToAttack, "attack");
+
                                 attackBoss("Blood moon");
                             } else {
                                 Rs2Inventory.wear(4151  );
@@ -323,31 +342,35 @@ public class MoonsScript extends Script {
                         break;
                     case GOING_TO_LOOT:
                         Rs2Prayer.toggleQuickPrayer(false);
-
+//                        if (Rs2Widget.getWidget(56950788) != null)
                         if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1376, 9710, 0))) {
                             Rs2GameObject.interact(51362, "Make-cuppa");
-
-                            sleep(1200);
-
-                            Rs2GameObject.interact(new WorldPoint(1374,9665,0),"Pass-through");
-                            sleep(1200);
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1347, 9590, 0))) {
-                            Rs2GameObject.interact(51362, "Make-cuppa");
-
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0)) && Microbot.getClient().getEnergy() == 10_000) {
-                            Rs2GameObject.interact(new WorldPoint(1356,9536,0),"Pass-through");
+                            sleepUntil(() -> Microbot.getClient().getEnergy() == 10_000);
                         }
+//                            sleep(1200);
+
+//                            Rs2GameObject.interact(new WorldPoint(1374,9665,0),"Pass-through");
+//                            sleep(1200);
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1347, 9590, 0))) {
+//                            Rs2GameObject.interact(51362, "Make-cuppa");
+//
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0)) && Microbot.getClient().getEnergy() == 10_000) {
+//                            Rs2GameObject.interact(new WorldPoint(1356,9536,0),"Pass-through");
+//                        }
 //                        else if (Rs2Player.distanceTo(new WorldPoint(1513, 9563, 0))<10) {
-                        else if (Rs2GameObject.exists(51346)&&lootable) {
+                            Rs2Walker.walkTo(1513,9580,0,8);
+                        if (Rs2GameObject.exists(51346)&&Rs2Widget.isWidgetVisible(56950788)) {
+
                             Rs2GameObject.interact(51346,"Claim");
-                            sleepUntil(()->Rs2Widget.getWidget(56885268) != null,10000);
-                        } else if (Rs2Widget.getWidget(56885268) != null) {
+                            sleepUntil(()->Rs2Widget.getWidget(56885268) != null,5000);
                             Widget widget = Rs2Widget.getWidget(56885268);
                             if (widget == null) return;
 
                             Microbot.getMouse().click(widget.getBounds());
-
+                            loots++;
                             sleep(1200);
+                        } else if (!Rs2Widget.isWidgetVisible(56950788)) {
+
 
                             moonlightOne = (int) Rs2Inventory.itemQuantity(moonlightPotion[0]);
                             moonlightTwo = (int) Rs2Inventory.itemQuantity(moonlightPotion[1]);
@@ -368,18 +391,30 @@ public class MoonsScript extends Script {
                         break;
                     case GOING_BACK_TO_BLOOD:
 //MenuEntryImpl(getOption=Pass-through, getTarget=<col=ffff>Entrance, getIdentifier=51377, getType=GAME_OBJECT_FIRST_OPTION, getParam0=48, getParam1=48, getItemId=-1, isForceLeftClick=false, getWorldViewId=-1, isDeprioritized=false)
-                        if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1513, 9578, 0))) {
-                            Rs2GameObject.interact(new WorldPoint(1513,9561,0),"Pass-through");
+//                        if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1513, 9578, 0))) {
+//                            Rs2GameObject.interact(new WorldPoint(1513,9561,0),"Pass-through");
+//
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1355, 9538, 0))) {
+//                            Rs2GameObject.interact(51362, "Make-cuppa");
+//
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0))  && Microbot.getClient().getEnergy() == 10_000) {
+//                            Rs2GameObject.interact(new WorldPoint(1388,9589,0),"Pass-through");
+//
+//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1418, 9632, 0))) {
+//                            Rs2GameObject.interact(51372,"Use");
+//                        }
 
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1355, 9538, 0))) {
-                            Rs2GameObject.interact(51362, "Make-cuppa");
-
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0))  && Microbot.getClient().getEnergy() == 10_000) {
-                            Rs2GameObject.interact(new WorldPoint(1388,9589,0),"Pass-through");
-
-                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1418, 9632, 0))) {
-                            Rs2GameObject.interact(51372,"Use");
-                        }
+//                        if(!Rs2GameObject.exists(51372)) {
+//                            if(1<0) {
+//                            Rs2Walker.walkTo(1350, 9582, 0, 2);
+//                            Rs2GameObject.interact(51362, "Make-cuppa");
+//                            sleepUntil(() -> Microbot.getClient().getEnergy() == 10_000);
+//                        }
+                        Rs2Walker.walkTo(1418,9632,0,8);
+                        sleep(1200);
+                        Rs2GameObject.interact(51372,"Use");
+                        sleep(1200);
+//                        state = State.FIGHTING;
                         break;
                 }
 
@@ -434,7 +469,10 @@ public class MoonsScript extends Script {
         state = State.DEFAULT;
         previousState = State.DEFAULT;
     }
-
+    public void startup() {
+        loots=0;
+        start_time=System.currentTimeMillis();
+    }
     @Override
     public void shutdown() {
         super.shutdown();
