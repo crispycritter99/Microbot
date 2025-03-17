@@ -108,7 +108,10 @@ public class AutoChinScript extends Script {
                 currentState = State.DROPPING;
                 return;
             }
-
+            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_50727, "reset", 4)) {
+                currentState = State.CATCHING;
+                return;
+            }
             // If there are shaking boxes, interact with them. ferrets
             if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9384, "reset", 4)) {
                 currentState = State.CATCHING;
@@ -142,7 +145,12 @@ public class AutoChinScript extends Script {
     }
 
     private void handleCatchingState(AutoHunterConfig config) {
-        sleep(config.minSleepAfterCatch(), config.maxSleepAfterCatch());
+//        sleep(config.minSleepAfterCatch(), config.maxSleepAfterCatch());
+//       int prevtraps=Rs2GameObject.getGameObjects(9380).size();
+//       Microbot.log(prevtraps+"");
+        Rs2Player.waitForAnimation();
+        Rs2Player.waitForAnimation();
+//        sleepUntil(()->Rs2GameObject.getGameObjects(9380).size()!=prevtraps,7500);
         currentState = State.IDLE;
     }
 
