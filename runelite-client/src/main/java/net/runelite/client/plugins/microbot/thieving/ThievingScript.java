@@ -188,10 +188,11 @@ public class ThievingScript extends Script {
 
     private void bank() {
         Microbot.status = "Getting food from bank...";
-
         BankLocation nearestBank = Rs2Bank.getNearestBank();
-        boolean isBankOpen = Rs2Bank.isNearBank(nearestBank, 8) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(nearestBank);
-        if (!isBankOpen || !Rs2Bank.isOpen()) return;
+if (Rs2Bank.isNearBank(nearestBank, 8))Rs2Bank.openBank();
+        else Rs2Bank.walkToBankAndUseBank(nearestBank);
+//        boolean isBankOpen = Rs2Bank.isNearBank(nearestBank, 8) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(nearestBank);
+        if (!Rs2Bank.isOpen()) return;
         Rs2Bank.depositAll();
 
         boolean successfullyWithdrawFood = Rs2Bank.withdrawX(true, config.food().getName(), config.foodAmount(), true);
