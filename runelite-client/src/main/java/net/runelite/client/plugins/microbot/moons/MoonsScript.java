@@ -390,19 +390,6 @@ public class MoonsScript extends Script {
 
                         break;
                     case GOING_BACK_TO_BLOOD:
-//MenuEntryImpl(getOption=Pass-through, getTarget=<col=ffff>Entrance, getIdentifier=51377, getType=GAME_OBJECT_FIRST_OPTION, getParam0=48, getParam1=48, getItemId=-1, isForceLeftClick=false, getWorldViewId=-1, isDeprioritized=false)
-//                        if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1513, 9578, 0))) {
-//                            Rs2GameObject.interact(new WorldPoint(1513,9561,0),"Pass-through");
-//
-//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1355, 9538, 0))) {
-//                            Rs2GameObject.interact(51362, "Make-cuppa");
-//
-//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1350, 9582, 0))  && Microbot.getClient().getEnergy() == 10_000) {
-//                            Rs2GameObject.interact(new WorldPoint(1388,9589,0),"Pass-through");
-//
-//                        } else if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1418, 9632, 0))) {
-//                            Rs2GameObject.interact(51372,"Use");
-//                        }
 
 //                        if(!Rs2GameObject.exists(51372)) {
 //                            if(1<0) {
@@ -414,7 +401,6 @@ public class MoonsScript extends Script {
                         sleep(1200);
                         Rs2GameObject.interact(51372,"Use");
                         sleep(1200);
-//                        state = State.FIGHTING;
                         break;
                 }
 
