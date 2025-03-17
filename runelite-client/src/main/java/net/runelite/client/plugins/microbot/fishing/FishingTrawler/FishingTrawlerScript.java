@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.fishing.FishingTrawler;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class FishingTrawlerScript extends Script {
     public static boolean tentacle = false;
+    private static boolean lockState = false;
     public static boolean lootnet = false;
      boolean test = false;
     public boolean run(FishingTrawlerConfig config) {
@@ -42,8 +44,11 @@ public class FishingTrawlerScript extends Script {
                         Rs2Widget.clickWidget("Bank-all");
                         sleep(Rs2Random.randomGaussian(600, 300));
                         lootnet=false;
+                            BreakHandlerScript.setLockState(false);
+
                     }
                     if (Rs2GameObject.interact(new WorldPoint(2675, 3170, 0), "Cross"))
+                        BreakHandlerScript.setLockState(true);
                         Rs2Player.waitForWalking(10000);
 
 //
