@@ -502,8 +502,8 @@ public class Rs2Walker {
 
         int canvasX = canv != null ? canv.getX() : -1;
         int canvasY = canv != null ? canv.getY() : -1;
-        canvasX+=Rs2Random.nextInt(-10,10,1,true);
-        canvasY+=Rs2Random.nextInt(-10,10,1,true);
+        canvasX+=Rs2Random.nextInt(-5,5,1,true);
+        canvasY+=Rs2Random.nextInt(-5,5,1,true);
 //        canvasX=0;
 //        canvasY=0;
         //if the tile is not on screen, use minimap
@@ -511,6 +511,14 @@ public class Rs2Walker {
             return Rs2Walker.walkMiniMap(worldPoint);
         }
 
+        Polygon poly = Perspective.getCanvasTilePoly(Microbot.getClient(), localPoint);
+        Point hovermouse = Microbot.getClient().getMouseCanvasPosition();
+        if (poly != null && poly.contains(hovermouse.getX(), hovermouse.getY()))
+        {
+//            Microbot.log("dont need to move");
+            canvasX=hovermouse.getX();
+            canvasY=hovermouse.getY();
+        }
         Microbot.doInvoke(new NewMenuEntry(canvasX, canvasY, MenuAction.WALK.getId(), 0, 0, "Walk here"), new Rectangle(canvasX, canvasY, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
         return true;
     }
