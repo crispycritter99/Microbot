@@ -76,7 +76,8 @@ public enum BankLocation {
     PISCATORIS_FISHING_COLONY(new WorldPoint(2330, 3689, 0)),
     PORT_KHAZARD(new WorldPoint(2664, 3161, 0)),
     PORT_PHASMATYS(new WorldPoint(3688, 3467, 0)),
-    PRIFDDINAS(new WorldPoint(3257, 6106, 0)),
+    PRIFDDINAS_WEST(new WorldPoint(3257, 6106, 0)),
+    PRIFDDINAS_EAST(new WorldPoint(3295, 6059, 0)),
     ROGUES_DEN_EMERALD_BENEDICT(new WorldPoint(3043, 4973, 1)),
     ROGUES_DEN_CHEST(new WorldPoint(3040, 4969, 1)),
     RUINS_OF_UNKAH(new WorldPoint(3156, 2835, 0)),
@@ -184,7 +185,8 @@ public enum BankLocation {
                 if (!isMember()) return false;
                 // Requires Mournings End Part 1 in progress or completed
                 return Rs2Player.getQuestState(Quest.MOURNINGS_END_PART_I) != QuestState.NOT_STARTED;
-            case PRIFDDINAS:
+            case PRIFDDINAS_EAST:
+            case PRIFDDINAS_WEST:
                 // Requires Song of the elves to be completed
                 return Rs2Player.getQuestState(Quest.SONG_OF_THE_ELVES) == QuestState.FINISHED;
             case SHILO_VILLAGE:

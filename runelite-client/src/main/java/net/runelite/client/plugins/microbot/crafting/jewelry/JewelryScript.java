@@ -77,7 +77,7 @@ public class JewelryScript extends Script {
 //                        boolean isBankOpen = Rs2Bank.isNearBank(15) ? Rs2Bank.useBank() : Rs2Bank.walkToBankAndUseBank();
                         if (Rs2Bank.isOpen()) {
                             System.out.println("Bank is already open.");
-                        } else if (Rs2Bank.isNearBank(15)) {
+                        } else if (Rs2Bank.isNearBank(plugin.getCraftingLocation().getBankLocation(), 15)) {
                             boolean opened = Rs2Bank.useBank();
                             System.out.println("Tried to use the bank: " + opened);
                         } else {
