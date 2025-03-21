@@ -65,6 +65,8 @@ public class AIOMagicPlugin extends Plugin {
 	private FlaxSpinScript flaxSpinScript;
 	@Inject
 	private DegrimeScript degrimeScript;
+	@Inject
+	private SuperGlassScript superGlassScript;
 
 	public static String version = "1.1.0";
 	
@@ -124,6 +126,9 @@ public class AIOMagicPlugin extends Plugin {
 			case DEGRIME:
 				degrimeScript.run();
 				break;
+			case SUPERGLASS:
+				superGlassScript.run();
+				break;
 		}
 	}
 
@@ -136,6 +141,7 @@ public class AIOMagicPlugin extends Plugin {
 		stunAlchScript.shutdown();
 		flaxSpinScript.shutdown();
 		degrimeScript.shutdown();
+		superGlassScript.shutdown();
 		overlayManager.remove(aioMagicOverlay);
 	}
 

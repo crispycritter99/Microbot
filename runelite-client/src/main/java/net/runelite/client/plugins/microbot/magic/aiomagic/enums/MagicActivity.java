@@ -8,5 +8,6 @@ public enum MagicActivity {
     TELEALCH,
     STUNALCH,
     SPINFLAX,
-    DEGRIME
+    DEGRIME,
+    SUPERGLASS
 }
