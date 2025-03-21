@@ -13,7 +13,6 @@ import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
-import net.runelite.client.plugins.microbot.util.math.Random;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
@@ -68,18 +67,21 @@ public class FlaxSpinScript extends Script {
 
 //                        Microbot.log("hi");
 //                        Rs2Inventory.useItemOnObject(ItemID.JUTE_FIBRE, config.flaxSpinLocation().getObjectID());
-                        Rs2Inventory.use(ItemID.JUTE_FIBRE);
-                        Rs2GameObject.interact(loom, "use");
-                        sleep(Random.random(2000, 3000));
+//                        Rs2Inventory.use(ItemID.JUTE_FIBRE);
+//                        Rs2GameObject.interact(loom, "use");
+                        Rs2GameObject.interact(loom, "Weave");
+                        Rs2Random.wait(2000, 3000);
                         //Rs2Inventory.useItemOnObject(ItemID.JUTE_FIBRE, config.flaxSpinLocation().getObjectID());
 //                        Microbot.log("ha");
                         sleepUntil(() -> !Rs2Player.isMoving());
-                        Rs2Widget.sleepUntilHasWidget("how many do you wish to make?");
-                        Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                        if (Rs2Widget.sleepUntilHasWidget("how many do you wish to make?")) {
+//                        Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
 //                        Rs2Dialogue.keyPressForDialogueOption("Drift net");
-//                        Rs2Widget.clickWidget("Drift Net");
-                        sleepUntilTrue(() -> !Rs2Inventory.hasItem(ItemID.JUTE_FIBRE), 600, 150000);
-                        state = State.BANKING;
+                        Rs2Widget.clickWidget("Drift Net");
+                            sleepUntilTrue(() -> !Rs2Inventory.hasItem(ItemID.JUTE_FIBRE), 600, 150000);
+
+                            state = State.BANKING;
+                        }
                         break;
                     case BANKING:
                         GameObject chest = Rs2GameObject.findObject("Bank Chest", false, 30, false, Rs2Player.getWorldLocation());
@@ -89,12 +91,13 @@ public class FlaxSpinScript extends Script {
                         sleepUntil(Rs2Bank::isOpen, 5000);
                         if (!Rs2Bank.useBank() || !Rs2Bank.isOpen()) return;
 
-                        Rs2Bank.depositAll(ItemID.DRIFT_NET);
-                        sleep(Rs2Random.randomGaussian(800,1.5));
+                        Rs2Bank.depositAll();
+//                        sleep(Rs2Random.randomGaussian(800,1.5));
                         Rs2Bank.withdrawAll(ItemID.JUTE_FIBRE);
                         sleep(Rs2Random.randomGaussian(800,1.5));
 
-                        Rs2Bank.closeBank();
+//                        Rs2Bank.closeBank();
+                        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
                         if (!Rs2Inventory.hasItem(ItemID.JUTE_FIBRE)) {
                             shutdown();
                             return;
