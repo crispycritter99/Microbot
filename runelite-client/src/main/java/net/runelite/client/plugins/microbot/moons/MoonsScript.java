@@ -18,6 +18,7 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
+import java.math.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +67,27 @@ public class MoonsScript extends Script {
             new WorldPoint(1389, 9631, 0),
             new WorldPoint(1389, 9633, 0),
             new WorldPoint(1389, 9634, 0)
+    );
+    private static final List<WorldPoint> pointsjaguar = Arrays.asList(
+            new WorldPoint(1390, 9636, 0),// top
+            new WorldPoint(1391, 9636, 0),
+            new WorldPoint(1393, 9636, 0),
+            new WorldPoint(1394, 9636, 0),
+
+            new WorldPoint(1396, 9634, 0),// right
+            new WorldPoint(1396, 9633, 0),
+            new WorldPoint(1396, 9631, 0),
+            new WorldPoint(1396, 9630, 0),
+
+            new WorldPoint(1394, 9628, 0),// bottom
+            new WorldPoint(1393, 9628, 0),
+            new WorldPoint(1391, 9628, 0),
+            new WorldPoint(1390, 9628, 0),
+
+            new WorldPoint(1388, 9630, 0),// left
+            new WorldPoint(1388, 9631, 0),
+            new WorldPoint(1388, 9633, 0),
+            new WorldPoint(1388, 9634, 0)
     );
 
     public boolean run(MoonsConfig config) {
@@ -231,7 +253,7 @@ public class MoonsScript extends Script {
 //                        state = State.FIGHTING;
                         break;
                     case FIGHTING:
-                        NPC floorTileNPC = Rs2Npc.getNpc(13015);
+                        Rs2NpcModel floorTileNPC = Rs2Npc.getNpc(13015);
                         WorldPoint floorTileLocation = (floorTileNPC != null) ? floorTileNPC.getWorldLocation() : null;
 
                        //WorldPoint playerLocation = Rs2Player.getWorldLocation();
@@ -240,21 +262,51 @@ public class MoonsScript extends Script {
                             WorldPoint closestTile = points.stream()
                                     .min(Comparator.comparingDouble(tile -> tile.distanceTo2D(floorTileLocation)))
                                     .orElse(null);
-
-                            if (closestTile != null && !playerLocation.equals(closestTile)) {
+                            if (closestTile != null && Rs2Npc.getNpcs("blood jaguar").count()!=0) {
 //                                Microbot.log("The closest tile to the centre is: " + closestTile);
 //                                Microbot.log("Player location: " + playerLocation);
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&closestTile.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation())<2){sleep(1800);}
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&Rs2Player.isInteracting()){sleep(1800);}
                                 if (Rs2Npc.getNpcs("blood jaguar").count()==0||MoonsPlugin.ticks==1&&!Rs2Player.isMoving()) {
                                     Rs2Walker.walkFastCanvas(closestTile);
-                                    if (Rs2Player.distanceTo(closestTile)<3){
+                                    if (Rs2Npc.getNpcs("blood jaguar").count()!=0){
                                         sleep(300);
-                                        Rs2Npc.interact("blood jaguar", "attack");
+                                        Rs2NpcModel jaguar=Rs2Npc.getNpcs("blood jaguar").sorted(Comparator.comparingInt((Rs2NpcModel npc) -> floorTileLocation.distanceTo(npc.getWorldLocation()))).findFirst().orElse(null);
+                                        WorldPoint closestJaguarTile = pointsjaguar.stream()
+                                                .min(Comparator.comparingDouble(tile -> tile.distanceTo2D(jaguar.getWorldLocation())))
+                                                .orElse(null);
+//                                        floorTileNPC.getWorldLocation().distanceTo()
+//                                        sleep(200);
+                                        Rs2Walker.walkFastCanvas(closestJaguarTile);
+                                        sleep(300);
+                                        Rs2Npc.interact(jaguar, "attack");
                                     }
                                 }
 
                             }
+                            else if (closestTile != null && !playerLocation.equals(closestTile)) {
+//                                Microbot.log("The closest tile to the centre is: " + closestTile);
+//                                Microbot.log("Player location: " + playerLocation);
+//                                if (Rs2Npc.getNpcs(13021).count()>1&&closestTile.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation())<2){sleep(1800);}
+//                                if (Rs2Npc.getNpcs(13021).count()>1&&Rs2Player.isInteracting()){sleep(1800);}
+                                if (Rs2Npc.getNpcs("blood jaguar").count()==0||MoonsPlugin.ticks==1&&!Rs2Player.isMoving()) {
+                                    Rs2Walker.walkFastCanvas(closestTile);
+                                    if (Rs2Npc.getNpcs("blood jaguar").count()!=0){
+                                        sleep(300);
+                                        Rs2NpcModel jaguar=Rs2Npc.getNpcs("blood jaguar").sorted(Comparator.comparingInt((Rs2NpcModel npc) -> floorTileLocation.distanceTo(npc.getWorldLocation()))).findFirst().orElse(null);
+                                        WorldPoint closestJaguarTile = pointsjaguar.stream()
+                                                .min(Comparator.comparingDouble(tile -> tile.distanceTo2D(jaguar.getWorldLocation())))
+                                                .orElse(null);
+//                                        floorTileNPC.getWorldLocation().distanceTo()
+//                                        sleep(200);
+//                                        Rs2Walker.walkFastCanvas(closestJaguarTile);
+//                                        sleep(300);
+                                        Rs2Npc.interact(jaguar, "attack");
+                                    }
+                                }
+
+                            }
+
 
                         }
 
@@ -326,7 +378,7 @@ public class MoonsScript extends Script {
                                 Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_SUPERIOR_ZOMBIE));
                                 //Rs2Npc.interact(npcToAttack, "attack");
                                 attackBoss("Blood moon");
-                            } else if (npcToAttack == 13011) {
+                            } else if (npcToAttack == 13011&&Rs2Npc.getNpcs("blood jaguar").count()==0&&bloodSpotsWorldPoints.isEmpty()) {
                                 Rs2Inventory.wear(4151);
                                 Rs2Inventory.wear(12954  );
                                 //Rs2Npc.interact(npcToAttack, "attack");
@@ -410,7 +462,7 @@ public class MoonsScript extends Script {
             } catch (Exception e) {
                 Microbot.log("Error: " + e);
             }
-        }, 0, 100, TimeUnit.MILLISECONDS);
+        }, 0, 10, TimeUnit.MILLISECONDS);
         return true;
     }
 
