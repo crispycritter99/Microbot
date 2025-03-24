@@ -25,6 +25,7 @@ import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
 import net.runelite.client.plugins.microbot.SulphurNagua.loot.LootScript;
 import net.runelite.client.plugins.microbot.SulphurNagua.safety.SafetyScript;
 import net.runelite.client.plugins.microbot.SulphurNagua.skill.AttackStyleScript;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -99,6 +100,7 @@ public class SulphurNaguaPlugin extends Plugin {
     @Override
     protected void startUp() throws AWTException {
         Microbot.pauseAllScripts = false;
+        BreakHandlerScript.setLockState(true);
         cooldown = 0;
         if (overlayManager != null) {
             overlayManager.add(playerAssistOverlay);
@@ -129,6 +131,7 @@ public class SulphurNaguaPlugin extends Plugin {
     }
 
     protected void shutDown() {
+        BreakHandlerScript.setLockState(false);
         lootScript.shutdown();
         cannonScript.shutdown();
         attackNpc.shutdown();

@@ -96,7 +96,7 @@ public class BreakHandlerScript extends Script {
                     } else {
                         new Login();
                     }
-                    totalBreaks++;
+
                     ClientUI.getFrame().setTitle(title);
                     if (Rs2AntibanSettings.takeMicroBreaks) {
                         Rs2AntibanSettings.microBreakActive = false;
@@ -108,6 +108,7 @@ public class BreakHandlerScript extends Script {
                 }
 
                 if ((breakIn <= 0 && !Microbot.pauseAllScripts && !isLockState()) || (Rs2AntibanSettings.microBreakActive && !Microbot.pauseAllScripts && !isLockState())) {
+                    totalBreaks++;
                     startBreak();
                 }
 

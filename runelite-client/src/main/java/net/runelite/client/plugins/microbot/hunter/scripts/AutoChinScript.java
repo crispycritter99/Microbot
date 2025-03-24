@@ -6,17 +6,18 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.hunter.AutoHunterConfig;
+import net.runelite.client.plugins.microbot.hunter.AutoHunterPlugin;
+import net.runelite.client.plugins.microbot.hunter.HunterTrap;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
-import net.runelite.client.plugins.microbot.util.npc.Rs2NpcManager;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 enum State {
@@ -44,6 +45,9 @@ public class AutoChinScript extends Script {
             ObjectID.SHAKING_BOX
     );
     State currentState = State.IDLE;
+
+
+
     public boolean run(AutoHunterConfig config) {
         Microbot.enableAutoRunOn = false;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
@@ -94,7 +98,12 @@ public class AutoChinScript extends Script {
                 currentState = State.LAYING;
                 return;
             }
-
+            AutoHunterPlugin.getTraps();
+            List<HunterTrap> traps = new ArrayList<>(AutoHunterPlugin.getTraps().values());
+            Microbot.log("active traps:"+traps.size());
+            for (int i = 0; i < traps.size(); i++) {
+                Microbot.log("traps #"+(i+1)+":"+traps.get(i).getState());;
+            }
             // If our inventory is full of ferrets
             if(Rs2Inventory.getEmptySlots() <= 1 && Rs2Inventory.contains(ItemID.FERRET)){
                 // ferrets have the option release and not drop
@@ -108,30 +117,49 @@ public class AutoChinScript extends Script {
                 currentState = State.DROPPING;
                 return;
             }
-            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_50727, "reset", 4)) {
+//            AutoHunterPlugin.getTraps().values().stream()
+//                    .filter(trap->trap.getState()== HunterTrap.State.FULL)
+//                    .collect(Collectors.toList());
+            Optional<HunterTrap> eligibletrap = traps.stream().filter(trap -> trap.getState() == HunterTrap.State.FULL).findFirst();
+            if (eligibletrap.isPresent()) {
+                if (Rs2GameObject.interact(eligibletrap.get().getWorldLocation(), "reset")) {
+                    Microbot.log("utilized trap map");
+                    currentState = State.CATCHING;
+                    return;
+                }
+            }
+             Optional<HunterTrap> emptytrap = traps.stream().filter(trap -> trap.getState() == HunterTrap.State.EMPTY).findFirst();
+                if (emptytrap.isPresent()) {
+                if (Rs2GameObject.interact(emptytrap.get().getWorldLocation(),"reset")){
+                    Microbot.log("utilized trap map");
                 currentState = State.CATCHING;
                 return;
-            }
-            // If there are shaking boxes, interact with them. ferrets
-            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9384, "reset", 4)) {
-                currentState = State.CATCHING;
-                return;
-            }
-            // If there are shaking boxes, interact with them
-            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9383, "reset", 4)) {
-                currentState = State.CATCHING;
-                return;
-            }
-            // If there are shaking boxes, interact with them
-            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9382, "reset", 4)) {
-                currentState = State.CATCHING;
-                return;
-            }
-
-            // Interact with traps that have not caught anything
-            if (Rs2GameObject.interact(ObjectID.BOX_TRAP_9385, "reset", 4)) {
-                currentState = State.CATCHING;
-            }
+                }
+             }
+//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_50727, "reset", 4)) {
+//                currentState = State.CATCHING;
+//                return;
+//            }
+//            // If there are shaking boxes, interact with them. ferrets
+//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9384, "reset", 4)) {
+//                currentState = State.CATCHING;
+//                return;
+//            }
+//            // If there are shaking boxes, interact with them
+//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9383, "reset", 4)) {
+//                currentState = State.CATCHING;
+//                return;
+//            }
+//            // If there are shaking boxes, interact with them
+//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9382, "reset", 4)) {
+//                currentState = State.CATCHING;
+//                return;
+//            }
+//
+//            // Interact with traps that have not caught anything
+//            if (Rs2GameObject.interact(ObjectID.BOX_TRAP_9385, "reset", 4)) {
+//                currentState = State.CATCHING;
+//            }
         } catch (Exception ex) {
             Microbot.log(ex.getMessage());
             ex.printStackTrace();

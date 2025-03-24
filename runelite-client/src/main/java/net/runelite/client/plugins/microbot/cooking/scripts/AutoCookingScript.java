@@ -127,7 +127,8 @@ public class AutoCookingScript extends Script {
 //                                Microbot.status = "Cooking " + cookingItem.getRawItemName();
 //                            }
 //                            else {
-                                Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+//                                Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+                            Rs2GameObject.interact(cookingObject.getId());
                             sleepUntil(() -> Rs2Widget.getWidget(17694725) != null);
                             sleep(Rs2Random.nextInt(300,600,1,true));
                                 Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
@@ -163,14 +164,15 @@ public class AutoCookingScript extends Script {
                             boolean isNPCBankOpen = Rs2Bank.openBank(npc);
                             if (!isNPCBankOpen) return;
                         } else {
-                            boolean isBankOpen = Rs2Bank.walkToBankAndUseBank();
-                            if (!isBankOpen || !Rs2Bank.isOpen()) return;
+//                            boolean isBankOpen = Rs2Bank.walkToBankAndUseBank();
+//                            if (!isBankOpen || !Rs2Bank.isOpen()) return;
+                            Rs2Bank.openBank();
                         }
 
                         if (hasCookedItem(cookingItem)) {
                             Rs2Bank.depositAll();
 //                            Rs2Random.wait(800, 1600);
-                            Rs2Inventory.waitForInventoryChanges(1600);
+//                            Rs2Inventory.waitForInventoryChanges(1600);
                         }
                         
                         if (!hasRawItem(cookingItem)) {
@@ -180,15 +182,17 @@ public class AutoCookingScript extends Script {
                         }
                         Rs2Bank.withdrawAll(cookingItem.getRawItemName(), true);
                         Rs2Inventory.waitForInventoryChanges(1600);
-//                        Rs2Random.wait(800, 1600);
+                        Rs2Random.wait(800, 1600);
+                        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
                         state = CookingState.WALKING;
-                        Rs2Bank.closeBank();
+//                        Rs2Bank.closeBank();
+
                         break;
                     case WALKING:
-                        if (!isNearCookingLocation(location, 10)) {
+                        if (!isNearCookingLocation(location, 20)) {
                             boolean walkTo = Rs2Walker.walkTo(location.getCookingObjectWorldPoint(), 2);
                             if (!walkTo) return;
-                        } else if (!isNearCookingLocation(location, 2)) {
+                        } else if (!isNearCookingLocation(location, 10)) {
                             Rs2Walker.walkFastCanvas(location.getCookingObjectWorldPoint());
                         }
 

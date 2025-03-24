@@ -1,11 +1,13 @@
-package net.runelite.client.plugins.microbot.moons;
-import net.runelite.api.*;
+package net.runelite.client.plugins.microbot.MoonsTest;
+
+import net.runelite.api.GameObject;
+import net.runelite.api.NPC;
+import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.MoonsTest.enums.State;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.moons.enums.State;
-import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -14,20 +16,17 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
-import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
-import java.math.*;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import static net.runelite.client.plugins.microbot.util.npc.Rs2Npc.getNpc;
-import static net.runelite.client.plugins.microbot.util.npc.Rs2Npc.interact;
 
-public class MoonsScript extends Script {
+import static net.runelite.client.plugins.microbot.util.npc.Rs2Npc.getNpc;
+
+public class MoonsTestScript extends Script {
     public static State state = State.DEFAULT;
     public static State previousState = State.DEFAULT;
 
@@ -91,7 +90,7 @@ public class MoonsScript extends Script {
             new WorldPoint(1388, 9634, 0)
     );
 
-    public boolean run(MoonsConfig config) {
+    public boolean run(MoonsTestConfig config) {
         state = config.getState();
         Microbot.enableAutoRunOn = true;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
@@ -270,7 +269,7 @@ public class MoonsScript extends Script {
 //                                Microbot.log("Player location: " + playerLocation);
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&closestTile.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation())<2){sleep(1800);}
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&Rs2Player.isInteracting()){sleep(1800);}
-                                if (Rs2Npc.getNpcs("blood jaguar").count()==0||MoonsPlugin.ticks==1&&!Rs2Player.isMoving()) {
+                                if (Rs2Npc.getNpcs("blood jaguar").count()==0|| MoonsTestPlugin.ticks==1&&!Rs2Player.isMoving()) {
                                     Rs2Walker.walkFastCanvas(closestTile);
                                     if (Rs2Npc.getNpcs("blood jaguar").count()!=0){
                                         sleep(300);
@@ -296,7 +295,7 @@ public class MoonsScript extends Script {
 //                                Microbot.log("Player location: " + playerLocation);
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&closestTile.distanceTo(Microbot.getClient().getLocalPlayer().getWorldLocation())<2){sleep(1800);}
 //                                if (Rs2Npc.getNpcs(13021).count()>1&&Rs2Player.isInteracting()){sleep(1800);}
-                                if (Rs2Npc.getNpcs("blood jaguar").count()==0||MoonsPlugin.ticks==1&&!Rs2Player.isMoving()) {
+                                if (Rs2Npc.getNpcs("blood jaguar").count()==0|| MoonsTestPlugin.ticks==1&&!Rs2Player.isMoving()) {
                                     Rs2Walker.walkFastCanvas(closestTile);
                                     if (Rs2Npc.getNpcs("blood jaguar").count()!=0){
                                         sleep(300);
@@ -369,10 +368,8 @@ public class MoonsScript extends Script {
                         boolean dangerZone = !Rs2GameObject.getGameObjects(51054).isEmpty();
                         if (!Rs2Prayer.isQuickPrayerEnabled() && Rs2Player.hasPrayerPoints() && !dangerZone) {
                             Rs2Prayer.toggleQuickPrayer(true);
-//                            Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,true);
                         } else if (dangerZone) {
                             Rs2Prayer.toggleQuickPrayer(false);
-//                            Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,false);
                         }
 
                         if (!Rs2Player.isMoving() && !Rs2Player.isInteracting()) {
@@ -403,7 +400,6 @@ public class MoonsScript extends Script {
                         break;
                     case GOING_TO_LOOT:
                         Rs2Prayer.toggleQuickPrayer(false);
-//                        Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,false);
 //                        if (Rs2Widget.getWidget(56950788) != null)
                         if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1376, 9710, 0))) {
                             Rs2GameObject.interact(51362, "Make-cuppa");
@@ -454,6 +450,7 @@ public class MoonsScript extends Script {
                     case GOING_BACK_TO_BLOOD:
 
 //                        if(!Rs2GameObject.exists(51372)) {
+//                            if(1<0) {
 //                            Rs2Walker.walkTo(1350, 9582, 0, 2);
 //                            Rs2GameObject.interact(51362, "Make-cuppa");
 //                            sleepUntil(() -> Microbot.getClient().getEnergy() == 10_000);

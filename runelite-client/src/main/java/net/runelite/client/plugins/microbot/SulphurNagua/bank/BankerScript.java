@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.SulphurNagua.bank;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ItemID;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -9,13 +10,16 @@ import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.constants.Constants;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.*;
@@ -153,20 +157,19 @@ public class BankerScript extends Script {
 
     public boolean handleBanking() {
         SulphurNaguaPlugin.setState(State.BANKING);
-//        Rs2Prayer.disableAllPrayers();
+
         Rs2Walker.walkTo(1349,9591,0,10);
+        Rs2Prayer.disableAllPrayers();
         Rs2GameObject.interact(51375,"Pass-through");
-//        while(Rs2GameObject.getGameObjects(51365).size()==0){sleep(600);}
         sleepUntil(() -> Rs2GameObject.getGameObjects(51365).size()!=0);
+        BreakHandlerScript.setLockState(false);
         sleep(Rs2Random.randomGaussian(1200,200));
 
 
         Rs2GameObject.interact(51365,"Collect-from");
-//        while(Rs2Inventory.getEmptySlots()>2){sleep(600);}
         sleepUntil(() -> Rs2Inventory.getEmptySlots()<2,20000);
 
         Rs2GameObject.interact(51377,"Pass-through");
-//        while(Rs2Player.getWorldLocation().getY()>9594){sleep(600);}
         sleepUntil(() -> Rs2Player.getWorldLocation().getY()<9594);
 
         while(Rs2Inventory.getEmptySlots()<2){Rs2Inventory.drop(29078);Rs2Inventory.waitForInventoryChanges(800);}
@@ -197,8 +200,18 @@ public class BankerScript extends Script {
 
             sleep(Rs2Random.randomGaussian(400,200));
         }
+//        List<Rs2ItemModel> items = Rs2Inventory.getList(Rs2ItemModel::isHaProfitable);
+//        long startTime = System.currentTimeMillis();
 
+//        while((Rs2Inventory.combine(ItemID.MOONLIGHT_POTION2,ItemID.MOONLIGHT_POTION2)||Rs2Inventory.combine(ItemID.MOONLIGHT_POTION1,ItemID.MOONLIGHT_POTION3))&&System.currentTimeMillis()-startTime<50000){
+//            sleepUntilTick(1);
+//        }
+//        while(Rs2Inventory.combine(ItemID.MOONLIGHT_POTION1,ItemID.MOONLIGHT_POTION3)&&System.currentTimeMillis()-startTime<50000){
+//            sleepUntilTick(1);
+//        }
         Rs2Inventory.dropAll(227);
+        Rs2Inventory.dropAll(ItemID.VIAL);
+        BreakHandlerScript.setLockState(true);
         return !needsBanking();
     }
 

@@ -2155,7 +2155,7 @@ public class Rs2Inventory {
             String[] actions = itemWidget != null && itemWidget.getActions() != null ?
                     itemWidget.getActions() :
                     rs2Item.getInventoryActions();
-
+//            Microbot.log(""+stripColTags(actions));
             identifier = indexOfIgnoreCase(stripColTags(actions), action) + 1;
         }
 
@@ -2168,6 +2168,7 @@ public class Rs2Inventory {
             menuAction = MenuAction.WIDGET_TARGET_ON_WIDGET;
         }
 
+//Microbot.log(action+" "+param0+" "+param1+" "+menuAction.getId()+" "+rs2Item.id+" "+rs2Item.name);
         Microbot.doInvoke(new NewMenuEntry(action, param0, param1, menuAction.getId(), identifier, rs2Item.id, rs2Item.name), (itemBounds(rs2Item) == null) ? new Rectangle(1, 1) : itemBounds(rs2Item));
 
         if (action.equalsIgnoreCase("destroy")) {

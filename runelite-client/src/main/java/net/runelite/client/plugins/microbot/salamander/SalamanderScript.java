@@ -1,13 +1,12 @@
 package net.runelite.client.plugins.microbot.salamander;
 
-import net.runelite.api.GameObject;
-import net.runelite.api.ItemID;
-import net.runelite.api.ObjectID;
-import net.runelite.api.Skill;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.hunter.AutoHunterPlugin;
+import net.runelite.client.plugins.microbot.salamander.HunterTrap;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
@@ -19,7 +18,9 @@ import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
 
 enum State {
     IDLE,
@@ -107,6 +108,17 @@ public class SalamanderScript extends Script {
             if (Rs2GroundItem.lootItemsBasedOnNames(lootParams)) {
                 Microbot.pauseAllScripts = false;
             }
+            if (Rs2Inventory.contains("small fishing net")&&Rs2Inventory.contains("rope")){
+                if (Rs2GameObject.interact(9000,"Set-trap",8)||Rs2GameObject.interact(8990,"Set-trap",10)||Rs2GameObject.interact(8732,"Set-trap",6)|| Rs2GameObject.interact(9341,"Set-trap",6)){
+//                    currentState = State.LAYING;
+//                    while (Rs2Player.getAnimation()==-1){sleep(100);}
+//                    while (Rs2Player.getAnimation()!=-1){sleep(100);}
+                    sleepUntil(() -> Rs2Player.getAnimation()!=-1);
+                    sleepUntil(() -> Rs2Player.getAnimation()==-1);
+                    sleepUntil(()->!Rs2Player.isMoving());
+//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
+                }
+            }
             // If our inventory is full of ferrets
 //            if(Rs2Inventory.getEmptySlots() <= 1 && Rs2Inventory.contains(ItemID.FERRET)){
 //                // ferrets have the option release and not drop
@@ -122,20 +134,39 @@ public class SalamanderScript extends Script {
 //            }
 
             // If there are shaking boxes, interact with them. ferrets
-            if (Rs2GameObject.interact(ObjectID.NET_TRAP_8996, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8986, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8734, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_9004, "check", 10)) {
-//                currentState = State.CATCHING;
-                int placeholder = Rs2Inventory.count("Rope");
-                sleepUntil(() -> Rs2Inventory.count("Rope")!=placeholder);
+            ArrayList<net.runelite.client.plugins.microbot.salamander.HunterTrap> traps = new ArrayList<>(SalamanderPlugin.getTraps().values());
+            Microbot.log("active traps:"+traps.size());
+            for (int i = 0; i < traps.size(); i++) {
+                Microbot.log("traps #"+(i+1)+":"+traps.get(i).getState());;
+            }
+            Optional<HunterTrap> eligibletrap = traps.stream().filter(trap -> trap.getState() == HunterTrap.State.FULL).findFirst();
+//            if (eligibletrap.isPresent()) {
+//                if (Rs2GameObject.interact(eligibletrap.get().getWorldLocation(), "reset")) {
+//                    Microbot.log("utilized trap map");
+//                    return;
+//                }
+//            }
+            if (eligibletrap.isPresent()){
+                GameObject donenet = Rs2GameObject.getGameObjects(8986, eligibletrap.get().getWorldLocation()).stream().findFirst().orElse(null);
+//            if (Rs2GameObject.interact(ObjectID.NET_TRAP_8996, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8986, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8734, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_9004, "check", 10)) {
+//                if (eligibletrap.isPresent()&&Rs2GameObject.interact(eligibletrap.get().getWorldLocation(), "Check")) {
+                if (eligibletrap.isPresent() && Rs2GameObject.interact(donenet, "Check")) {
+                    //                currentState = State.CATCHING;
+//                    int placeholder = Rs2Inventory.count("Rope");
+//                    sleepUntil(() -> Rs2Inventory.count("Rope")!=placeholder);
+                    Rs2Player.waitForAnimation();
 //                Rs2Player.waitForXpDrop(Skill.HUNTER);
-                if (Rs2Inventory.interact(10148,"release")||Rs2Inventory.interact(10147,"release")||Rs2Inventory.interact(10146,"release")||Rs2Inventory.interact(10149,"release")){sleep(Rs2Random.randomGaussian(100,3));}
+                    if (Rs2Inventory.interact(10148, "release") || Rs2Inventory.interact(10147, "release") || Rs2Inventory.interact(10146, "release") || Rs2Inventory.interact(10149, "release")) {
+                        sleep(Rs2Random.randomGaussian(100, 3));
+                    }
                     if (Rs2Inventory.contains("small fishing net") && Rs2Inventory.contains("rope")) {
-                        if (Rs2GameObject.interact(9000)||Rs2GameObject.interact(8990) || Rs2GameObject.interact(8732)|| Rs2GameObject.interact(9341)) {
+                        if (Rs2GameObject.interact(9000,"Set-trap",10) || Rs2GameObject.interact(8990,"Set-trap",10) || Rs2GameObject.interact(8732,"Set-trap",10) || Rs2GameObject.interact(9341,"Set-trap",10)) {
 //                    currentState = State.LAYING;
 //                    while (Rs2Player.getAnimation()==-1){sleep(100);}
 //                    while (Rs2Player.getAnimation()!=-1){sleep(100);}
                             sleepUntil(() -> Rs2Player.getAnimation() != -1);
                             sleepUntil(() -> Rs2Player.getAnimation() == -1);
-                            sleepUntil(()->!Rs2Player.isMoving());
+                            sleepUntil(() -> !Rs2Player.isMoving());
 //                            sleep(Rs2Random.randomGaussian(1200, 300));
 //                    Rs2Player.waitForXpDrop(Skill.HUNTER);
                         }
@@ -145,20 +176,11 @@ public class SalamanderScript extends Script {
 //                sleepUntil(() -> Rs2Player.getAnimation()==-1);
 
 //                sleepUntil(() -> !Rs2Player.isMoving());
-                return;
-            }
+                    return;
 
-            if (Rs2Inventory.contains("small fishing net")&&Rs2Inventory.contains("rope")){
-                if (Rs2GameObject.interact(9000)||Rs2GameObject.interact(8990)||Rs2GameObject.interact(8732)|| Rs2GameObject.interact(9341)){
-//                    currentState = State.LAYING;
-//                    while (Rs2Player.getAnimation()==-1){sleep(100);}
-//                    while (Rs2Player.getAnimation()!=-1){sleep(100);}
-                    sleepUntil(() -> Rs2Player.getAnimation()!=-1);
-                    sleepUntil(() -> Rs2Player.getAnimation()==-1);
-                    sleepUntil(()->!Rs2Player.isMoving());
-//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
                 }
             }
+
 //            // If there are shaking boxes, interact with them
 //            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9383, "reset", 4)) {
 //                currentState = State.CATCHING;

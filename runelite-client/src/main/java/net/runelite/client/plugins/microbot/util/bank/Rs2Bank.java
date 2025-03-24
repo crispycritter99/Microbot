@@ -1447,7 +1447,7 @@ public class Rs2Bank {
         if (result) {
             return Rs2Bank.useBank();
         } else {
-            Rs2Walker.walkTo(bankLocation.getWorldPoint());
+            Rs2Walker.walkTo(bankLocation.getWorldPoint(),8);
         }
         return false;
     }

@@ -30,7 +30,7 @@ import java.io.InputStream;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
-public class TeleportLocationDataTest
+public class TeleportMeleeLocationDataTest
 {
 	@Test
 	public void testResources() throws IOException

@@ -11,6 +11,7 @@ import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.scurrius.enums.State;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -49,6 +50,7 @@ public class ScurriusScript extends Script {
     Rs2NpcModel scurrius = null;
     private State previousState = null;
     private boolean hasLoggedRespawnWait = false;
+    public static boolean isProjectileActive = false;
     private Boolean previousInFightRoom = null;
     private Rs2PrayerEnum currentDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
 
@@ -74,7 +76,10 @@ public class ScurriusScript extends Script {
                 }
 
                 scurrius = Rs2Npc.getNpc("Scurrius", true);
-
+                scurrius.getAnimation();
+//                if (scurrius!=null) {
+//                    Microbot.log(""+ Rs2WorldPoint.convertInstancedWorldPoint(scurrius.getWorldLocation()));
+//                }
                 boolean hasFood = !Rs2Inventory.getInventoryFood().isEmpty();
                 boolean hasPrayerPotions = Rs2Inventory.hasItem("prayer potion") || Rs2Inventory.hasItem("super restore");
                 boolean isScurriusPresent = scurrius != null;
@@ -99,7 +104,7 @@ public class ScurriusScript extends Script {
                 }
 
                 if (state == State.FIGHTING) {
-                    if (!isScurriusPresent && hasFood && hasPrayerPotions && isInFightRoom) {
+                    if ((!isScurriusPresent&&Rs2Npc.getNpcs("giant rat").count()==0) && hasFood && hasPrayerPotions && isInFightRoom) {
                         state = State.WAITING_FOR_BOSS;
                         hasLoggedRespawnWait = false;
                     }
@@ -132,11 +137,11 @@ public class ScurriusScript extends Script {
                         }
                         if (Rs2Bank.isOpen()) {
                             Rs2Bank.depositAllExcept(importantItems.toArray(new Integer[0]));
-                            
+
                             int requiredFoodAmount = config.foodAmount();
                             int requiredPotionAmount = config.prayerPotionAmount();
                             int requiredTeleports = config.teleportAmount();
-                            
+
                             if (!Rs2Bank.withdrawDeficit(config.foodSelection().getId(), requiredFoodAmount)) {
                                 Microbot.showMessage("Missing Food in Bank");
                                 shutdown();
@@ -159,7 +164,9 @@ public class ScurriusScript extends Script {
                         break;
 
                     case FIGHTING:
-                        handlePrayerLogic();
+//                        handlePrayerLogic();
+                        if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY))
+                            Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,true);
                         List<WorldPoint> dangerousWorldPoints = Rs2Tile.getDangerousGraphicsObjectTiles()
                                 .stream()
                                 .map(Pair::getKey)
@@ -189,25 +196,27 @@ public class ScurriusScript extends Script {
                             }
                         }
 
-                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS) {
-                            int minPrayer = config.minPrayerPercent();
-                            int maxPrayer = config.maxPrayerPercent();
-                            int randomPrayerThreshold = ThreadLocalRandom.current().nextInt(minPrayer, maxPrayer + 1);
-
-                            if (Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) < randomPrayerThreshold && !Rs2Player.isAnimating()) {
-                                Rs2Player.drinkPrayerPotionAt(randomPrayerThreshold);
-                                lastPrayerTime = currentTime;
-                                Microbot.log("Drinking prayer potion at " + randomPrayerThreshold + "% prayer points.");
-                            }
-                        }
+//                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS) {
+//                            int minPrayer = config.minPrayerPercent();
+//                            int maxPrayer = config.maxPrayerPercent();
+//                            int randomPrayerThreshold = ThreadLocalRandom.current().nextInt(minPrayer, maxPrayer + 1);
+//
+//                            if (Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) < randomPrayerThreshold && !Rs2Player.isAnimating()) {
+//                                Rs2Player.drinkPrayerPotionAt(randomPrayerThreshold);
+//                                lastPrayerTime = currentTime;
+//                                Microbot.log("Drinking prayer potion at " + randomPrayerThreshold + "% prayer points.");
+//                            }
+//                        }
+                        Rs2Player.drinkPrayerPotion();
 
                         Optional<Rs2NpcModel> giantRat = Rs2Npc.getNpcs("giant rat").filter(npc -> !npc.isDead()).findFirst();
                         if (giantRat.isPresent()) {
                             Rs2NpcModel giantRatModel = giantRat.get();
-                            boolean didWeAttackAGiantRat = scurrius != null && config.prioritizeRats() && Rs2Npc.attack(giantRatModel);
+//                            boolean didWeAttackAGiantRat = scurrius != null && config.prioritizeRats() && Rs2Npc.interact(giantRatModel,"attack");
+                            boolean didWeAttackAGiantRat =config.prioritizeRats() && Rs2Npc.interact(giantRatModel,"attack");
                             if (didWeAttackAGiantRat) return;
                         }
-                        
+
                         if (!Microbot.getClient().getLocalPlayer().isInteracting()) {
                             Rs2Npc.attack(scurrius);
                         }
@@ -364,6 +373,7 @@ public class ScurriusScript extends Script {
 
     public void disableAllPrayers() {
         Rs2Prayer.disableAllPrayers();
+        ScurriusPlugin.currentPrayer=Rs2PrayerEnum.RAPID_HEAL;
         Microbot.log("All prayers disabled to preserve prayer points.");
         currentDefensivePrayer = null;
     }

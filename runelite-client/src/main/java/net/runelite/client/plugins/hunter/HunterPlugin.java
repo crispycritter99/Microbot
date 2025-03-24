@@ -75,9 +75,10 @@ public class HunterPlugin extends Plugin
 	private HunterConfig config;
 
 	@Getter
-	private final Map<WorldPoint, HunterTrap> traps = new HashMap<>();
+	public static final Map<WorldPoint, HunterTrap> traps = new HashMap<>();
 
 	private WorldPoint lastTickLocalPlayerLocation;
+
 
 	@Provides
 	HunterConfig provideConfig(ConfigManager configManager)
