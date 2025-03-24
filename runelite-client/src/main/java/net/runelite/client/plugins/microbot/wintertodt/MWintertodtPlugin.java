@@ -140,6 +140,7 @@ public class MWintertodtPlugin extends Plugin {
         if (messageNode.getValue().startsWith("You did not earn enough points")) {
             lost++;
         }
+            
         if (chatMessage.getType() != ChatMessageType.GAMEMESSAGE) return;
 
         if (chatMessage.getMessage().equalsIgnoreCase("oh dear, you are dead!")) {

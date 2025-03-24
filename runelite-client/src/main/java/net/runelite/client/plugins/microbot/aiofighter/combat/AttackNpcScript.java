@@ -51,7 +51,7 @@ public class AttackNpcScript extends Script {
                 if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
                     return;
 
-                if(config.state().equals(State.BANKING))
+                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING))
                     return;
                 if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
                         Rs2Inventory.wear("Bracelet of slaughter");
