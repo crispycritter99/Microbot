@@ -93,7 +93,7 @@ public class MixologyScript extends Script {
                     if (Rs2Inventory.hasItem("digweed") && !Rs2Player.isAnimating()) {
                         Optional<Integer> potionItemId = potionOrders
                                 .stream()
-                                .filter(x -> !x.fulfilled() && Rs2Inventory.hasItem(x.potionType().itemId()))
+                                .filter(x -> !x.fulfilled()&&x.potionType().itemId()==ItemID.MIXALOT && Rs2Inventory.hasItem(x.potionType().itemId()))
                                 .map(x -> x.potionType().itemId())
                                 .findFirst();
                         if (potionItemId.isPresent()) {
@@ -259,10 +259,27 @@ public class MixologyScript extends Script {
                         }
 
                         PotionOrder nonFulfilledPotion = nonFulfilledPotions.get(0);
-
+//                            Microbot.log(nonFulfilledPotion.toString());
                         if (Rs2Player.isAnimating()) {
+
+                            switch (nonFulfilledPotion.potionModifier()) {
+                                case HOMOGENOUS:
+                                    GameObject agitator = (GameObject) Rs2GameObject.findObjectById(AlchemyObject.AGITATOR.objectId());
+                                    Rs2GameObject.hoverOverObject(agitator);
+
+                                    break;
+                                case CONCENTRATED:
+                                    GameObject retort = (GameObject) Rs2GameObject.findObjectById(AlchemyObject.RETORT.objectId());
+                                    Rs2GameObject.hoverOverObject(retort);
+                                    break;
+                                case CRYSTALISED:
+                                    GameObject alembic = (GameObject) Rs2GameObject.findObjectById(AlchemyObject.ALEMBIC.objectId());
+                                    Rs2GameObject.hoverOverObject(alembic);
+                                    break;
+                            }
+
                             if (agitatorQuickActionTicks > 0 && config.useQuickActionOnAgitator()) {
-                                int clicks =  Rs2AntibanSettings.naturalMouse ? Rs2Random.between(4, 6) : Rs2Random.between(6, 10);
+                                int clicks =  Rs2AntibanSettings.naturalMouse ? Rs2Random.between(3, 5) : Rs2Random.between(6, 10);
                                 for (int i = 0; i < clicks; i++) {
                                     quickActionProcessPotion(nonFulfilledPotion);
                                 }
@@ -275,7 +292,7 @@ public class MixologyScript extends Script {
                             }
                             if (nonFulfilledPotion.potionModifier().alchemyObject() == AlchemyObject.RETORT && config.useQuickActionOnRetort()) {
                                 quickActionProcessPotion(nonFulfilledPotion);
-                                sleep(350, 400);
+                                sleep(Rs2Random.randomGaussian(450,100));
                             }
                             return;
                         }

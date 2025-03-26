@@ -10,6 +10,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.scurrius.enums.State;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -76,7 +77,6 @@ public class ScurriusScript extends Script {
                 }
 
                 scurrius = Rs2Npc.getNpc("Scurrius", true);
-                scurrius.getAnimation();
 //                if (scurrius!=null) {
 //                    Microbot.log(""+ Rs2WorldPoint.convertInstancedWorldPoint(scurrius.getWorldLocation()));
 //                }
@@ -131,10 +131,10 @@ public class ScurriusScript extends Script {
 
                 switch (state) {
                     case BANKING:
-                        boolean isCloseToBank = Rs2Bank.walkToBank();
-                        if (isCloseToBank) {
-                            Rs2Bank.useBank();
-                        }
+                        Rs2Bank.walkToBankAndUseBank(BankLocation.VARROCK_EAST);
+//                        if (isCloseToBank) {
+//                            return;
+//                        }
                         if (Rs2Bank.isOpen()) {
                             Rs2Bank.depositAllExcept(importantItems.toArray(new Integer[0]));
 
@@ -165,8 +165,11 @@ public class ScurriusScript extends Script {
 
                     case FIGHTING:
 //                        handlePrayerLogic();
-                        if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY))
-                            Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,true);
+//                        if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY))
+//                            Rs2Prayer.toggle(Rs2PrayerEnum.PIETY,true);
+//                        if (Rs2Magic.canCast())
+                        if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.AUGURY))
+                            Rs2Prayer.toggle(Rs2PrayerEnum.AUGURY,true);
                         List<WorldPoint> dangerousWorldPoints = Rs2Tile.getDangerousGraphicsObjectTiles()
                                 .stream()
                                 .map(Pair::getKey)
@@ -190,7 +193,11 @@ public class ScurriusScript extends Script {
                             int randomEatThreshold = ThreadLocalRandom.current().nextInt(minEat, maxEat + 1);
 
                             if (Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < randomEatThreshold && !Rs2Player.isAnimating()) {
-                                Rs2Player.eatAt(randomEatThreshold);
+                                if (!Rs2Player.eatAt(randomEatThreshold))
+                                {
+                                    state = State.TELEPORT_AWAY;
+                                    return;
+                                }
                                 lastEatTime = currentTime;
                                 Microbot.log("Eating food at " + randomEatThreshold + "% health.");
                             }

@@ -30,6 +30,9 @@ public class ScurriusOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .left(ScurriusScript.state.toString())
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .right(ScurriusScript.state.toString())
+                    .build());
 
 
         } catch(Exception ex) {

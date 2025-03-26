@@ -115,6 +115,7 @@ public class VardorvisScript extends Script {
                         sleepUntil(Rs2Player::isWalking);
 
                         Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3419, 0));
+//                        Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3419, 0));
 
                         sleepUntil(()-> Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1129, 3419, 0)));
 

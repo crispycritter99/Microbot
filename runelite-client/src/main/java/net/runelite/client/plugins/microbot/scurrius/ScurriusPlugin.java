@@ -15,6 +15,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.VardorvisHelper.VardorvisHelperScript;
 import net.runelite.client.plugins.microbot.scurrius.enums.State;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
@@ -40,7 +41,7 @@ import static net.runelite.client.plugins.microbot.vardorvis.VardorvisScript.isP
 public class ScurriusPlugin extends Plugin {
     private ExecutorService walkingExecutor;
     public static int currentRunningTicks = 0;
-
+//    public static int remainingCycles2=0;
     public static Rs2PrayerEnum currentPrayer = null;
     private static final int RANGE_PROJECTILE = 2642;
     private static final int MAGE_PROJECTILE = 2640;
@@ -120,7 +121,7 @@ public class ScurriusPlugin extends Plugin {
     public void handleProjectile(ProjectileMoved event) {
         final Projectile projectile = event.getProjectile();
         final int remainingCycles = projectile.getRemainingCycles();
-
+//        Microbot.log(""+projectile.getStartCycle());
 
         if (remainingCycles >= 10 && remainingCycles < 25) { // > 0
             ScurriusScript.isProjectileActive = true;

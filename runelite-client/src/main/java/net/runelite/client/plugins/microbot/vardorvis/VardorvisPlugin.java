@@ -61,6 +61,10 @@ public class VardorvisPlugin extends Plugin {
     private final Set<Integer> trackedWidgets = Set.of(54591499, 54591498, 54591497, 54591496, 54591495, 54591494);
     private WorldPoint safespot = new WorldPoint(1129,3413,0);
     private WorldPoint axespot = new WorldPoint(1131,3415,0);
+    private int northAxeY=3421;
+    private int northSafeY=3423;
+    private int southAxeY=3416;
+    private int southSafeY=3413;
     int tickCounter = 0;
 
     public static boolean oppositeAxe = false;
@@ -118,7 +122,9 @@ public class VardorvisPlugin extends Plugin {
 
             //Microbot.log("Prayer swapped to RANGE");
         }
-
+//        if (state == State.FIGHTING&&!Rs2Player.hasThrallActive()) {
+//            Rs2Magic.quickCast(MagicAction.RESURRECT_GREATER_GHOST);
+//        }
         if (Rs2Inventory.getInventoryFood().isEmpty() && Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < 30) {
             Microbot.log("You were going to dieee!!");
             Rs2Inventory.interact("Teleport to house", "break");
@@ -174,7 +180,10 @@ public class VardorvisPlugin extends Plugin {
                 Microbot.log("Healing | pose animation = " + poseAnimation + " | Current tick = " + currentRunningTicks);
 
                 handleHealingAndPrayer();
-
+                if(Rs2Combat.getSpecEnergy() < 500&&!Rs2Equipment.isWearing(29796) )
+                {
+                    Rs2Inventory.wield(29796);
+                }
                 sleepUntilExecutor.submit(() -> {
                     boolean conditionsMet = sleepUntil(() -> {
                         boolean walkingCheck = !Rs2Player.isWalking();
@@ -192,6 +201,7 @@ public class VardorvisPlugin extends Plugin {
 
                                 specVardorvis();
                             } else {
+
                                 Microbot.log("Hitting vardorvis after heal | Current tick = " + currentRunningTicks);
                                 Rs2Npc.interact(12223, "Attack");
                             }
@@ -202,8 +212,8 @@ public class VardorvisPlugin extends Plugin {
         } else if (VardorvisScript.inFight && Rs2Npc.getNpc("Vardorvis").getHealthRatio() != -1) {
             Microbot.log("Somehow on a wrong tile? moving back to safe tile | Current tick = " + currentRunningTicks + " Health ratio = " + Rs2Npc.getNpc("Vardorvis").getHealthRatio());
             walkingExecutor.submit(() -> {
-//                Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3423, 0));
-                Rs2Walker.walkFastCanvas(safespot);
+                Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3423, 0));
+//                Rs2Walker.walkFastCanvas(safespot);
             }, 50);
 
             handleHealingAndPrayer();
@@ -214,6 +224,7 @@ public class VardorvisPlugin extends Plugin {
     public void onClientTick(ClientTick tick) {
 
         if (isBloodSplatsVisible()) {
+            sleep(500);
             clickingBloodSplats();
         }
 
@@ -227,8 +238,8 @@ public class VardorvisPlugin extends Plugin {
             if (!axeOnSafeTile) {
                 Microbot.log("Safe to move back to default tile | Tick counter = " + tickCounter + "  | Current tick = " + currentRunningTicks);
                 walkingExecutor.submit(() -> {
-                    Rs2Walker.walkFastCanvas(safespot);
-//                    Rs2Walker.walkFastCanvas(new WorldPoint(1129,3423,0));
+//                    Rs2Walker.walkFastCanvas(safespot);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(1129,3423,0));
                 }, 50);
                 tickCounter = 0;
             }
@@ -247,8 +258,8 @@ public class VardorvisPlugin extends Plugin {
 
                 Microbot.log("Axe spawned on you moving to avoid tile | Current ticks = " + currentRunningTicks);
                 walkingExecutor.submit(() -> {
-//                    Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
-                    Rs2Walker.walkFastCanvas(axespot);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
+//                    Rs2Walker.walkFastCanvas(axespot);
                 }, 50);
                 axeOnSafeTile = true;
             }
@@ -308,8 +319,9 @@ public class VardorvisPlugin extends Plugin {
 
 
                 sleepUntil(() -> Rs2Combat.getSpecEnergy() != currentSpec);
-
-                Rs2Inventory.wield(29796);
+                if (Rs2Combat.getSpecEnergy()<40) {
+                    Rs2Inventory.wield(29796);
+                }
             }, 50);
         }, 50);
     }
@@ -340,7 +352,7 @@ public class VardorvisPlugin extends Plugin {
     public void clickingBloodSplats() {
         for (int widgetId : trackedWidgets) {
             if (Rs2Widget.isWidgetVisible(widgetId)) {
-                clickWidgetWithDelay(Rs2Widget.getWidget(widgetId), Rs2Random.between(30, 90));// 30, 120
+                clickWidgetWithDelay(Rs2Widget.getWidget(widgetId), Rs2Random.between(60, 120));// 30, 120
             }
         }
     }
@@ -399,8 +411,8 @@ public class VardorvisPlugin extends Plugin {
             //Microbot.log("Found Rs2NpcModel with ID 12227 at " + axe.getLocalLocation());
             Microbot.log("Moving to avoid tile because opposite axe  | Current tick = " + currentRunningTicks);
             walkingExecutor.submit(() -> {
-                Rs2Walker.walkFastCanvas(axespot);
-//                Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
+//                Rs2Walker.walkFastCanvas(axespot);
+                Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
             }, 50);
 
             oppositeAxe = false;

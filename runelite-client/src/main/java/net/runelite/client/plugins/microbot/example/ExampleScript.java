@@ -53,7 +53,7 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-//                Microbot.log(Rs2Player.hasThrallActive()+" "+ Rs2Magic.canCast(MagicAction.RESURRECT_GREATER_GHOST));
+                Microbot.log(Rs2Player.thrallCooldown+""+Rs2Player.thrallActive+""+Rs2Player.hasThrallActive()+"");
 //                Rs2Magic.cast(MagicAction.RESURRECT_GREATER_ZOMBIE);
 //                Rs2Inventory.use("house");
 //                sleep(600);
@@ -91,7 +91,7 @@ public class ExampleScript extends Script {
 
 
 
-                shutdown();
+//                shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);

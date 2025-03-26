@@ -13,6 +13,10 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ColorUtil;
 
@@ -20,6 +24,7 @@ import javax.inject.Inject;
 import java.awt.*;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 @PluginDescriptor(
         name = PluginDescriptor.Mocrosoft + "AutoMixology",
@@ -29,6 +34,7 @@ import java.util.*;
 )
 @Slf4j
 public class MixologyPlugin extends Plugin {
+    private ExecutorService walkingExecutor;
     @Inject
     private Client client;
     @Inject
@@ -176,11 +182,19 @@ public class MixologyPlugin extends Plugin {
     public void onGraphicsObjectCreated(GraphicsObjectCreated event) {
         int spotAnimId = event.getGraphicsObject().getId();
         if (spotAnimId == 2955 && this.alembicPotionType != null) {
+//            Microbot.log("skibidi2");
             mixologyScript.alembicQuickActionTicks = 1;
+//            walkingExecutor.submit(() -> {
+//                Rs2GameObject.interact(55391);
+//            });
         }
 
         if (spotAnimId == 2954 && this.agitatorPotionType != null) {
+//            Microbot.log("skibidi");
             mixologyScript.agitatorQuickActionTicks = 1;
+//            walkingExecutor.submit(() -> {
+//                Rs2GameObject.interact(55390);
+//            });
         }
     }
 

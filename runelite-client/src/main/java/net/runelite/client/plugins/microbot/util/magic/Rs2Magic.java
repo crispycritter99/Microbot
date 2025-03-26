@@ -81,11 +81,11 @@ public class Rs2Magic {
             return false;
         }
 
-        if (magicSpell.getName().toLowerCase().contains("resurrect")){
-            if (Rs2Player.hasThrallActive()) {
-                return false;
-            }
-        }
+//        if (magicSpell.getName().toLowerCase().contains("resurrect")){
+//            if (Rs2Player.hasThrallActive()) {
+//                return false;
+//            }
+//        }
 
         if (magicSpell.getName().toLowerCase().contains("enchant")){
             if (Rs2Widget.clickWidget("Jewellery Enchantments", Optional.of(218), 3, true)) {
@@ -118,11 +118,11 @@ public class Rs2Magic {
         if (spellbookWidget == null) return false;
         Widget widget = Rs2Widget.findWidget(magicSpell.getName(), List.of(spellbookWidget));
         if (widget == null) return false;
-        if (magicSpell.getName().toLowerCase().contains("resurrect")){
-            if (Rs2Player.hasThrallActive()) {
-                return false;
-            }
-        }
+//        if (magicSpell.getName().toLowerCase().contains("resurrect")){
+//            if (Rs2Player.hasThrallActive()) {
+//                return false;
+//            }
+//        }
         return widget.getSpriteId() == magicSpell.getSprite();
     }
 
