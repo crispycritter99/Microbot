@@ -53,6 +53,17 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
+//                Microbot.log(Rs2Player.hasThrallActive()+" "+ Rs2Magic.canCast(MagicAction.RESURRECT_GREATER_GHOST));
+//                Rs2Magic.cast(MagicAction.RESURRECT_GREATER_ZOMBIE);
+//                Rs2Inventory.use("house");
+//                sleep(600);
+//                Rs2Npc.interact(Rs2Npc.getNpc("Phials"));
+//                if (Rs2Player.isInteracting())
+//                        return;
+//                Rs2Magic.cast(MagicAction.EXPERT_REANIMATION);
+//                Rs2Inventory.interact("ensouled","Reanimate");
+//                Rs2Player.waitForXpDrop(Skill.MAGIC);
+//                sleepUntilTick(15);
 ////                Rs2Walker.walkFastCanvas(new WorldPoint(2799,9568,3));
 ////                Rs2Player.waitForXpDrop(Skill.AGILITY);
 //                    Rs2Widget.clickWidget(49938445);
@@ -64,27 +75,23 @@ public class ExampleScript extends Script {
 ////                sleepUntilTick(3);
 //                Microbot.log(Arrays.stream(Rs2Widget.getWidget(49938444).getActions()).findFirst().get().contains("Sign")+"");
 ////                Rs2Widget.clickWidget(49938444);
-            if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8061)!=null)
-            {
-                Rs2Prayer.toggleQuickPrayer(true);
-            }
-            else if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8058)!=null)
-            {
-                Rs2Prayer.toggleQuickPrayer(true);
-            }
-            else if (Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8059)!=null)
-            {
-                    Rs2Prayer.toggleQuickPrayer(false);
-            }
-//            else{
-//                Rs2Prayer.toggleQuickPrayer(false);
+//            if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8061)!=null)
+//            {
+//                Rs2Prayer.toggleQuickPrayer(true);
 //            }
-//                Microbot.log(""+Rs2Npc.getNpcs("Vorkath").anyMatch(npc -> npc.isDead()));
+//            else if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8058)!=null)
+//            {
+//                Rs2Prayer.toggleQuickPrayer(true);
+//            }
+//            else if (Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8059)!=null)
+//            {
+//                    Rs2Prayer.toggleQuickPrayer(false);
+//            }
+//Rs2Bank.walkToBankAndUseBank();
 
 
 
-
-//                shutdown();
+                shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);

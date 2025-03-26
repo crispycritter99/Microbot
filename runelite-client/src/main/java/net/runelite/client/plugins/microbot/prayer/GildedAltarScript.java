@@ -7,12 +7,14 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -156,12 +158,16 @@ public class GildedAltarScript extends Script {
 
     public void unnoteBones() {
         if (Microbot.getClient().getWidget(14352385) == null) {
+//            Rs2NpcModel Phials = Rs2Npc.getNpc("Phials");
+//            Rs2ItemModel bones = Rs2Inventory.get("bones");
             if (!Rs2Inventory.isItemSelected()) {
                 Rs2Inventory.use("bones");
             } else {
                 Rs2Npc.interact("Phials", "Use");
                 Rs2Player.waitForWalking();
             }
+//            Rs2Inventory.useItemOnNpc(bones.getId(),Phials);
+//            Rs2Player.waitForWalking();
         } else if (Microbot.getClient().getWidget(14352385) != null) {
             Rs2Keyboard.keyPress('3');
             Rs2Inventory.waitForInventoryChanges(2000);
@@ -257,39 +263,28 @@ public class GildedAltarScript extends Script {
 //        sleep(Rs2Random.randomGaussian(100,3));
         Rs2Inventory.interact(item,"use");
         Rs2GameObject.interact(altar);
-        Rs2Inventory.interact(item,"use");
+//        Rs2Inventory.interact(item,"use");
 //        Rs2Inventory.slotInteract(27,"use");
         Rs2Player.waitForXpDrop(Skill.PRAYER, 6010);
-        Microbot.log(""+Rs2Inventory.contains(536));
-                                while (Rs2Inventory.contains(536)) {
-//                                    Microbot.log(""+Rs2Inventory.contains(536));
-//                                    Microbot.log("0");
-//                                    Rs2Inventory.useUnNotedItemOnObject("bones", altar);
-//                            for(int i = 0; i < 26; ++i){
-//                                    int numberRawBefore=Rs2Inventory.count(cookingItem.getRawItemName());
-//                                    Rs2Inventory.slotInteract(27,"use");
-//                                    Rs2GameObject.interact(altar,"use");
-
-//                                    Microbot.log("1");
-                                    int skillExp = Microbot.getClient().getSkillExperience(Skill.PRAYER);
-                                    Rs2GameObject.interact(altar);
-//                                    Microbot.log("2");
-//                                    Rs2Inventory.useUnNotedItemOnObject("bones", altar);
-//                                    sleep(Rs2Random.randomGaussian(100,3));
-//                                    Rs2Inventory.slotInteract(27, "use");
-                                    if (Rs2Inventory.count(536)>1) {
-                                        Rs2Inventory.interact(item, "use");
-                                        Rs2GameObject.hoverOverObject(altar);
-                                    }
-                                    while(Microbot.getClient().getSkillExperience(Skill.PRAYER)==skillExp){sleep(50);}
-//                                    Rs2Player.waitForXpDrop(Skill.PRAYER, 601);
-//                                    Microbot.log("3");
-                                    sleep(Rs2Random.randomGaussian(50,2));
-//                                    Microbot.log("4");
-//                                    sleep(Rs2Random.randomGaussian(100,3));
-
-
-                        }
+//        Microbot.log(""+Rs2Inventory.contains(536));
+//                                while (Rs2Inventory.contains(536)) {
+//                                    int skillExp = Microbot.getClient().getSkillExperience(Skill.PRAYER);
+//                                    Rs2GameObject.interact(altar);
+//                                    if (Rs2Inventory.count(536)>1) {
+//                                        Rs2Inventory.interact(item, "use");
+//                                        Rs2GameObject.hoverOverObject(altar);
+//                                    }
+//                                    while(Microbot.getClient().getSkillExperience(Skill.PRAYER)==skillExp){sleep(50);}
+//                                    sleep(Rs2Random.randomGaussian(50,2));
+//                                    Rs2Inventory.useItemOnObject(536,13197);
+////                                    Rs2Inventory.useLast(536);
+////                                    Rs2GameObject.interact(altar);
+////                                    sleepUntilTick(1);
+//                                    sleep(Rs2Random.randomGaussian(150,25));
+////                                    Microbot.log("distance to "+ Rs2Player.distanceTo(altar.getWorldLocation()));
+//
+//
+//                        }
 
 
         // Use bones on the altar if it's valid

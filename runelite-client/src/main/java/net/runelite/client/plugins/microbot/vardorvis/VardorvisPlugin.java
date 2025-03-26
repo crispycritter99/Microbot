@@ -17,6 +17,7 @@ import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -29,6 +30,7 @@ import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.microbot.vardorvis.enums.State;
 import net.runelite.client.plugins.microbot.vardorvis.enums.StateBank;
 import net.runelite.client.plugins.microbot.vardorvis.enums.StatePOH;
+import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 import net.runelite.client.ui.overlay.OverlayManager;
 import javax.inject.Inject;
 import java.awt.*;
@@ -57,8 +59,9 @@ public class VardorvisPlugin extends Plugin {
     private static final int RANGE_PROJECTILE = 1343;
 
     private final Set<Integer> trackedWidgets = Set.of(54591499, 54591498, 54591497, 54591496, 54591495, 54591494);
-
-    private int tickCounter = 0;
+    private WorldPoint safespot = new WorldPoint(1129,3413,0);
+    private WorldPoint axespot = new WorldPoint(1131,3415,0);
+    int tickCounter = 0;
 
     public static boolean oppositeAxe = false;
     public static int oppositeAxeCounter = 0;
@@ -128,9 +131,9 @@ public class VardorvisPlugin extends Plugin {
 
             state = State.POH;
         }
-        if (Rs2Npc.getNpc(10800)==null){
-//            Rs2Magic.quickCast()
-        }
+//        if (Rs2Npc.getNpc(10800)==null&&Rs2Player.isInCombat()&& state==State.FIGHTING){
+//            Rs2Magic.quickCast(MagicAction.RESURRECT_GREATER_GHOST);
+//        }
         if (Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < 30) {
             //Microbot.log("Using food because < 20 health");
             handleHealingAndPrayer();
@@ -199,7 +202,8 @@ public class VardorvisPlugin extends Plugin {
         } else if (VardorvisScript.inFight && Rs2Npc.getNpc("Vardorvis").getHealthRatio() != -1) {
             Microbot.log("Somehow on a wrong tile? moving back to safe tile | Current tick = " + currentRunningTicks + " Health ratio = " + Rs2Npc.getNpc("Vardorvis").getHealthRatio());
             walkingExecutor.submit(() -> {
-                Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3423, 0));
+//                Rs2Walker.walkFastCanvas(new WorldPoint(1129, 3423, 0));
+                Rs2Walker.walkFastCanvas(safespot);
             }, 50);
 
             handleHealingAndPrayer();
@@ -223,7 +227,8 @@ public class VardorvisPlugin extends Plugin {
             if (!axeOnSafeTile) {
                 Microbot.log("Safe to move back to default tile | Tick counter = " + tickCounter + "  | Current tick = " + currentRunningTicks);
                 walkingExecutor.submit(() -> {
-                    Rs2Walker.walkFastCanvas(new WorldPoint(1129,3423,0));
+                    Rs2Walker.walkFastCanvas(safespot);
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(1129,3423,0));
                 }, 50);
                 tickCounter = 0;
             }
@@ -242,7 +247,8 @@ public class VardorvisPlugin extends Plugin {
 
                 Microbot.log("Axe spawned on you moving to avoid tile | Current ticks = " + currentRunningTicks);
                 walkingExecutor.submit(() -> {
-                    Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
+                    Rs2Walker.walkFastCanvas(axespot);
                 }, 50);
                 axeOnSafeTile = true;
             }
@@ -393,7 +399,8 @@ public class VardorvisPlugin extends Plugin {
             //Microbot.log("Found Rs2NpcModel with ID 12227 at " + axe.getLocalLocation());
             Microbot.log("Moving to avoid tile because opposite axe  | Current tick = " + currentRunningTicks);
             walkingExecutor.submit(() -> {
-                Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
+                Rs2Walker.walkFastCanvas(axespot);
+//                Rs2Walker.walkFastCanvas(new WorldPoint(1131,3421,0));
             }, 50);
 
             oppositeAxe = false;

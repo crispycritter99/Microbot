@@ -63,11 +63,12 @@ public class SuperGlassScript extends Script {
 
                 switch (state) {
                     case BANKING:
-                        if (Rs2Inventory.contains("molten glass")||!Rs2Inventory.containsAll("bucket of sand","giant seaweed")){
+                        if (Rs2Inventory.contains("molten glass")||!Rs2Inventory.contains("bucket of sand")||!Rs2Inventory.contains("bucket of sand")){
                         Rs2Bank.openBank();
 
-                        Rs2Bank.depositAllExcept(ItemID.RUNE_POUCH, ItemID.NATURE_RUNE, ItemID.ASTRAL_RUNE);
-//                        Rs2Inventory.waitForInventoryChanges(600);
+//                        Rs2Bank.depositAllExcept(ItemID.RUNE_POUCH, ItemID.NATURE_RUNE, ItemID.ASTRAL_RUNE);
+                            Rs2Bank.depositAll(ItemID.MOLTEN_GLASS);
+                        Rs2Inventory.waitForInventoryChanges(1800);
 
                         List<Rs2Staff> staffList = Rs2Magic.findStavesByRunes(List.of(Runes.AIR));
 
@@ -105,29 +106,35 @@ public class SuperGlassScript extends Script {
                             Rs2Bank.withdrawAll(ItemID.ASTRAL_RUNE);
 //                            Rs2Inventory.waitForInventoryChanges(1200);
                         }
-                        if (!Rs2Inventory.hasItemAmount("Giant seaweed", 3)) {
-                            if (!Rs2Bank.hasItem(ItemID.GIANT_SEAWEED)) {
-                                Microbot.showMessage("seaweed not found");
-                                shutdown();
-                                return;
-                            }
-
-                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
-                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
-                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
-//                            Rs2Inventory.waitForInventoryChanges(1200);
-                        }
-                        if (!Rs2Inventory.hasItemAmount(ItemID.BUCKET_OF_SAND, 18)) {
-                            if (!Rs2Bank.hasItem(ItemID.BUCKET_OF_SAND)) {
-                                Microbot.showMessage("sand not found");
-                                shutdown();
-                                return;
-                            }
-
+//                            if (!Rs2Inventory.hasItemAmount(ItemID.BUCKET_OF_SAND, 18)) {
+//                                if (!Rs2Bank.hasItem(ItemID.BUCKET_OF_SAND)) {
+//                                    Microbot.showMessage("sand not found");
+//                                    shutdown();
+//                                    return;
+//                                }
+//
+//                                Rs2Bank.withdrawX(ItemID.BUCKET_OF_SAND, 18);
+//
+//                                Rs2Inventory.waitForInventoryChanges(1200);
+//                            }
+//                        if (!Rs2Inventory.hasItemAmount("Giant seaweed", 3)) {
+//                            if (!Rs2Bank.hasItem(ItemID.GIANT_SEAWEED)) {
+//                                Microbot.showMessage("seaweed not found");
+//                                shutdown();
+//                                return;
+//                            }
+////                            Rs2Bank.withdrawX(ItemID.GIANT_SEAWEED, 18);
+//
+//                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
+//                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
+//                            Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
+////                            Rs2Inventory.waitForInventoryChanges(1200);
+//                        }
                             Rs2Bank.withdrawX(ItemID.BUCKET_OF_SAND, 18);
-
-                            Rs2Inventory.waitForInventoryChanges(1200);
-                        }
+                            Rs2Bank.withdrawAll(ItemID.GIANT_SEAWEED);
+//                                                        Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
+//                                                        Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
+//                                                        Rs2Bank.withdrawOne(ItemID.GIANT_SEAWEED);
 //                        Rs2Bank.withdrawX(ItemID.FLAX,25);
 //                        Rs2Bank.closeBank();
 //                        sleep(Rs2Random.randomGaussian(300,50));
@@ -141,7 +148,7 @@ public class SuperGlassScript extends Script {
                             shutdown();
                             return;
                         }
-                        Rs2Magic.quickCast(MagicAction.SUPERGLASS_MAKE);
+                        Rs2Magic.cast(MagicAction.SUPERGLASS_MAKE);
                         Rs2Player.waitForXpDrop(Skill.MAGIC, 10000, false);
                         sleepUntilTick(2);
                         sleep(Rs2Random.randomGaussian(300,50));

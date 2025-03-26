@@ -6,6 +6,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.game.npcoverlay.HighlightedNpc;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
@@ -569,31 +570,65 @@ public class Rs2Npc {
                 }
             }
 
-            // Fetch NPC composition
-            NPCComposition npcComposition = Microbot.getClientThread().runOnClientThread(() -> Microbot.getClient().getNpcDefinition(npc.getId()));
+            NPCComposition npcComposition = Microbot.getClientThread().runOnClientThread(
+                    () -> Microbot.getClient().getNpcDefinition(npc.getId()));
 
-            // Determine action index in NPC's menu
-            int index = 0;
-            for (int i = 0; i < npcComposition.getActions().length; i++) {
-                String npcAction = npcComposition.getActions()[i];
-                if (npcAction == null || !npcAction.equalsIgnoreCase(action)) continue;
-                index = i;
+            if (npcComposition == null || npcComposition.getActions() == null) {
+                Microbot.log("Error: Could not get NPC composition or actions for NPC: " + npc.getName());
+                return false;
             }
 
-            // Retrieve the corresponding menu action
-            MenuAction menuAction = getMenuAction(index);
+            MenuAction menuAction;
+            if (Rs2Inventory.isItemSelected()) {
+                menuAction = MenuAction.WIDGET_TARGET_ON_NPC;
+            } else {
+                int index = -1;
+                String[] actions = npcComposition.getActions();
 
-            // Execute the interaction
-            if (menuAction != null) {
-                Microbot.doInvoke(new NewMenuEntry(0, 0, menuAction.getId(), npc.getIndex(), -1, npc.getName(), npc), Rs2UiHelper.getActorClickbox(npc));
+                if (action == null || action.isEmpty()) {
+                    for (int i = 0; i < actions.length; i++) {
+                        if (actions[i] != null && !actions[i].isEmpty()) {
+                            index = i;
+                            action = actions[i];
+                            break;
+                        }
+                    }
+                } else {
+                    if (actions != null) {
+                        for (int i = 0; i < actions.length; i++) {
+                            if (actions[i] != null && actions[i].equalsIgnoreCase(action)) {
+                                index = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (index == -1) {
+                    Microbot.log("Error: Action '" + action + "' not found for NPC: " + npc.getName());
+                    return false;
+                }
+
+                menuAction = getMenuAction(index);
+                if (menuAction == null) {
+                    Microbot.log("Error: Could not get menu action for action '" + action + "' on NPC: " + npc.getName());
+                    return false;
+                }
             }
+
+
+
+
+
+            Microbot.doInvoke(new NewMenuEntry(0, 0, menuAction.getId(), npc.getIndex(), -1, npc.getName(), npc),
+                    Rs2UiHelper.getActorClickbox(npc));
+            return true;
 
         } catch (Exception ex) {
-            Microbot.log(ex.getMessage());
+            Microbot.log("Error interacting with NPC '" + npc.getName() + "' for action '" + action + "': " + ex.getMessage());
             ex.printStackTrace();
+            return false;
         }
-
-        return true;
     }
 
     /**
