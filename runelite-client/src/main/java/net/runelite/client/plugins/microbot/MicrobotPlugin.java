@@ -170,6 +170,7 @@ public class MicrobotPlugin extends Plugin {
         Rs2Player.handlePotionTimers(event);
         Rs2Player.handleTeleblockTimer(event);
         Rs2Player.handleThrallActivity(event);
+        Rs2Player.handleThrallCooldown(event);
     }
     
     @Subscribe
