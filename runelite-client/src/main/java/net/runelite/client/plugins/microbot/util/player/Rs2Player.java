@@ -56,6 +56,8 @@ public class Rs2Player {
     public static int antiPoisonTime = -1;
     public static int teleBlockTime = -1;
     public static int goadingTime = -1;
+    public static boolean thrallActive = false;
+    public static boolean thrallCooldown = false;
     public static Instant lastAnimationTime = null;
     private static final long COMBAT_TIMEOUT_MS = 10000;
     private static long lastCombatTime = 0;
@@ -113,6 +115,9 @@ public class Rs2Player {
         } else return antiVenomTime < VENOM_VALUE_CUTOFF;
     }
 
+    public static boolean hasThrallActive() {
+        return thrallActive||thrallCooldown;
+    }
     public static boolean hasAntiPoisonActive() {
         return antiPoisonTime > 0;
     }
@@ -178,6 +183,38 @@ public class Rs2Player {
                 teleBlockTime = -1;
             } else {
                 teleBlockTime = time;
+            }
+        }
+    }
+    /**
+     * Handles updates to the teleblock timer based on changes to the {@link Varbits#TELEBLOCK} varbit.
+     *
+     * @see Varbits#TELEBLOCK
+     */
+    public static void handleThrallActivity(VarbitChanged event){
+        if (event.getVarbitId() == Varbits.RESURRECT_THRALL) {
+//            int time = event.getValue();
+
+            if (event.getValue() == 1) {
+                thrallActive = true;
+            } else {
+                thrallActive = false;
+            }
+        }
+    }
+    /**
+     * Handles updates to the teleblock timer based on changes to the {@link Varbits#TELEBLOCK} varbit.
+     *
+     * @see Varbits#TELEBLOCK
+     */
+    public static void handleThrallCooldown(VarbitChanged event){
+        if (event.getVarbitId() == Varbits.RESURRECT_THRALL_COOLDOWN) {
+//            int time = event.getValue();
+
+            if (event.getValue() == 1) {
+                thrallCooldown = true;
+            } else {
+                thrallCooldown = false;
             }
         }
     }
