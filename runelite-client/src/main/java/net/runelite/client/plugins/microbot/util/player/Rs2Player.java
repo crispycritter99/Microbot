@@ -186,38 +186,6 @@ public class Rs2Player {
             }
         }
     }
-    /**
-     * Handles updates to the teleblock timer based on changes to the {@link Varbits#TELEBLOCK} varbit.
-     *
-     * @see Varbits#TELEBLOCK
-     */
-    public static void handleThrallActivity(VarbitChanged event){
-        if (event.getVarbitId() == Varbits.RESURRECT_THRALL) {
-//            int time = event.getValue();
-
-            if (event.getValue() == 1) {
-                thrallActive = true;
-            } else {
-                thrallActive = false;
-            }
-        }
-    }
-    /**
-     * Handles updates to the teleblock timer based on changes to the {@link Varbits#TELEBLOCK} varbit.
-     *
-     * @see Varbits#TELEBLOCK
-     */
-    public static void handleThrallCooldown(VarbitChanged event){
-        if (event.getVarbitId() == Varbits.RESURRECT_THRALL_COOLDOWN) {
-//            int time = event.getValue();
-
-            if (event.getValue() == 1) {
-                thrallCooldown = true;
-            } else {
-                thrallCooldown = false;
-            }
-        }
-    }
 
     public static void handleAnimationChanged(AnimationChanged event) {
         if (!(event.getActor() instanceof Player)) {

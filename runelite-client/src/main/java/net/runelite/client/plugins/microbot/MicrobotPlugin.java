@@ -169,8 +169,6 @@ public class MicrobotPlugin extends Plugin {
     public void onVarbitChanged(VarbitChanged event) {
         Rs2Player.handlePotionTimers(event);
         Rs2Player.handleTeleblockTimer(event);
-        Rs2Player.handleThrallActivity(event);
-        Rs2Player.handleThrallCooldown(event);
     }
     
     @Subscribe
