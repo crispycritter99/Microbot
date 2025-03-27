@@ -158,10 +158,12 @@ public class BankerScript extends Script {
     public boolean handleBanking() {
         SulphurNaguaPlugin.setState(State.BANKING);
 
-        Rs2Walker.walkTo(1349,9591,0,10);
+//        Rs2Walker.walkTo(1349,9591,0,10);
+
+//        Rs2GameObject.interact(51375,"Pass-through");
+//        sleepUntil(() -> Rs2GameObject.getGameObjects(51365).size()!=0);
+        Rs2Walker.walkTo(1374,9671,0,10);
         Rs2Prayer.disableAllPrayers();
-        Rs2GameObject.interact(51375,"Pass-through");
-        sleepUntil(() -> Rs2GameObject.getGameObjects(51365).size()!=0);
         BreakHandlerScript.setLockState(false);
         sleep(Rs2Random.randomGaussian(1200,200));
 
@@ -169,9 +171,9 @@ public class BankerScript extends Script {
         Rs2GameObject.interact(51365,"Collect-from");
         sleepUntil(() -> Rs2Inventory.getEmptySlots()<2,20000);
 
-        Rs2GameObject.interact(51377,"Pass-through");
-        sleepUntil(() -> Rs2Player.getWorldLocation().getY()<9594);
-
+//        Rs2GameObject.interact(51377,"Pass-through");
+//        sleepUntil(() -> Rs2Player.getWorldLocation().getY()<9594);
+        Rs2Walker.walkTo(1349,9582,0,0);
         while(Rs2Inventory.getEmptySlots()<2){Rs2Inventory.drop(29078);Rs2Inventory.waitForInventoryChanges(800);}
 //        sleepUntil(() -> !Rs2Combat.inCombat());
 
@@ -184,7 +186,7 @@ public class BankerScript extends Script {
 
         sleep(Rs2Random.randomGaussian(1200,200));
 
-        Rs2Walker.walkTo(1349,9582,0,0);
+
 
 
         while(Rs2Inventory.contains(29079)){
