@@ -162,8 +162,9 @@ public class BankerScript extends Script {
 
 //        Rs2GameObject.interact(51375,"Pass-through");
 //        sleepUntil(() -> Rs2GameObject.getGameObjects(51365).size()!=0);
-        Rs2Walker.walkTo(1374,9671,0,10);
         Rs2Prayer.disableAllPrayers();
+        Rs2Walker.walkTo(1374,9671,0,10);
+
         BreakHandlerScript.setLockState(false);
         sleep(Rs2Random.randomGaussian(1200,200));
 
