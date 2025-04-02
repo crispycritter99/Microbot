@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static net.runelite.api.NullObjectID.*;
 import static net.runelite.api.ObjectID.LADDER_36231;
+import static net.runelite.api.ObjectID.LADDER_36232;
 import static net.runelite.client.plugins.microbot.agility.enums.AgilityCourseName.GNOME_STRONGHOLD_AGILITY_COURSE;
 import static net.runelite.client.plugins.microbot.agility.enums.AgilityCourseName.PRIFDDINAS_AGILITY_COURSE;
 
@@ -62,7 +63,7 @@ public class AgilityScript extends Script {
 
     public static final Set<Integer> PORTAL_OBSTACLE_IDS = ImmutableSet.of(
             // Prifddinas portals
-            NULL_36241, NULL_36242, NULL_36243, NULL_36244, NULL_36245, NULL_36246
+            NULL_36241,36240, NULL_36242, NULL_36243, NULL_36244, NULL_36245, NULL_36246
     );
 
     private List<AgilityObstacleModel> getCurrentCourse(MicroAgilityConfig config) {
@@ -192,7 +193,7 @@ public class AgilityScript extends Script {
                 if (config.agilityCourse() == PRIFDDINAS_AGILITY_COURSE) {
                     TileObject portal = Rs2GameObject.findObject(PORTAL_OBSTACLE_IDS.stream().collect(Collectors.toList()));
 
-                    if (portal != null && Microbot.getClientThread().runOnClientThread(() -> portal.getClickbox()) != null) {
+                    if (portal != null && Microbot.getClientThread().runOnClientThread(portal::getClickbox) != null) {
                         if (Rs2GameObject.interact(portal, "travel")) {
                             sleep(2000, 3000);
                             return;
@@ -200,21 +201,7 @@ public class AgilityScript extends Script {
                     }
                 }
 
-                if (Microbot.getClient().getTopLevelWorldView().getPlane() == 0 && playerWorldLocation.distanceTo(startCourse) > 6 && config.agilityCourse() != GNOME_STRONGHOLD_AGILITY_COURSE) {
-                    currentObstacle = 0;
-                    LocalPoint startCourseLocal = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), startCourse);
-                    if (startCourseLocal == null || playerLocation.distanceTo(startCourseLocal) >= MAX_DISTANCE) {
-                        if (config.alchemy()) {
-                            Rs2Magic.alch(config.item(), 50, 100);
-                        }
-                        if (Rs2Player.getWorldLocation().distanceTo(startCourse) < 100) {//extra check for prif course
-                            Rs2Walker.walkTo(startCourse, 8);
-                            Microbot.log("Going back to course's starting point");
-                            isWalkingToStart = true;
-                            return;
-                        }
-                    }
-                }
+
 
                 if (!marksOfGrace.isEmpty() && !Rs2Inventory.isFull()) {
                     for (RS2Item markOfGraceTile : marksOfGrace) {
@@ -254,9 +241,31 @@ public class AgilityScript extends Script {
                         TileObject gameObject = Rs2GameObject.findObject(courses.stream()
                                 .filter(x -> x.getOperationX().check(Rs2Player.getWorldLocation().getX(), x.getRequiredX()) && x.getOperationY().check(Rs2Player.getWorldLocation().getY(), x.getRequiredY()))
                                 .map(AgilityObstacleModel::getObjectID).collect(Collectors.toList()));
-
+                        if (Rs2GameObject.interact(36232,"Climb",10)) {
+                            isWalkingToStart = false;
+                            sleep(2000,3000);
+                            return;
+                            //LADDER_36231 in prifddinas does not give experience
+//                            if (36232 != LADDER_36232 && waitForAgilityObstabcleToFinish(agilityExp))
+//                                break;
+                        }
                         if (gameObject == null) {
                             Microbot.log("NO agility obstacle found. Please report this as a bug if this keeps happening.");
+                            if (Microbot.getClient().getTopLevelWorldView().getPlane() == 0 && playerWorldLocation.distanceTo(startCourse) > 6 && config.agilityCourse() != GNOME_STRONGHOLD_AGILITY_COURSE) {
+                                currentObstacle = 0;
+                                LocalPoint startCourseLocal = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), startCourse);
+                                if (startCourseLocal == null || playerLocation.distanceTo(startCourseLocal) >= MAX_DISTANCE) {
+                                    if (config.alchemy()) {
+                                        Rs2Magic.alch(config.item(), 50, 100);
+                                    }
+                                    if (Rs2Player.getWorldLocation().distanceTo(startCourse) < 100) {//extra check for prif course
+                                        Rs2Walker.walkTo(startCourse, 8);
+                                        Microbot.log("Going back to course's starting point");
+                                        isWalkingToStart = true;
+                                        return;
+                                    }
+                                }
+                            }
                             return;
                         }
 
@@ -271,6 +280,10 @@ public class AgilityScript extends Script {
                         if (Rs2GameObject.interact(gameObject)) {
                             isWalkingToStart = false;
                             //LADDER_36231 in prifddinas does not give experience
+                            if (gameObject.getId() == LADDER_36231) {
+                                sleep(1000, 2000);
+                                break;
+                            }
                             if (gameObject.getId() != LADDER_36231 && waitForAgilityObstabcleToFinish(agilityExp))
                                 break;
                         }

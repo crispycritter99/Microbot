@@ -149,14 +149,15 @@ public class MicroAgilityPlugin extends Plugin {
         agilityScript.ardougneCourse.add(new AgilityObstacleModel(GAP_15612));
 
         //Prifddinas
-        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(LADDER_36221, 3253, -1, Operation.LESS_EQUAL, Operation.GREATER));
+        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(LADDER_36221, -1, 6112, Operation.GREATER, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36225, 3258, -1, Operation.LESS_EQUAL, Operation.GREATER));
-        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(CHIMNEY_36227, -1, 6106, Operation.GREATER, Operation.LESS_EQUAL));
+        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(CHIMNEY_36227, 3272, 6106, Operation.GREATER_EQUAL, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(ROOF_EDGE, -1, 6115, Operation.GREATER, Operation.LESS_EQUAL));
-        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(DARK_HOLE_36229, -1, 6117, Operation.GREATER, Operation.LESS_EQUAL));
+        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(DARK_HOLE_36229, -1, 6114, Operation.GREATER, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(LADDER_36231, -1, 3392, Operation.GREATER, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(ROPE_BRIDGE_36233, 2265, -1, Operation.GREATER_EQUAL, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36234, 2254, -1, Operation.GREATER_EQUAL, Operation.GREATER));
+        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(LADDER_36232, 3266, -1, Operation.GREATER_EQUAL, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(ROPE_BRIDGE_36235, -1, 3398, Operation.GREATER, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36236, -1, 3409, Operation.GREATER, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36237));
