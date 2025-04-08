@@ -38,6 +38,7 @@ public interface ThievingConfig extends Config {
     {
         return ThievingNpc.NONE;
     }
+
     @ConfigItem(
             keyName = "ardougneAreaCheck",
             name = "Ardy Knights Bank Area Check?",
@@ -49,6 +50,7 @@ public interface ThievingConfig extends Config {
     {
         return false;
     }
+
     @ConfigSection(
             name = "buffs",
             description = "general",

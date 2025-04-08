@@ -1,7 +1,6 @@
 package net.runelite.client.plugins.microbot.driftnet;
 
 import net.runelite.api.ItemID;
-import net.runelite.api.NPC;
 import net.runelite.api.ObjectID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -10,7 +9,6 @@ import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
-import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -21,14 +19,12 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.List;
-
 
 import static net.runelite.client.plugins.microbot.Microbot.log;
-import static net.runelite.client.plugins.microbot.util.Global.sleepGaussian;
 
 public class DriftNetScript extends Script {
 
@@ -123,7 +119,8 @@ public class DriftNetScript extends Script {
     private void processNets(DriftNetConfig config) {
         for (DriftNet net : DriftNetPlugin.getNETS()) {
 
-            final Shape netShape = Microbot.getClientThread().runOnClientThread(net.getNet()::getConvexHull);
+            final Shape netShape = Microbot.getClientThread().runOnClientThreadOptional(net.getNet()::getConvexHull)
+                    .orElse(null);
 
             if (netShape == null) {
                 continue;

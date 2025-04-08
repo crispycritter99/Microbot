@@ -184,6 +184,7 @@ public class ThievingScript extends Script {
                 return;
             }
         }
+
         if (config.THIEVING_NPC() == ThievingNpc.WEALTHY_CITIZEN) {
             handleWealthyCitizen();
         } else if (config.THIEVING_NPC() == ThievingNpc.ELVES) {
@@ -205,36 +206,36 @@ public class ThievingScript extends Script {
         }
     }
 
-    private void handleWealthyCitizen() {
-        try {
-            if (Rs2Player.isAnimating(3000)) {
-                return;
-            }
-            List<Rs2NpcModel> wealthyCitizenInteracting = new ArrayList<>();
+        private void handleWealthyCitizen() {
             try {
-                Stream<Rs2NpcModel> npcStream = Rs2Npc.getNpcs("Wealthy citizen", true);
-                if (npcStream != null) {
-                    wealthyCitizenInteracting = npcStream
-                            .filter(x -> x != null && x.isInteracting() && x.getInteracting() != null)
-                            .collect(Collectors.toList());
+                if (Rs2Player.isAnimating(3000)) {
+                    return;
+                }
+                List<Rs2NpcModel> wealthyCitizenInteracting = new ArrayList<>();
+                try {
+                    Stream<Rs2NpcModel> npcStream = Rs2Npc.getNpcs("Wealthy citizen", true);
+                    if (npcStream != null) {
+                        wealthyCitizenInteracting = npcStream
+                                .filter(x -> x != null && x.isInteracting() && x.getInteracting() != null)
+                                .collect(Collectors.toList());
+                    }
+                } catch (Exception ex) {
+                    Microbot.log("Error retrieving Wealthy citizens: " + ex.getMessage());
+                    return;
+                }
+
+                Optional<Rs2NpcModel> wealthyCitizenToPickpocket = wealthyCitizenInteracting.stream().findFirst();
+                if (wealthyCitizenToPickpocket.isPresent()) {
+                    Rs2NpcModel pickpocketnpc = wealthyCitizenToPickpocket.get();
+                    if (!Rs2Player.isAnimating(3000) && Rs2Npc.pickpocket(pickpocketnpc)) {
+                        Microbot.status = "Pickpocketting " + pickpocketnpc.getName();
+                        sleep(300, 600);
+                    }
                 }
             } catch (Exception ex) {
-                System.out.println("Error retrieving Wealthy citizens: " + ex.getMessage());
-                return;
+               Microbot.log("Error in handleWealthyCitizen: " + ex.getMessage());
             }
-
-            Optional<Rs2NpcModel> wealthyCitizenToPickpocket = wealthyCitizenInteracting.stream().findFirst();
-            if (wealthyCitizenToPickpocket.isPresent()) {
-                Rs2NpcModel pickpocketnpc = wealthyCitizenToPickpocket.get();
-                if (!Rs2Player.isAnimating(3000) && Rs2Npc.pickpocket(pickpocketnpc)) {
-                    Microbot.status = "Pickpocketting " + pickpocketnpc.getName();
-                    sleep(300, 600);
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Error in handleWealthyCitizen: " + ex.getMessage());
         }
-    }
 
     private void handleShadowVeil() {
         if (!Rs2Magic.isShadowVeilActive() && Rs2Magic.isArceeus() &&
