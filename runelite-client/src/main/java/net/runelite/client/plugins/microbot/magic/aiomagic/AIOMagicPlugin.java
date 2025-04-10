@@ -14,6 +14,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.StunSpell;
+import net.runelite.client.plugins.microbot.magic.aiomagic.enums.PlankLog;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.SuperHeatItem;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.TeleportSpell;
 import net.runelite.client.plugins.microbot.magic.aiomagic.scripts.*;
@@ -61,6 +62,14 @@ public class AIOMagicPlugin extends Plugin {
 	private TeleAlchScript teleAlchScript;
 	@Inject
 	private StunAlchScript stunAlchScript;
+	@Inject
+	private FlaxSpinScript flaxSpinScript;
+	@Inject
+	private DegrimeScript degrimeScript;
+	@Inject
+	private SuperGlassScript superGlassScript;
+	@Inject
+	private PlankMakeScript plankMakeScript;
 
 	public static String version = "1.1.0";
 	
@@ -78,6 +87,13 @@ public class AIOMagicPlugin extends Plugin {
 	private StunSpell stunSpell;
 	@Getter
 	private String stunNpcName;
+	@Getter
+	private String logName;
+	@Getter
+	private int herb;
+	@Getter
+	private PlankLog plankLog;
+
 
 	@Override
 	protected void startUp() throws AWTException {
@@ -88,7 +104,8 @@ public class AIOMagicPlugin extends Plugin {
 		teleportSpell = config.teleportSpell();
 		stunSpell = config.stunSpell();
 		stunNpcName = config.stunNpcName();
-
+		herb = config.Herb().getGrimyItemID();
+		plankLog = config.Plank();
 		if (overlayManager != null) {
 			overlayManager.add(aioMagicOverlay);
 		}
@@ -112,6 +129,18 @@ public class AIOMagicPlugin extends Plugin {
 			case STUNALCH:
 				stunAlchScript.run();
 				break;
+			case SPINFLAX:
+				flaxSpinScript.run();
+				break;
+			case DEGRIME:
+				degrimeScript.run();
+				break;
+			case SUPERGLASS:
+				superGlassScript.run();
+				break;
+			case PLANKMAKE:
+				plankMakeScript.run();
+				break;
 		}
 	}
 
@@ -122,6 +151,10 @@ public class AIOMagicPlugin extends Plugin {
 		teleportScript.shutdown();
 		teleAlchScript.shutdown();
 		stunAlchScript.shutdown();
+		flaxSpinScript.shutdown();
+		degrimeScript.shutdown();
+		superGlassScript.shutdown();
+		plankMakeScript.shutdown();
 		overlayManager.remove(aioMagicOverlay);
 	}
 
@@ -155,6 +188,10 @@ public class AIOMagicPlugin extends Plugin {
 
 		if (event.getKey().equals(AIOMagicConfig.stunNpcName)) {
 			stunNpcName = config.stunNpcName();
+		}
+
+		if (event.getKey().equals(AIOMagicConfig.stunNpcName)) {
+			logName = config.Plank().getLogName();
 		}
 	}
 

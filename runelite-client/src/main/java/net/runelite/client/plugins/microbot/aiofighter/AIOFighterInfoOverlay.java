@@ -38,9 +38,8 @@ public class AIOFighterInfoOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder().build());
             panelComponent.getChildren().add(LineComponent.builder()
                     .left(Microbot.status)
-                    .right("Version:" + AIOFighterPlugin.version)
+                    .right("State:" + config.state())
                     .build());
-
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

@@ -4,10 +4,12 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.plugins.microbot.degrime.enums.Herb;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.MagicActivity;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.StunSpell;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.SuperHeatItem;
 import net.runelite.client.plugins.microbot.magic.aiomagic.enums.TeleportSpell;
+import net.runelite.client.plugins.microbot.magic.aiomagic.enums.PlankLog;
 import net.runelite.client.plugins.microbot.util.magic.Rs2CombatSpells;
 
 @ConfigGroup(AIOMagicConfig.configGroup)
@@ -22,6 +24,7 @@ public interface AIOMagicConfig extends Config {
 	String teleportSpell = "teleportSpell";
 	String stunSpell = "stunSpell";
 	String stunNpcName = "stunNpcName";
+	String plankMakeName = "plankMake";
 
 	@ConfigSection(
 			name = "General Settings",
@@ -64,6 +67,20 @@ public interface AIOMagicConfig extends Config {
 			position = 3
 	)
 	String teleportSection = "teleport";
+
+	@ConfigSection(
+			name = "Degrime Settings",
+			description = "Configure Degrime settings",
+			position = 2
+	)
+	String degrimeSection = "Degrime";
+
+	@ConfigSection(
+			name = "Plank Make Settings",
+			description = "Configure Degrime settings",
+			position = 2
+	)
+	String plankMakeSection = "Plank Make";
 
 	@ConfigItem(
 			keyName = activity,
@@ -151,4 +168,20 @@ public interface AIOMagicConfig extends Config {
 	default TeleportSpell teleportSpell() {
 		return TeleportSpell.VARROCK_TELEPORT;
 	}
+	@ConfigItem(
+			keyName = "Herb",
+			name = "Item",
+			description = "Chose the jewelry item you would like to craft",
+			position = 0,
+			section = degrimeSection
+	)
+	default Herb Herb() { return Herb.GUAM; }
+	@ConfigItem(
+			keyName = plankMakeName,
+			name = "Item",
+			description = "Choose the plank you want to make",
+			position = 0,
+			section = plankMakeSection
+	)
+	default PlankLog Plank() { return PlankLog.LOG; }
 }

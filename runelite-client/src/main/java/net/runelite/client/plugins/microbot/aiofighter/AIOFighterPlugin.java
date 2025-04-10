@@ -126,6 +126,8 @@ public class AIOFighterPlugin extends Plugin {
         //slayerScript.run(config);
         Microbot.getSpecialAttackConfigs()
                 .setSpecialAttack(true);
+        if (Microbot.isLoggedIn())
+            AIOFighterPlugin.setState(State.IDLE);
     }
 
     protected void shutDown() {

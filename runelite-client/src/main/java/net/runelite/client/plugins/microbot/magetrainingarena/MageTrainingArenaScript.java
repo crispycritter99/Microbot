@@ -530,7 +530,8 @@ public class MageTrainingArenaScript extends Script {
             Rs2Walker.walkTo(3364, 9636, 2, 2);
             return;
         }
-
+        if (Rs2Inventory.isFull())
+                return;
         if (room.getSuggestion() == null) {
             Rs2GameObject.interact("Cupboard", "Search");
 

@@ -7,5 +7,8 @@ public enum MagicActivity {
     TELEPORT,
     TELEALCH,
     STUNALCH,
-
+    SPINFLAX,
+    DEGRIME,
+    SUPERGLASS,
+    PLANKMAKE
 }

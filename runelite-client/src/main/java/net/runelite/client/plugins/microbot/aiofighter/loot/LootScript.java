@@ -27,16 +27,19 @@ public class LootScript extends Script {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
+                if (!config.toggleLootItems()) return;
+
                 minFreeSlots = config.bank() ? config.minFreeSlots() : 0;
-                if (!super.run()) return;
                 if (!Microbot.isLoggedIn()) return;
+                if (!super.run()) return;
+
                 if (AIOFighterPlugin.getState().equals(State.BANKING) || AIOFighterPlugin.getState().equals(State.WALKING)) return;
                 if (Rs2Inventory.isFull() || Rs2Inventory.getEmptySlots() <= minFreeSlots || (Rs2Combat.inCombat() && !config.toggleForceLoot()))
                     return;
 
 
 
-                if (!config.toggleLootItems()) return;
+
                 if (config.looterStyle().equals(DefaultLooterStyle.MIXED) || config.looterStyle().equals(DefaultLooterStyle.ITEM_LIST)) {
                     lootItemsOnName(config);
                 }
@@ -121,9 +124,31 @@ public class LootScript extends Script {
                     minFreeSlots,
                     config.toggleDelayedLooting(),
                     config.toggleOnlyLootMyItems(),
-                    " rune"
+                    "Air rune","Water rune","Earth rune","Fire rune",
+                    "Mind rune","Chaos rune","Death rune","Blood rune","Wrath rune",
+                    "Body rune","Cosmic rune","Nature rune","Law rune",
+                    "Sunfire rune","Astral rune","Soul rune",
+                    "Mist rune","Dust rune", "Mud rune","Smoke rune","Steam rune","Lava rune"
             );
             if (Rs2GroundItem.lootItemsBasedOnNames(runesParams)) {
+                Microbot.pauseAllScripts = false;
+            }
+        }
+    }
+
+    // loot runes
+    private void lootHerbs(AIOFighterConfig config) {
+        if (config.toggleLootRunes()) {
+            LootingParameters herbsParams = new LootingParameters(
+                    config.attackRadius(),
+                    1,
+                    1,
+                    config.minFreeSlots(),
+                    config.toggleDelayedLooting(),
+                    config.toggleOnlyLootMyItems(),
+                    "grimy "
+            );
+            if (Rs2GroundItem.lootItemsBasedOnNames(herbsParams)) {
                 Microbot.pauseAllScripts = false;
             }
         }
@@ -177,6 +202,7 @@ public class LootScript extends Script {
         );
         if (Rs2GroundItem.lootItemBasedOnValue(valueParams)) {
             Microbot.pauseAllScripts = false;
+
         }
     }
 

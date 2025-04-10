@@ -7,6 +7,7 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.runecrafting.gotr.data.CellType;
 import net.runelite.client.plugins.microbot.runecrafting.gotr.data.GuardianPortalInfo;
 import net.runelite.client.plugins.microbot.runecrafting.gotr.data.Mode;
@@ -154,7 +155,7 @@ public class GotrScript extends Script {
                     if (lootChisel()) return;
 
                     if (waitingForGameToStart(timeToStart)) return;
-            
+
 
                     if (!Rs2Inventory.hasItem("Uncharged cell") && !isInLargeMine() && !isInHugeMine()) {
                         takeUnchargedCells();
@@ -227,10 +228,11 @@ public class GotrScript extends Script {
     }
 
     private boolean waitingForGameToStart(int timeToStart) {
+        BreakHandlerScript.setLockState(false);
         if (isInHugeMine()) return false;
 
         if (getStartTimer() > Rs2Random.randomGaussian(35, Rs2Random.between(1, 5)) || getStartTimer() == -1 || timeToStart > 10) {
-
+            BreakHandlerScript.setLockState(true);
             // Only take cells if we don't already have them
             if (!Rs2Inventory.hasItem("Uncharged cell")) {
                 // If in large mine and need cells, leave first

@@ -19,7 +19,7 @@ public class BreakHandlerScript extends Script {
 
     public static int breakIn = -1;
     public static int breakDuration = -1;
-
+    public static boolean isResumed;
     public static int totalBreaks = 0;
 
     public static Duration duration;
@@ -46,6 +46,7 @@ public class BreakHandlerScript extends Script {
         Microbot.enableAutoRunOn = false;
         title = ClientUI.getFrame().getTitle();
         breakIn = Rs2Random.between(config.timeUntilBreakStart() * 60, config.timeUntilBreakEnd() * 60);
+        isResumed=false;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
                 
@@ -87,7 +88,10 @@ public class BreakHandlerScript extends Script {
                 if (breakDuration <= 0 && Microbot.pauseAllScripts) {
                     if (Rs2AntibanSettings.universalAntiban && Rs2AntibanSettings.actionCooldownActive)
                         return;
-                    Microbot.pauseAllScripts = false;
+                    if (isResumed) {
+                        isResumed=false;
+                        Microbot.pauseAllScripts = false;
+                    }
                     if (breakIn <= 0)
                         breakIn = Rs2Random.between(config.timeUntilBreakStart() * 60, config.timeUntilBreakEnd() * 60);
 
@@ -107,7 +111,7 @@ public class BreakHandlerScript extends Script {
                     return;
                 }
 
-                if ((breakIn <= 0 && !Microbot.pauseAllScripts && !isLockState()) || (Rs2AntibanSettings.microBreakActive && !Microbot.pauseAllScripts && !isLockState())) {
+                if (!Rs2Player.isInCombat()&&(breakIn <= 0 && !Microbot.pauseAllScripts && !isLockState()) || (Rs2AntibanSettings.microBreakActive && !Microbot.pauseAllScripts && !isLockState())) {
                     startBreak();
                 }
 
@@ -132,7 +136,7 @@ public class BreakHandlerScript extends Script {
         }
 
         breakDuration = Rs2Random.between(config.breakDurationStart() * 60, config.breakDurationEnd() * 60);
-
+        isResumed=true;
         if (config.logoutAfterBreak()) {
             Rs2Player.logout();
         }

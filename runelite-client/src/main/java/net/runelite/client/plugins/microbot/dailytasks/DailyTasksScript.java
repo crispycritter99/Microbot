@@ -99,7 +99,7 @@ public class DailyTasksScript extends Script {
     }
 
     private void initializeTasks() {
-        clientThread.runOnClientThreadOptional(() -> {
+        clientThread.runOnClientThread(() -> {
             for (DailyTask task : DailyTask.values()) {
                 if (task.isEnabled(config) && task.isAvailable()) {
                     tasksToComplete.add(task);

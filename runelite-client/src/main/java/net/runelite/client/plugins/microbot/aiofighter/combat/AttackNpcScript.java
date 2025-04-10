@@ -13,6 +13,7 @@ import net.runelite.client.plugins.microbot.aiofighter.enums.State;
 import net.runelite.client.plugins.microbot.util.ActorModel;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcManager;
@@ -49,9 +50,12 @@ public class AttackNpcScript extends Script {
             try {
                 if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
                     return;
-
-                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING))
+//                Microbot.log(Microbot.pauseAllScripts+"");
+                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING)||Microbot.pauseAllScripts)
                     return;
+
+                if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
+                        Rs2Inventory.wear("Bracelet of slaughter");
 
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())

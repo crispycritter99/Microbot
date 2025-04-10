@@ -55,6 +55,7 @@ public class Rs2Widget {
     public static boolean clickWidget(Widget widget) {
         if (widget != null) {
             Microbot.getMouse().click(widget.getBounds());
+            Microbot.log(widget.getBounds().toString());
             return true;
         }
         return false;
