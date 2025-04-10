@@ -50,11 +50,13 @@ public class AttackNpcScript extends Script {
             try {
                 if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
                     return;
-
-                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING))
+//                Microbot.log(Microbot.pauseAllScripts+"");
+                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING)||Microbot.pauseAllScripts)
                     return;
+
                 if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
                         Rs2Inventory.wear("Bracelet of slaughter");
+
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())
                         .collect(Collectors.toList());

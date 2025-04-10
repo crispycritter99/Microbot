@@ -4,7 +4,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaConfig;
+import net.runelite.client.plugins.microbot.SulphurNagua.SulphurNaguaPlugin;
 import net.runelite.client.plugins.microbot.SulphurNagua.enums.PrayerStyle;
+import net.runelite.client.plugins.microbot.SulphurNagua.enums.State;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcManager;
@@ -34,6 +36,7 @@ public class PrayerScript extends Script {
 
     private void handlePrayer(SulphurNaguaConfig config) {
         if (!Microbot.isLoggedIn() || !config.togglePrayer()) return;
+//        if (SulphurNaguaPlugin.getState() == State.BANKING) {return;}
         if (config.prayerStyle() != PrayerStyle.CONTINUOUS && config.prayerStyle() != PrayerStyle.ALWAYS_ON) return;
         if (config.prayerStyle() == PrayerStyle.CONTINUOUS) {
             boolean underAttack = !Rs2Npc.getNpcsForPlayer().isEmpty() || Rs2Combat.inCombat();

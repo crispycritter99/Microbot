@@ -578,7 +578,7 @@ public class VorkathMeleeScript extends Script {
 
         if (safeTile != null) {
             if (playerLocation.equals(safeTile)) {
-                Rs2Npc.interact(vorkath, "attack");
+//                Rs2Npc.interact(vorkath, "attack");
             } else {
                 Rs2Player.eatAt(75);
                 Rs2Walker.walkFastLocal(LocalPoint.fromWorld(Microbot.getClient(), safeTile));

@@ -1,5 +1,7 @@
 package net.runelite.client.plugins.microbot.vardorvis;
 
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -7,6 +9,9 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
+
+import static net.runelite.api.Varbits.RESURRECT_THRALL;
+import static net.runelite.api.Varbits.RESURRECT_THRALL_COOLDOWN;
 
 public class VardorvisOverlay extends OverlayPanel {
 
@@ -67,6 +72,9 @@ public class VardorvisOverlay extends OverlayPanel {
 
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("Axe on safe tile = " + VardorvisPlugin.axeOnSafeTile)
+                    .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Thrall is active = " + Rs2Magic.isThrallActive() + " "+Microbot.getVarbitValue(RESURRECT_THRALL)+" "+Microbot.getVarbitValue(RESURRECT_THRALL_COOLDOWN) )
                     .build());
 
         } catch (Exception ex) {

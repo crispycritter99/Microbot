@@ -23,6 +23,7 @@ import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -205,11 +206,15 @@ public class BlastoiseFurnaceScript extends Script {
         boolean fullCoalBag = Rs2Inventory.interact(coalBag, "Fill");
         if (!fullCoalBag)
             return;
+        sleep(Rs2Random.randomGaussian(600,100));
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
+//        sleep(Rs2Random.randomGaussian(600,100));
         depositOre();
         Rs2Walker.walkFastCanvas(new WorldPoint(1940, 4962, 0));
         sleep(3400);
         sleepUntil(() -> barsInDispenser(config.getBars()) > 0, 10000);
         sleep(400, 700);
+
     }
 
     private void retrievePrimary() {
@@ -218,6 +223,8 @@ public class BlastoiseFurnaceScript extends Script {
             Rs2Bank.withdrawAll(primaryOre);
             return;
         }
+        sleep(Rs2Random.randomGaussian(600,100));
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
         depositOre();
         Rs2Walker.walkFastCanvas(new WorldPoint(1940, 4962, 0));
         sleep(3400);
@@ -233,6 +240,8 @@ public class BlastoiseFurnaceScript extends Script {
         boolean fullCoalBag = Rs2Inventory.interact(coalBag, "Fill");
         if (!fullCoalBag)
             return;
+        sleep(Rs2Random.randomGaussian(600,100));
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
         depositOre();
 
     }

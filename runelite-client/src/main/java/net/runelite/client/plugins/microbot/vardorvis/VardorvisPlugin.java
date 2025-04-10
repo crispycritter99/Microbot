@@ -113,6 +113,11 @@ public class VardorvisPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick tick) {
         currentRunningTicks++;
+        if (isBloodSplatsVisible()) {
+            Microbot.log("bloodsplat visible");
+//            sleep(2000);
+            clickingBloodSplats();
+        }
         if (Microbot.getClient().isPrayerActive(Prayer.PROTECT_FROM_MELEE) && currentPrayer != Rs2PrayerEnum.PROTECT_MELEE) {
             currentPrayer = Rs2PrayerEnum.PROTECT_MELEE;
             //Microbot.log("Prayer swapped to MELEE");
@@ -140,7 +145,7 @@ public class VardorvisPlugin extends Plugin {
 //        if (Rs2Npc.getNpc(10800)==null&&Rs2Player.isInCombat()&& state==State.FIGHTING){
 //            Rs2Magic.quickCast(MagicAction.RESURRECT_GREATER_GHOST);
 //        }
-        if (Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < 30) {
+        if (Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) < 40) {
             //Microbot.log("Using food because < 20 health");
             handleHealingAndPrayer();
         }
@@ -178,12 +183,10 @@ public class VardorvisPlugin extends Plugin {
             int poseAnimation = Rs2Player.getPoseAnimation();
             if (poseAnimation == 1205 || poseAnimation == 1210) { // poseAnimation == 1205 || poseAnimation == 1206 || poseAnimation == 1208 ||
                 Microbot.log("Healing | pose animation = " + poseAnimation + " | Current tick = " + currentRunningTicks);
-
+//                if(!Rs2Magic.isThrallActive())
+//                    Rs2Magic.cast(MagicAction.RESURRECT_GREATER_GHOST);
                 handleHealingAndPrayer();
-                if(Rs2Combat.getSpecEnergy() < 500&&!Rs2Equipment.isWearing(29796) )
-                {
-                    Rs2Inventory.wield(29796);
-                }
+
                 sleepUntilExecutor.submit(() -> {
                     boolean conditionsMet = sleepUntil(() -> {
                         boolean walkingCheck = !Rs2Player.isWalking();
@@ -201,7 +204,9 @@ public class VardorvisPlugin extends Plugin {
 
                                 specVardorvis();
                             } else {
-
+                                if (!Rs2Equipment.isWearing(29796)) {
+                                    Rs2Inventory.wield(29796);
+                                }
                                 Microbot.log("Hitting vardorvis after heal | Current tick = " + currentRunningTicks);
                                 Rs2Npc.interact(12223, "Attack");
                             }
@@ -223,10 +228,11 @@ public class VardorvisPlugin extends Plugin {
     @Subscribe
     public void onClientTick(ClientTick tick) {
 
-        if (isBloodSplatsVisible()) {
-            sleep(500);
-            clickingBloodSplats();
-        }
+//        if (isBloodSplatsVisible()) {
+//            Microbot.log("bloodsplat visible");
+////            sleep(2000);
+//            clickingBloodSplats();
+//        }
 
         if (Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1131, 3421, 0))) {
             tickCounter++;
@@ -327,11 +333,17 @@ public class VardorvisPlugin extends Plugin {
     }
 
     private boolean isBloodSplatsVisible() {
+        int i=0;
         for (int widgetId : trackedWidgets) {
             if (Rs2Widget.isWidgetVisible(widgetId)) {
-                Rs2Widget.findWidget("hi");
+                i++;
+//                Rs2Widget.findWidget("hi");
+//                Microbot.log("hi");
                 return true;
             }
+        }
+        if (i!=0) {
+            Microbot.log("" + i);
         }
         return false;
     }
@@ -340,7 +352,7 @@ public class VardorvisPlugin extends Plugin {
             try {
                 Thread.sleep(delayMs);
                 if (Rs2Widget.isWidgetVisible(widget.getId())) {
-                    Microbot.log("Clicking on widget  | Current tick = " + currentRunningTicks);
+                    Microbot.log("Clicking on widget with id "+widget.getId()+"  | Current tick = " + currentRunningTicks);
                     Rs2Widget.clickWidget(widget);
                 }
             } catch (InterruptedException e) {
@@ -352,6 +364,7 @@ public class VardorvisPlugin extends Plugin {
     public void clickingBloodSplats() {
         for (int widgetId : trackedWidgets) {
             if (Rs2Widget.isWidgetVisible(widgetId)) {
+
                 clickWidgetWithDelay(Rs2Widget.getWidget(widgetId), Rs2Random.between(60, 120));// 30, 120
             }
         }
@@ -428,6 +441,7 @@ public class VardorvisPlugin extends Plugin {
         if (currentPrayer < maxPrayer - 30) {
             Rs2Inventory.interact("prayer potion", "drink");
         }
+        Rs2Player.drinkCombatPotionAt(Skill.ATTACK);
 
         if (currentHealth < maxHealth - 45) {
             Microbot.doInvoke(new NewMenuEntry("Eat", Rs2Inventory.slot(385), 9764864, MenuAction.CC_OP.getId(), 2, 385, "Shark"), new Rectangle(1, 1));

@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static net.runelite.client.plugins.microbot.tithefarmfast.enums.TitheFarmStateFast.*;
+import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
+import static net.runelite.client.plugins.microbot.util.Global.sleepUntilTrue;
 import static net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue.hasSelectAnOption;
 
 /**
@@ -354,7 +356,11 @@ int plantnumber;
                 Rs2Walker.walkFastCanvas(p);
             Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
-        }
+//                sleepUntilTrue(Rs2Player::isWalking, 100, 5000);
+//                sleepUntil(() -> Rs2Player.distanceTo(p) == 0&&!Rs2Player.isWalking());
+//                Rs2Player.waitForWalking();
+
+            }
             else if (!Rs2Inventory.isItemSelected()){
 
                 Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
@@ -388,7 +394,9 @@ int plantnumber;
                 if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
                     Rs2Walker.walkFastCanvas(p);
                     sleepUntil(() -> Rs2Player.distanceTo(p) == 0);
-
+//                    Rs2Player.waitForWalking();
+//                    sleepUntilTrue(Rs2Player::isWalking, 100, 5000);
+//                    sleepUntil(() -> Rs2Player.distanceTo(p) == 0&&!Rs2Player.isWalking());
                     plantcycle = false;
 
                 }

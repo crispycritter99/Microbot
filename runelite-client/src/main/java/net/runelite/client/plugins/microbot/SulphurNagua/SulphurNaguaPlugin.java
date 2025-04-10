@@ -30,6 +30,7 @@ import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
+import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.ui.JagexColors;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ColorUtil;
@@ -128,6 +129,7 @@ public class SulphurNaguaPlugin extends Plugin {
         //slayerScript.run(config);
         Microbot.getSpecialAttackConfigs()
                 .setSpecialAttack(true);
+        SulphurNaguaPlugin.setState(State.IDLE);
     }
 
     protected void shutDown() {
@@ -240,6 +242,12 @@ public class SulphurNaguaPlugin extends Plugin {
         if (event.getMessage().contains("reach that")) {
             AttackNpcScript.skipNpc();
         }
+        if (event.getType() != ChatMessageType.GAMEMESSAGE) return;
+
+        if (event.getMessage().equalsIgnoreCase("oh dear, you are dead!")) {
+            Rs2Walker.setTarget(null);
+            shutDown();
+        }
     }
     // on setting change
     @Subscribe
@@ -267,6 +275,7 @@ public class SulphurNaguaPlugin extends Plugin {
 
     @Subscribe
     public void onGameTick(GameTick gameTick) {
+//        Microbot.log(config.state().toString());
         if (cooldown > 0 && !Rs2Combat.inCombat())
             cooldown--;
         //execute flicker script

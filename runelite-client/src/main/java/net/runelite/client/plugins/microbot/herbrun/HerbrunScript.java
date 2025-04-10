@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
+import static net.runelite.api.Varbits.DIARY_KOUREND_EASY;
+import static net.runelite.api.Varbits.RESURRECT_THRALL;
 import static net.runelite.client.plugins.microbot.Microbot.log;
 
 @Slf4j
@@ -42,6 +44,8 @@ public class HerbrunScript extends Script {
     @Inject
     ClientThread clientThread;
     private boolean initialized = false;
+    List<String> diseaseFreePatches = List.of("Weiss","Troll Stronghold");
+
 
     @Inject
     public HerbrunScript(HerbrunPlugin plugin, HerbrunConfig config) {
@@ -166,9 +170,19 @@ public class HerbrunScript extends Script {
         var state = getHerbPatchState(obj);
         switch (state) {
             case "Empty":
-                Rs2Inventory.use("compost");
-                Rs2GameObject.interact(obj, "Compost");
-                Rs2Player.waitForXpDrop(Skill.FARMING);
+                currentPatch = herbPatches.stream()
+                        .filter(patch -> Objects.equals(patch.getRegionName(), "Weiss"))
+                        .findFirst()
+                        .orElseGet(() -> herbPatches.stream()
+                                .findFirst()
+                                .orElse(null));
+                boolean hasKourendEasyDiary = Microbot.getVarbitValue(DIARY_KOUREND_EASY) == 1;
+                boolean skipCompost=(hasKourendEasyDiary&&currentPatch.getRegionName().equals("Kourend")||diseaseFreePatches.stream().anyMatch(str -> currentPatch.getRegionName().equalsIgnoreCase(str)));
+                if(!skipCompost){
+                    Rs2Inventory.use("compost");
+                    Rs2GameObject.interact(obj, "Compost");
+                    Rs2Player.waitForXpDrop(Skill.FARMING);
+                }
                 Rs2Inventory.use(" seed");
                 Rs2GameObject.interact(obj, "Plant");
                 sleepUntil(() -> getHerbPatchState(obj).equals("Growing"));

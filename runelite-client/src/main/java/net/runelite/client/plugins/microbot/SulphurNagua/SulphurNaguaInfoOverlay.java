@@ -40,6 +40,9 @@ public class SulphurNaguaInfoOverlay extends OverlayPanel {
                     .left(Microbot.status)
                     .right("State:" + config.state())
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .right(Microbot.pauseAllScripts+"")
+                    .build());
 
 
         } catch (Exception ex) {

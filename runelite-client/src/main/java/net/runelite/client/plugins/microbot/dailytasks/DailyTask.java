@@ -41,7 +41,7 @@ public enum DailyTask {
                 sleepUntil(() -> !Rs2Inventory.hasItem("Herb box"), 20000);
 
             },
-            config -> false
+            DailyTasksConfig::collectHerbBoxes
     ),
 
     BATTLESTAVES(
@@ -136,7 +136,6 @@ public enum DailyTask {
             new WorldPoint(2532, 3863, 0),
             () -> Microbot.getClient().getVarpValue(VarPlayer.THRONE_OF_MISCELLANIA) > 0,
             () -> {
-                sleepUntil(() -> Rs2Player.getWorldLocation().getRegionID() == 10044, 10000);
                 Rs2GameObject.interact(15079);
                 sleepUntilOnClientThread(() -> Microbot.getClient().getVarbitValue(Varbits.KINGDOM_APPROVAL) == 127, 10000);
                 Rs2Walker.walkTo(new WorldPoint(2502, 3858, 1), 5);
@@ -159,7 +158,7 @@ public enum DailyTask {
                 Rs2Keyboard.typeString(String.valueOf(50000));
                 Rs2Keyboard.enter();
             },
-            config -> false
+            DailyTasksConfig::handleMiscellania
     );
 
     @Getter

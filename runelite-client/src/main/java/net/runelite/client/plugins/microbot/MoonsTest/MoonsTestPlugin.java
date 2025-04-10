@@ -16,6 +16,9 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 @PluginDescriptor(
         name = "<html>[<font color=red>Neon</font>] " + "Moons of Peril Test",
@@ -25,6 +28,10 @@ import java.awt.*;
 )
 @Slf4j
 public class MoonsTestPlugin extends Plugin {
+    private ScheduledExecutorService scheduler;
+    private ExecutorService executor;
+    private ExecutorService sleepUntilExecutor;
+    private ExecutorService walkingExecutor;
     @Inject
     private MoonsTestConfig config;
     @Provides
@@ -47,11 +54,26 @@ public class MoonsTestPlugin extends Plugin {
         MoonsTestScript.state = State.CHAMBER;
         moonsTestScript.startup();
         moonsTestScript.run(config);
+        if (executor == null || executor.isShutdown() || executor.isTerminated()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
+        if (scheduler == null || scheduler.isShutdown() || scheduler.isTerminated()) {
+            scheduler = Executors.newScheduledThreadPool(1);
+        }
+        if (sleepUntilExecutor == null || sleepUntilExecutor.isShutdown() || sleepUntilExecutor.isTerminated()) {
+            sleepUntilExecutor = Executors.newSingleThreadExecutor();
+        }
+        if (walkingExecutor == null || walkingExecutor.isShutdown() || walkingExecutor.isTerminated()) {
+            walkingExecutor = Executors.newSingleThreadExecutor();
+        }
     }
 
     protected void shutDown() {
         moonsTestScript.shutdown();
         overlayManager.remove(moonsTestOverlay);
+        scheduler.shutdown();
+        executor.shutdown();
+        sleepUntilExecutor.shutdown();
     }
 
     @Subscribe
@@ -75,6 +97,7 @@ public class MoonsTestPlugin extends Plugin {
         else {
             ticks++;
         }
+
 
     }
 

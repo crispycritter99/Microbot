@@ -199,6 +199,7 @@ public class LootScript extends Script {
         );
         if (Rs2GroundItem.lootItemBasedOnValue(valueParams)) {
             Microbot.pauseAllScripts = false;
+
         }
     }
 

@@ -63,11 +63,17 @@ public class Rs2Bank {
     private static final int SELECTED_OPTION_VARBIT = VarbitID.BANK_QUANTITY_TYPE;
     
     // BANK actions
+    private static final int BANK_HANDLE_1 = 1;
+    private static final int BANK_HANDLE_5 = 2;
+    private static final int BANK_HANDLE_10 = 3;
     private static final int BANK_HANDLE_X_SET = 4;
     private static final int BANK_HANDLE_X_UNSET = 5;
     private static final int BANK_HANDLE_ALL = 6;
 
     // INVENTORY actions (e.g., for deposit)
+    private static final int INVENTORY_HANDLE_1 = 2;
+    private static final int INVENTORY_HANDLE_5 = 4;
+    private static final int INVENTORY_HANDLE_10 = 5;
     private static final int INVENTORY_HANDLE_X_SET = 6;
     private static final int INVENTORY_HANDLE_X_UNSET = 7;
     private static final int INVENTORY_HANDLE_ALL = 8;
@@ -511,17 +517,59 @@ public class Rs2Bank {
         boolean isInventory = container == BANK_INVENTORY_ITEM_CONTAINER;
         int handleXSet = isInventory ? INVENTORY_HANDLE_X_SET : BANK_HANDLE_X_SET;
         int handleXUnset = isInventory ? INVENTORY_HANDLE_X_UNSET : BANK_HANDLE_X_UNSET;
-        
-        if (!isInventory && Microbot.getVarbitValue(SELECTED_OPTION_VARBIT) == 4) {
-            handleXSet++;
-            handleXUnset++;
+        int handle1 = isInventory ? INVENTORY_HANDLE_1 : BANK_HANDLE_1;
+        int handle5 = isInventory ? INVENTORY_HANDLE_5 : BANK_HANDLE_5;
+        int handle10 = isInventory ? INVENTORY_HANDLE_10 : BANK_HANDLE_10;
+        if (Microbot.getVarbitValue(SELECTED_OPTION_VARBIT) == 4) {
+            handleXSet+= isInventory ? 0 : 1;
+            handleXUnset+= isInventory ? 0 : 1;
+            handle1 ++;
+            handle5+= isInventory ? 0 : 1;
+            handle10+= isInventory ? 0 : 1;
         }
-        
         if (Microbot.getVarbitValue(SELECTED_OPTION_VARBIT) == 3) {
             handleXSet = isInventory ? 2 : 1;
+            handle1 ++;
+            handle5+= isInventory ? 0 : 1;
+            handle10+= isInventory ? 0 : 1;
+
         }
-        
-        if (Microbot.getVarbitValue(X_AMOUNT_VARBIT) == amount) {
+        if (Microbot.getVarbitValue(SELECTED_OPTION_VARBIT) == 2) {
+            handle10 = isInventory ? 2 : 1;
+            handle5+= isInventory ? 0 : 1;
+            handle1 ++;
+        }
+        if (Microbot.getVarbitValue(SELECTED_OPTION_VARBIT) == 1) {
+            handle5 = isInventory ? 2 : 1;
+            handle1 ++;
+        }
+//        Microbot.log(""+handleXSet);
+        if (amount==1){
+            invokeMenu(handle1, rs2Item);
+
+            if (safe)
+                return sleepUntilTrue(() -> inventorySize != Rs2Inventory.size(), 100, 2500);
+
+            return true;
+        }
+        else if (amount==5){
+            invokeMenu(handle5, rs2Item);
+
+            if (safe)
+                return sleepUntilTrue(() -> inventorySize != Rs2Inventory.size(), 100, 2500);
+
+            return true;
+        }
+        else if (amount==10){
+            invokeMenu(handle10, rs2Item);
+
+            if (safe)
+                return sleepUntilTrue(() -> inventorySize != Rs2Inventory.size(), 100, 2500);
+
+            return true;
+        }
+        else if (Microbot.getVarbitValue(X_AMOUNT_VARBIT) == amount) {
+
             invokeMenu(handleXSet, rs2Item);
 
             if (safe)
@@ -536,7 +584,9 @@ public class Rs2Bank {
                 if (widget == null) return false;
                 return widget.getText().equalsIgnoreCase("Enter amount:");
             }, 5000);
-            
+            if (!Rs2Widget.getWidget(162, 42).getText().equalsIgnoreCase("Enter amount:")){
+                return false;
+            }
             Rs2Random.waitEx(1200, 100);
             Rs2Keyboard.typeString(String.valueOf(amount));
             Rs2Keyboard.enter();

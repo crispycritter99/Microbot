@@ -542,7 +542,6 @@ public class Constants {
 
     public static final Set<Integer> TOOL_LEPRECHAUN_IDS = ImmutableSet.of(
             NpcID.TOOL_LEPRECHAUN,
-            NpcID.TOOL_LEPRECHAUN_757,
             NpcID.TOOL_LEPRECHAUN_7757
     );
 

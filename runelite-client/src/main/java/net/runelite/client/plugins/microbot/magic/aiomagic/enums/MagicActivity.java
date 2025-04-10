@@ -9,5 +9,6 @@ public enum MagicActivity {
     STUNALCH,
     SPINFLAX,
     DEGRIME,
-    SUPERGLASS
+    SUPERGLASS,
+    PLANKMAKE
 }

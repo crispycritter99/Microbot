@@ -51,10 +51,8 @@ public class AttackNpcScript extends Script {
             try {
                 if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
                     return;
-
                 if(config.state().equals(State.BANKING))
                     return;
-//Microbot.log(""+config.state());
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())
                         .collect(Collectors.toList());

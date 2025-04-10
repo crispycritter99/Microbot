@@ -42,11 +42,11 @@ public class MoonsScript extends Script {
     boolean lootable;
     private long lastEatTime = -1;
     public static long start_time = 0;
-    public static WorldPoint closestTile;
     public static int loots=0;
     private long lastPrayerTime = -1;
     private static final int EAT_COOLDOWN_MS = 2000;
     private static final int PRAYER_COOLDOWN_MS = 2000;
+    public static WorldPoint closestTile=null;
 
     private static final List<WorldPoint> points = Arrays.asList(
             new WorldPoint(1390, 9635, 0),// top
@@ -251,7 +251,8 @@ public class MoonsScript extends Script {
                         Rs2Walker.walkTo(1418,9632,0,8);
                         sleep(1200);
                         Rs2GameObject.interact(51372,"Use");
-                        sleep(1200);
+//                        sleep(1800);
+                        sleepUntil(()->Rs2Npc.getNpcs("blood moon").count()!=0);
 //                        Rs2Player.waitForWalking();
 //                        state = State.FIGHTING;
                         break;
@@ -262,9 +263,10 @@ public class MoonsScript extends Script {
                        //WorldPoint playerLocation = Rs2Player.getWorldLocation();
 
                         if (floorTileLocation != null) {
-                            WorldPoint closestTile = points.stream()
+                            closestTile = points.stream()
                                     .min(Comparator.comparingDouble(tile -> tile.distanceTo2D(floorTileLocation)))
                                     .orElse(null);
+
                             if (closestTile != null && Rs2Npc.getNpcs("blood jaguar").count()!=0) {
 //                                Microbot.log("The closest tile to the centre is: " + closestTile);
 //                                Microbot.log("Player location: " + playerLocation);
@@ -337,7 +339,9 @@ public class MoonsScript extends Script {
                         int maxEat = 50;
                         int maxPrayer = 50;
 //                        Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_GREATER_THRALL));
-
+                        if(!Rs2Magic.isThrallActive()&&Rs2Inventory.hasItem("Book of the dead")&&Rs2Npc.getNpcs("blood moon").count()!=0) {
+                            Rs2Magic.cast(MagicAction.RESURRECT_GREATER_GHOST);
+                        }
                         int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
                         if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= maxEat) {
                             Rs2Player.useFood();
@@ -359,7 +363,7 @@ public class MoonsScript extends Script {
                                         Rs2Inventory.wear(4151);
                                         Rs2Inventory.wear(12954);
                                         //Rs2Npc.interact(npcToAttack, "attack");
-                                        attackBoss("Blood moon");
+//                                        attackBoss("Blood moon");
                                     }
                                 }
 //                            lastPrayerTime = currentTime;
@@ -384,18 +388,20 @@ public class MoonsScript extends Script {
                             if (npcToAttack == 13011 && Rs2Combat.getSpecEnergy() >= 500&&Rs2Inventory.hasItem("dragon claws")) {
                                 Rs2Inventory.wear(13652); // d claws
                                 Rs2Combat.setSpecState(true);
-                                Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_SUPERIOR_ZOMBIE));
+//                                Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_SUPERIOR_ZOMBIE));
                                 //Rs2Npc.interact(npcToAttack, "attack");
                                 attackBoss("Blood moon");
-                            } else if (npcToAttack == 13011&&Rs2Npc.getNpcs("blood jaguar").count()==0&&bloodSpotsWorldPoints.isEmpty()) {
-                                Rs2Inventory.wear(4151);
-                                Rs2Inventory.wear(12954  );
+                            } else if (playerLocation.equals(closestTile)&&npcToAttack == 13011&&Rs2Npc.getNpcs("blood jaguar").count()==0&&bloodSpotsWorldPoints.isEmpty()) {
+//                                Rs2Inventory.wear(4151);
+//                                Rs2Inventory.wear(12954  );
+                                Rs2Inventory.wield(29796);
                                 //Rs2Npc.interact(npcToAttack, "attack");
 
                                 attackBoss("Blood moon");
-                            } else {
-                                Rs2Inventory.wear(4151  );
-                                Rs2Inventory.wear(12954  );
+                            } else{
+//                                Rs2Inventory.wear(4151  );
+//                                Rs2Inventory.wear(12954  );
+                                Rs2Inventory.wear(29796);
                                 attackBoss("Blood jaguar");
                             }
                         }
@@ -461,7 +467,7 @@ public class MoonsScript extends Script {
                         Rs2Walker.walkTo(1418,9632,0,8);
                         sleep(1200);
                         Rs2GameObject.interact(51372,"Use");
-                        sleep(1200);
+                        sleepUntil(()->Rs2Npc.getNpcs("blood moon").count()!=0);
                         break;
                 }
 

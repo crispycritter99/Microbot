@@ -3,16 +3,22 @@ package net.runelite.client.plugins.microbot.vardorvis;
 import net.runelite.api.MenuAction;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.widgets.ComponentID;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.herbrun.HerbrunConfig;
+import net.runelite.client.plugins.microbot.herbrun.HerbrunPlugin;
+import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -24,7 +30,9 @@ import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.microbot.vardorvis.enums.State;
 import net.runelite.client.plugins.microbot.vardorvis.enums.StateBank;
 import net.runelite.client.plugins.microbot.vardorvis.enums.StatePOH;
+import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
+import javax.inject.Inject;
 import java.awt.*;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -36,14 +44,19 @@ public class VardorvisScript extends Script {
     public static State state = State.UNKNOWN;
     public static StateBank bankState = StateBank.UNKNOWN;
     public static StatePOH POHState = StatePOH.UNKNOWN;
-
+    private final VardorvisPlugin plugin;
+    private final VardorvisConfig config;
     public static boolean inFight = false;
 
     public static boolean inInstance = false;
 
     public static int maxHealth = 0;
     public static int maxPrayer = 0;
-
+    @Inject
+    public VardorvisScript(VardorvisPlugin plugin, VardorvisConfig config) {
+        this.plugin = plugin;
+        this.config = config;
+    }
     public boolean run(VardorvisConfig config) {
         Microbot.enableAutoRunOn = true;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
@@ -121,14 +134,17 @@ public class VardorvisScript extends Script {
 
                         Rs2Camera.setZoom(550);
 
-                        Rs2Inventory.interact("super combat potion", "drink");
+                        Rs2Player.drinkCombatPotionAt(Skill.ATTACK);
 
                         sleepUntil(Rs2Inventory::isEmpty, 2_000);
 
                         inFight = true;
 
                         Rs2Prayer.toggleQuickPrayer(true);
-
+                        if(Rs2Inventory.hasItem("Book")) {
+//                            Microbot.log("diddy2");
+                            Rs2Magic.cast(MagicAction.RESURRECT_GREATER_GHOST);
+                        }
                         Rs2Npc.interact(12223, "Attack");
 
                         sleep(1000);
@@ -146,6 +162,15 @@ public class VardorvisScript extends Script {
                             Rs2Prayer.toggleQuickPrayer(true);
 
                         }
+//                        Microbot.log(""+Rs2Magic.isThrallActive());
+                        if(!Rs2Magic.isThrallActive()&&Rs2Inventory.hasItem("Book")) {
+//                            Microbot.log("diddy2");
+                            Rs2Magic.cast(MagicAction.RESURRECT_GREATER_GHOST);
+                        }
+                        if(Rs2Combat.getSpecEnergy() < 500&&!Rs2Equipment.isWearing(29796) )
+                        {
+                            Rs2Inventory.wear(29796);
+                        }
 //                        else if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MELEE) && !isProjectileActive) {
 //
 //                            Microbot.log("Toggling Protect Melee ON");
@@ -154,35 +179,36 @@ public class VardorvisScript extends Script {
 
                         break;
                     case AFTER_FIGHT:
-                        shutdown();
+//                        shutdown();
                         
-//                        Microbot.log("Attempting to pick up items");
-//
-//                        LootingParameters itemLootParams = new LootingParameters(
-//                                10,
-//                                1,
-//                                1,
-//                                0,
-//                                false,
-//                                true,
-//                                ""
-//                        );
-//                        if (Rs2GroundItem.lootItemsBasedOnNames(itemLootParams)) {
-//                            Microbot.log("Picking up items");
-//                            sleep(5_000);
-//
-//                            Microbot.log("Slept for 10 seconds now leaving");
-//
-//                            Rs2Inventory.interact("Teleport to house", "break");
-//
-//                            state = State.POH;
-//
-//                            sleep(4000);
-//
-//                            Microbot.log("Turning state to POH");
-//
-//                            state = State.POH;
-//                        }
+                        Microbot.log("Attempting to pick up items");
+
+                        LootingParameters itemLootParams = new LootingParameters(
+                                10,
+                                1,
+                                1,
+                                0,
+                                false,
+                                true,
+                                ""
+                        );
+                        if (Rs2GroundItem.lootItemsBasedOnNames(itemLootParams)) {
+//                            if Rs2Inventory.hasItemAmount("Shark",5);
+                            Microbot.log("Picking up items");
+                            sleep(5_000);
+
+                            Microbot.log("Slept for 10 seconds now leaving");
+
+                            Rs2Inventory.interact("Teleport to house", "break");
+
+                            state = State.POH;
+
+                            sleep(4000);
+
+                            Microbot.log("Turning state to POH");
+
+                            state = State.POH;
+                        }
 
                         break;
                 }
@@ -237,17 +263,26 @@ public class VardorvisScript extends Script {
 
     public void doingBankThings() {
         boolean isBankOpen = Rs2Bank.isOpen();
-
-        if (!Rs2Inventory.isFull() && isBankOpen || !Rs2Inventory.hasItemAmount("Shark", 11) && isBankOpen) {
-            bankState = StateBank.GET_ITEMS;
-        } else if (Rs2Inventory.isFull() && !Objects.equals(Rs2Inventory.getItemInSlot(27).name, "Teleport to house") && Rs2Inventory.hasItemAmount("Shark", 11)) {
-            bankState = StateBank.MOVE_ITEMS;
-        } else if (!isBankOpen && !Rs2Inventory.isFull() || !isBankOpen && !Rs2Inventory.hasItemAmount("Shark", 11)) {
-            bankState = StateBank.OPEN_BANK;
+        var inventorySetup = new Rs2InventorySetup(config.inventorySetup(), mainScheduledFuture);
+        if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
+            Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
+            if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
+                Microbot.log("Failed to load inventory setup");
+                Microbot.stopPlugin(plugin);
+                return;
+            }
+            Rs2Bank.closeBank();
         }
-        else {
+//        if (!Rs2Inventory.isFull() && isBankOpen || !Rs2Inventory.hasItemAmount("Shark", 10) && isBankOpen) {
+//            bankState = StateBank.GET_ITEMS;
+//        } else if (Rs2Inventory.isFull() && !Objects.equals(Rs2Inventory.getItemInSlot(27).name, "Teleport to house") && Rs2Inventory.hasItemAmount("Shark", 10)) {
+//            bankState = StateBank.MOVE_ITEMS;
+//        } else if (!isBankOpen && !Rs2Inventory.isFull() || !isBankOpen && !Rs2Inventory.hasItemAmount("Shark", 10)) {
+//            bankState = StateBank.OPEN_BANK;
+//        }
+//        else {
             bankState = StateBank.TELEPORT_TO_STRANGLEWOOD;
-        }
+//        }
 
         switch (bankState) {
             case OPEN_BANK:
@@ -266,12 +301,15 @@ public class VardorvisScript extends Script {
 
                 Rs2Bank.withdrawItem("dragon claws");
 
-                Rs2Bank.withdrawX("Cooked Karambwan", 11);
-                Rs2Bank.withdrawX("Shark", 11);
+                Rs2Bank.withdrawX("Cooked Karambwan", 10);
+                Rs2Bank.withdrawX("Shark", 10);
 
                 Rs2Bank.withdrawItem("Ring of shadows");
 
                 Rs2Bank.withdrawItem("Teleport to house");
+                Rs2Bank.withdrawItem("Book of the dead");
+
+                Rs2Bank.withdrawItem("Rune pouch");
 
                 Rs2Bank.closeBank();
 
@@ -283,10 +321,10 @@ public class VardorvisScript extends Script {
                     Rs2Bank.closeBank();
                 }
 
-                Rs2ItemModel ring = Rs2Inventory.get("Ring of shadows");
+//                Rs2ItemModel ring = Rs2Inventory.get("Ring of shadows");
                 Rs2ItemModel bankTab = Rs2Inventory.get("Teleport to house");
 
-                Rs2Inventory.moveItemToSlot(ring, 26);
+//                Rs2Inventory.moveItemToSlot(ring, 26);
 
                 sleepUntil(() -> Objects.equals(Rs2Inventory.getItemInSlot(26).name, "Ring of shadows"));
 
@@ -302,11 +340,13 @@ public class VardorvisScript extends Script {
                     Rs2Bank.closeBank();
                 }
 
-                Rs2Inventory.interact("Ring of shadows", "Teleport");
-
-                sleepUntil(() -> Rs2Widget.hasWidget("The Stranglewood"));
-                Rs2Widget.clickWidget("The Stranglewood");
-
+//                Rs2Inventory.interact("Ring of shadows", "Teleport");
+//
+//                sleepUntil(() -> Rs2Widget.hasWidget("The Stranglewood"));
+//                Rs2Widget.clickWidget("The Stranglewood");
+                Rs2ItemModel ring = Rs2Inventory.get("Ring of Shadows");
+                Microbot.doInvoke(new NewMenuEntry("The Stranglewood", ring.getSlot(), ComponentID.INVENTORY_CONTAINER, 57, 327683, ring.id, ""), (Rs2Inventory.itemBounds(ring) == null) ? new Rectangle(1, 1) : Rs2Inventory.itemBounds(ring));
+                Rs2Player.waitForAnimation();
                 break;
         }
     }
@@ -314,22 +354,22 @@ public class VardorvisScript extends Script {
     public void walkingToBoss() {
         Rs2Camera.setZoom(200);
 
-        Rs2GameObject.interact(48745, "Enter");
-
-        Microbot.log("Waiting until 1146");
-        sleepUntil(() -> Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1146, 3433, 0)), 25_000);
+//        Rs2GameObject.interact(48745, "Enter");
+//
+//        Microbot.log("Waiting until 1146");
+//        sleepUntil(() -> Objects.equals(Rs2Player.getWorldLocation(), new WorldPoint(1146, 3433, 0)), 25_000);
 
         Microbot.log("Walking to boss");
         Rs2Walker.walkTo(new WorldPoint(1117, 3429, 0));
 
-        Microbot.log("Waiting until 1117");
-        sleepUntil(() -> Rs2Player.distanceTo(new WorldPoint(1117, 3429, 0)) <= 1, 12_000);
+//        Microbot.log("Waiting until 1117");
+//        sleepUntil(() -> Rs2Player.distanceTo(new WorldPoint(1117, 3429, 0)) <= 1, 12_000);
 
         Microbot.log("Climbing over");
         Rs2GameObject.interact(49495, "Climb-over");
 
         Microbot.log("waiting after climb");
-        sleepUntil(Rs2Inventory::isEmpty, 7_000);
+        Rs2Player.waitForAnimation();
 
         Microbot.log("After waiting for climb | in instance = " + inInstance + " Region = " + Rs2Player.getWorldLocation().getRegionID());
     }

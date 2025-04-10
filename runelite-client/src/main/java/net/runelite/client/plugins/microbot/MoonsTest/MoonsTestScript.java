@@ -333,37 +333,7 @@ public class MoonsTestScript extends Script {
                             }
                         }
 
-                        int maxEat = 50;
-                        int maxPrayer = 50;
-//                        Microbot.log(""+ Rs2Magic.canCast(MagicAction.RESURRECT_GREATER_THRALL));
 
-                        int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
-                        if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= maxEat) {
-                            Rs2Player.useFood();
-                            if (Rs2Npc.getNpc(13011)!=null&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
-                                Rs2Inventory.wear(4151);
-                                Rs2Inventory.wear(12954  );
-                                //Rs2Npc.interact(npcToAttack, "attack");
-                                attackBoss("Blood moon");
-                            }
-                            lastEatTime = currentTime;
-                            Microbot.log("Eating food at " + maxEat + "% health.");
-                        }
-
-                        int currentPrayerPoints = Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER);
-//                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS && currentPrayerPoints <= maxPrayer&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
-                            if (Rs2Npc.getNpcs("blood jaguar").count()==0) {
-                                if (Rs2Player.drinkPrayerPotion()) {
-                                    if (Rs2Npc.getNpc(13011) != null) {
-                                        Rs2Inventory.wear(4151);
-                                        Rs2Inventory.wear(12954);
-                                        //Rs2Npc.interact(npcToAttack, "attack");
-                                        attackBoss("Blood moon");
-                                    }
-                                }
-//                            lastPrayerTime = currentTime;
-//                            Microbot.log("Drinking prayer potion at " + maxPrayer + "% prayer points.");
-                        }
 
                         boolean dangerZone = !Rs2GameObject.getGameObjects(51054).isEmpty();
                         if (!Rs2Prayer.isQuickPrayerEnabled() && Rs2Player.hasPrayerPoints() && !dangerZone) {

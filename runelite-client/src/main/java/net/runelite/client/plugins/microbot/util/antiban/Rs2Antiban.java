@@ -349,6 +349,7 @@ public class Rs2Antiban {
         }
         if (Math.random() < Rs2AntibanSettings.microBreakChance) {
             Rs2AntibanSettings.microBreakActive = true;
+            BreakHandlerScript.isResumed=true;
             BreakHandlerScript.breakDuration = Rs2Random.between(Rs2AntibanSettings.microBreakDurationLow*60, Rs2AntibanSettings.microBreakDurationHigh*60);
             if (Rs2AntibanSettings.moveMouseOffScreen)
                 moveMouseOffScreen();

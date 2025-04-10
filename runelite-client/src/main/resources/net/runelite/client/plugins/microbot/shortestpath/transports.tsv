@@ -5007,4 +5007,6 @@
 2723 3374 0	2727 9774 0	Climb-down;Staircase;16664									
 2723 3375 0	2727 9775 0	Climb-down;Staircase;16664									
 2727 9774 0	2723 3374 0	Climb-up;Staircase;16665									
-2727 9775 0	2723 3375 0	Climb-up;Staircase;16664									
+2727 9775 0	2723 3375 0	Climb-up;Staircase;16664
+1149 3444 0	1146 3433 0	Enter;Entry;48745
+1146 3433 0	1149 3444 0	Enter;Entry;48746

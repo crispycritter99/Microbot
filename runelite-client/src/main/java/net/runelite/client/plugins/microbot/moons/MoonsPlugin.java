@@ -68,16 +68,16 @@ public class MoonsPlugin extends Plugin {
 
     public static int ticks = 10;
     @Subscribe
-    public void onGameTick(GameTick tick)
-    {
+    public void onGameTick(GameTick tick) {
         //System.out.println(getName().chars().mapToObj(i -> (char)(i + 3)).map(String::valueOf).collect(Collectors.joining()));
-        if (Rs2Npc.getNpc(13011).getAnimation()!=11000){
-            ticks = 0;
-        }
-        else {
-            ticks++;
-        }
+        if (Rs2Npc.getNpcs("blood moon").count() != 0) {
+            if (Rs2Npc.getNpc(13011).getAnimation() != 11000) {
+                ticks = 0;
+            } else {
+                ticks++;
+            }
 
+        }
     }
 
 //    public static void danceJaguar(String npcName) {
