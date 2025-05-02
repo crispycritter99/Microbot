@@ -107,7 +107,7 @@ public class Rs2InventorySetup {
                 Microbot.showMessage("Bank is missing the following item " + inventorySetupsItem.getName(), 10);
                 break;
             }
-
+            Microbot.log(withdrawQuantity+"");
             withdrawItem(inventorySetupsItem, withdrawQuantity);
         }
 

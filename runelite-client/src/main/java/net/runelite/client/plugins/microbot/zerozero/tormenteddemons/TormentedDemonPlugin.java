@@ -2,10 +2,8 @@ package net.runelite.client.plugins.microbot.zerozero.tormenteddemons;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.GraphicsObject;
-import net.runelite.api.InventoryID;
-import net.runelite.api.Item;
-import net.runelite.api.ItemComposition;
+import net.runelite.api.*;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicsObjectCreated;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -17,6 +15,11 @@ import net.runelite.client.plugins.microbot.Microbot;
 import java.awt.datatransfer.StringSelection;
 import java.util.StringJoiner;
 import java.util.concurrent.Executors;
+
+import net.runelite.client.plugins.microbot.VardorvisHelper.VardorvisHelperScript;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -73,7 +76,6 @@ public class TormentedDemonPlugin extends Plugin {
             scheduledExecutorService.shutdown();
         }
     }
-
     @Subscribe
     private void onConfigChanged(ConfigChanged event) {
         if (!event.getGroup().equals("tormenteddemon")) {

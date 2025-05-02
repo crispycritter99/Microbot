@@ -505,7 +505,7 @@ public class Rs2Walker {
 
     public static boolean walkFastCanvas(WorldPoint worldPoint, boolean toggleRun) {
 
-        Rs2Player.toggleRunEnergy(toggleRun);
+//        Rs2Player.toggleRunEnergy(toggleRun);
         Point canv;
         LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), worldPoint);
 

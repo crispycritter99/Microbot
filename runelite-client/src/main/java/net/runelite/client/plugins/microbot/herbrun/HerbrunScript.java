@@ -44,7 +44,7 @@ public class HerbrunScript extends Script {
     @Inject
     ClientThread clientThread;
     private boolean initialized = false;
-    List<String> diseaseFreePatches = List.of("Weiss","Troll Stronghold");
+    List<String> diseaseFreePatches = List.of("Weiss","Troll Stronghold","Kourend");
 
 
     @Inject
@@ -99,7 +99,7 @@ public class HerbrunScript extends Script {
 
             if (!currentPatch.isInRange(10)) {
                 HerbrunPlugin.status = "Walking to " + currentPatch.getRegionName();
-                Rs2Walker.walkTo(currentPatch.getLocation(), 20);
+                Rs2Walker.walkTo(currentPatch.getLocation(), 10);
 
             }
 
@@ -177,12 +177,13 @@ public class HerbrunScript extends Script {
                                 .findFirst()
                                 .orElse(null));
                 boolean hasKourendEasyDiary = Microbot.getVarbitValue(DIARY_KOUREND_EASY) == 1;
-                boolean skipCompost=(hasKourendEasyDiary&&currentPatch.getRegionName().equals("Kourend")||diseaseFreePatches.stream().anyMatch(str -> currentPatch.getRegionName().equalsIgnoreCase(str)));
-                if(!skipCompost){
+                boolean skipCompost=(diseaseFreePatches.stream().anyMatch(str -> currentPatch.getRegionName().equalsIgnoreCase(str)));
+//                Microbot.log(""+diseaseFreePatches.stea)
+//                if(!skipCompost){
                     Rs2Inventory.use("compost");
                     Rs2GameObject.interact(obj, "Compost");
                     Rs2Player.waitForXpDrop(Skill.FARMING);
-                }
+//                }
                 Rs2Inventory.use(" seed");
                 Rs2GameObject.interact(obj, "Plant");
                 sleepUntil(() -> getHerbPatchState(obj).equals("Growing"));

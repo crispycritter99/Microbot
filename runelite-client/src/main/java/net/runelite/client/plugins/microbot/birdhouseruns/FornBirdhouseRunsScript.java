@@ -66,7 +66,7 @@ public class FornBirdhouseRunsScript extends Script {
 
                 switch (botStatus) {
                     case TELEPORTING:
-                        Rs2Walker.walkTo(new WorldPoint(3764, 3869, 1), 5);
+                        Rs2Walker.walkTo(new WorldPoint(3764, 3869, 1), 10);
                         botStatus = states.VERDANT_TELEPORT;
                         break;
                     case VERDANT_TELEPORT:

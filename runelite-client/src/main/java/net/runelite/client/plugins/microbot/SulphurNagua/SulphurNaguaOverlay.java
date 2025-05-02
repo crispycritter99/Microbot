@@ -17,7 +17,7 @@ import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
 import javax.inject.Inject;
 import java.awt.*;
 
-import static net.runelite.client.plugins.microbot.aiofighter.combat.AttackNpcScript.attackableNpcs;
+import static net.runelite.client.plugins.microbot.SulphurNagua.combat.AttackNpcScript.attackableNpcs;
 import static net.runelite.client.plugins.microbot.aiofighter.combat.FlickerScript.currentMonstersAttackingUs;
 import static net.runelite.client.ui.overlay.OverlayUtil.renderPolygon;
 

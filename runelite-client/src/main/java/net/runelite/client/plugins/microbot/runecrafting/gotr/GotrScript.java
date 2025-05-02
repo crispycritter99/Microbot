@@ -108,6 +108,7 @@ public class GotrScript extends Script {
         this.config = config;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
+//                useNpcContact = true;
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
@@ -140,6 +141,7 @@ public class GotrScript extends Script {
                     Rs2Inventory.drop("portal talisman");
                     log("Dropping portal talisman...");
                 }
+//                Microbot.log(""+Rs2Inventory.hasItem("colossal pouch")+""+Rs2Inventory.hasDegradedPouch());
                 //Repair colossal pouch asap to avoid disintegrate completely
                 if (Rs2Inventory.hasItem("colossal pouch") && Rs2Inventory.hasDegradedPouch()) {
                     if (!repairPouches()) {
@@ -154,7 +156,10 @@ public class GotrScript extends Script {
 
                     if (lootChisel()) return;
 
-                    if (waitingForGameToStart(timeToStart)) return;
+                    if (waitingForGameToStart(timeToStart)) {
+
+                        return;
+                    }
 
 
                     if (!Rs2Inventory.hasItem("Uncharged cell") && !isInLargeMine() && !isInHugeMine()) {
@@ -228,11 +233,11 @@ public class GotrScript extends Script {
     }
 
     private boolean waitingForGameToStart(int timeToStart) {
-        BreakHandlerScript.setLockState(false);
+
         if (isInHugeMine()) return false;
 
         if (getStartTimer() > Rs2Random.randomGaussian(35, Rs2Random.between(1, 5)) || getStartTimer() == -1 || timeToStart > 10) {
-            BreakHandlerScript.setLockState(true);
+
             // Only take cells if we don't already have them
             if (!Rs2Inventory.hasItem("Uncharged cell")) {
                 // If in large mine and need cells, leave first
@@ -491,6 +496,7 @@ public class GotrScript extends Script {
                     Rs2Player.waitForAnimation();
                     if (!Rs2Player.isAnimating())
                         Rs2GameObject.interact(ObjectID.HUGE_GUARDIAN_REMAINS);
+                    sleep(1000);
                 }
             } else {
                 if (Rs2Inventory.allPouchesFull()) {
@@ -500,6 +506,7 @@ public class GotrScript extends Script {
                     sleep(Rs2Random.randomGaussian(Rs2Random.between(600, 1200), Rs2Random.between(100, 300)));
                     if (!Rs2Inventory.isFull()) {
                         Rs2GameObject.interact(ObjectID.HUGE_GUARDIAN_REMAINS);
+                        sleep(1000);
                     }
                 }
             }
@@ -574,6 +581,7 @@ public class GotrScript extends Script {
     }
 
     private static boolean repairPouches() {
+//        Microbot.log(""+useNpcContact);
         if (!useNpcContact) {
             repairWithCordelia();
             return true;

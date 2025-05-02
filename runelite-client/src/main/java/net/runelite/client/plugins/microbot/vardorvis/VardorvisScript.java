@@ -182,7 +182,7 @@ public class VardorvisScript extends Script {
 //                        shutdown();
                         
                         Microbot.log("Attempting to pick up items");
-
+                        Rs2Prayer.toggleQuickPrayer(false);
                         LootingParameters itemLootParams = new LootingParameters(
                                 10,
                                 1,
@@ -244,8 +244,9 @@ public class VardorvisScript extends Script {
 
                 if (!Rs2Player.isWalking()) {
                     Microbot.log("Current state POH Rejuvenation");
-
+                    Rs2Inventory.wear("Noxious");
                     Rs2GameObject.interact(29241, "Drink");
+                    sleep(1800);
                 }
 
                 break;

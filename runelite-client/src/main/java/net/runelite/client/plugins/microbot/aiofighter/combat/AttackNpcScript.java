@@ -11,6 +11,7 @@ import net.runelite.client.plugins.microbot.aiofighter.enums.AttackStyle;
 import net.runelite.client.plugins.microbot.aiofighter.enums.AttackStyleMapper;
 import net.runelite.client.plugins.microbot.aiofighter.enums.State;
 import net.runelite.client.plugins.microbot.util.ActorModel;
+import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
@@ -74,7 +75,7 @@ public class AttackNpcScript extends Script {
                 messageShown = false;
 
                 filteredAttackableNpcs = Rs2Npc.getAttackableNpcs(config.attackReachableNpcs())
-                        .filter(npc -> npc.getWorldLocation().distanceTo(config.centerLocation()) <= config.attackRadius())
+                        .filter(npc -> npc.getWorldLocation().distanceTo(config.centerLocation()) <= config.attackRadius()&&npc.getId()!=-1)
                         .sorted(Comparator.comparingInt((Rs2NpcModel npc) -> npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1)
                                 .thenComparingInt(npc -> Rs2Player.getRs2WorldPoint().distanceToPath(npc.getWorldLocation())))
                         .collect(Collectors.toList());
@@ -98,10 +99,12 @@ public class AttackNpcScript extends Script {
 
                 if (!attackableNpcs.isEmpty()) {
                     Rs2NpcModel npc = attackableNpcs.stream().findFirst().orElse(null);
+//                    if (npc == null) return;
 
                     if (!Rs2Camera.isTileOnScreen(npc.getLocalLocation()))
                         Rs2Camera.turnTo(npc);
 
+//                    Rs2Npc.interact(npc);
                     Rs2Npc.interact(npc, "attack");
                     Microbot.status = "Attacking " + npc.getName();
                     AIOFighterPlugin.setCooldown(config.playStyle().getRandomTickInterval());
@@ -152,10 +155,19 @@ public class AttackNpcScript extends Script {
         } else if (npc.getName().equalsIgnoreCase("rockslug") && npc.getHealthRatio() < 5) {
             Rs2Inventory.useItemOnNpc(ItemID.BAG_OF_SALT, npc);
             Rs2Player.waitForAnimation();
-        } else if (npc.getName().equalsIgnoreCase("gargoyle") && npc.getHealthRatio() < 3) {
-            Rs2Inventory.useItemOnNpc(ItemID.ROCK_HAMMER, npc);
+        }else if (npc.getName().equalsIgnoreCase("zygomite") && npc.getHealthRatio() < 5) {
+//            Rs2Inventory.useItemOnNpc(ItemID.FUNGICIDE, npc);
+            if (Rs2Bank.isOpen()) return;
+            Rs2Inventory.use("fungicide spray");
+            sleep(100);
+            if (!Rs2Inventory.isItemSelected()) return;
+            Rs2Npc.interact(npc);
             Rs2Player.waitForAnimation();
         }
+//        else if (npc.getName().equalsIgnoreCase("gargoyle") && npc.getHealthRatio() < 3) {
+//            Rs2Inventory.useItemOnNpc(ItemID.ROCK_HAMMER, npc);
+//            Rs2Player.waitForAnimation();
+//        }
     }
 
     public void shutdown() {

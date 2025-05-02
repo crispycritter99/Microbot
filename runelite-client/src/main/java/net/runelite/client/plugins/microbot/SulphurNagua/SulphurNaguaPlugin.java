@@ -69,12 +69,12 @@ public class SulphurNaguaPlugin extends Plugin {
     private final FoodScript foodScript = new FoodScript();
     private final LootScript lootScript = new LootScript();
     private final SafeSpot safeSpotScript = new SafeSpot();
-    private final FlickerScript flickerScript = new FlickerScript();
+//    private final FlickerScript flickerScript = new FlickerScript();
     private final UseSpecialAttackScript useSpecialAttackScript = new UseSpecialAttackScript();
-    private final BuryScatterScript buryScatterScript = new BuryScatterScript();
+//    private final BuryScatterScript buryScatterScript = new BuryScatterScript();
     private final AttackStyleScript attackStyleScript = new AttackStyleScript();
     private final BankerScript bankerScript = new BankerScript();
-    private final PrayerScript prayerScript = new PrayerScript();
+//    private final PrayerScript prayerScript = new PrayerScript();
     private final HighAlchScript highAlchScript = new HighAlchScript();
     private final PotionManagerScript potionManagerScript = new PotionManagerScript();
     private final SafetyScript safetyScript = new SafetyScript();
@@ -116,13 +116,13 @@ public class SulphurNaguaPlugin extends Plugin {
         foodScript.run(config);
         //prayerPotionScript.run(config);
         safeSpotScript.run(config);
-        flickerScript.run(config);
+//        flickerScript.run(config);
         useSpecialAttackScript.run(config);
         //antiPoisonScript.run(config);
-        buryScatterScript.run(config);
+//        buryScatterScript.run(config);
         attackStyleScript.run(config);
         bankerScript.run(config);
-        prayerScript.run(config);
+//        prayerScript.run(config);
         highAlchScript.run(config);
         potionManagerScript.run(config);
         safetyScript.run(config);
@@ -141,13 +141,13 @@ public class SulphurNaguaPlugin extends Plugin {
         foodScript.shutdown();
         //prayerPotionScript.shutdown();
         safeSpotScript.shutdown();
-        flickerScript.shutdown();
+//        flickerScript.shutdown();
         useSpecialAttackScript.shutdown();
         //antiPoisonScript.shutdown();
-        buryScatterScript.shutdown();
+//        buryScatterScript.shutdown();
         attackStyleScript.shutdown();
         bankerScript.shutdown();
-        prayerScript.shutdown();
+//        prayerScript.shutdown();
         highAlchScript.shutdown();
         potionManagerScript.shutdown();
         safetyScript.shutdown();
@@ -279,14 +279,14 @@ public class SulphurNaguaPlugin extends Plugin {
         if (cooldown > 0 && !Rs2Combat.inCombat())
             cooldown--;
         //execute flicker script
-        if(config.togglePrayer())
-            flickerScript.onGameTick();
+//        if(config.togglePrayer())
+//            flickerScript.onGameTick();
     }
 
     @Subscribe
     public void onNpcDespawned(NpcDespawned npcDespawned) {
-        if(config.togglePrayer())
-            flickerScript.onNpcDespawned(npcDespawned);
+//        if(config.togglePrayer())
+//            flickerScript.onNpcDespawned(npcDespawned);
     }
 
     @Subscribe
@@ -295,7 +295,7 @@ public class SulphurNaguaPlugin extends Plugin {
         final Hitsplat hitsplat = event.getHitsplat();
 
         if ((hitsplat.isMine()) && event.getActor().getInteracting() instanceof NPC && config.togglePrayer() && (config.prayerStyle() == PrayerStyle.LAZY_FLICK) || (config.prayerStyle() == PrayerStyle.PERFECT_LAZY_FLICK)) {
-            flickerScript.resetLastAttack(true);
+//            flickerScript.resetLastAttack(true);
             Rs2Prayer.disableAllPrayers();
             if (config.toggleQuickPray())
                 Rs2Prayer.toggleQuickPrayer(false);

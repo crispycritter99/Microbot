@@ -542,7 +542,8 @@ public class Rs2Npc {
      */
 
     public static boolean interact(Rs2NpcModel npc, String action) {
-        if (npc == null) return false;
+//        Microbot.log(""+npc.getId()+" "+npc.getId());
+        if (npc.getId() == -1) return false;
 
         Microbot.status = action + " " + npc.getName();
         try {

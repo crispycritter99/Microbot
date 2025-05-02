@@ -53,8 +53,9 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                Rs2Bank.withdrawX("air rune",3);
-
+//                Rs2Bank.withdrawX("air rune",3);
+                Rs2Walker.walkTo(new WorldPoint(2828, 3695, 0), 1);
+//                new WorldPoint(2828, 3695, 0)
 //                Rs2Magic.cast(MagicAction.RESURRECT_GREATER_ZOMBIE);
 //                Rs2Inventory.use("house");
 //                sleep(600);

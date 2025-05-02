@@ -53,6 +53,9 @@ public class BreakHandlerOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .right(Microbot.pauseAllScripts+"")
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("lockstate: "+BreakHandlerScript.lockState)
+                    .build());
 
         } catch(Exception ex) {
             System.out.println(ex.getMessage());

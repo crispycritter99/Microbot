@@ -214,6 +214,11 @@ public class VardorvisPlugin extends Plugin {
                     });
                 });
             }
+//            else if (!Rs2Player.isInteracting()){
+//
+//                Rs2Npc.interact(12223, "Attack");
+//
+//            }
         } else if (VardorvisScript.inFight && Rs2Npc.getNpc("Vardorvis").getHealthRatio() != -1) {
             Microbot.log("Somehow on a wrong tile? moving back to safe tile | Current tick = " + currentRunningTicks + " Health ratio = " + Rs2Npc.getNpc("Vardorvis").getHealthRatio());
             walkingExecutor.submit(() -> {

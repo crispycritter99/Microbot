@@ -58,6 +58,9 @@ public class GotrOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("Total time script loop: " + GotrScript.totalTime + "ms")
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("npc contact " + GotrScript.useNpcContact + "")
+                    .build());
 
         } catch(Exception ex) {
             Microbot.logStackTrace(this.getClass().getSimpleName(), ex);

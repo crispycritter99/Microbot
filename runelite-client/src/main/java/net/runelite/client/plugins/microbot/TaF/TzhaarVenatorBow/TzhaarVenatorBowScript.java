@@ -9,6 +9,7 @@ import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
@@ -94,7 +95,8 @@ public class TzhaarVenatorBowScript extends Script {
             Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
         }
         Rs2Player.eatAt(config.minEatPercent());
-        Rs2Player.drinkPrayerPotionAt(config.minPrayerPercent());
+//        Rs2Player.drinkPrayerPotionAt(config.minPrayerPercent());
+        Rs2Player.drinkPrayerPotion();
         if (!isRangingPotionActive(config.boostedStatsThreshold())) {
             consumePotion(Rs2Potion.getRangePotionsVariants());
         }
@@ -219,7 +221,7 @@ public class TzhaarVenatorBowScript extends Script {
 
     private void handleBanking(TzHaarVenatorBowConfig config) {
         Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, false);
-        if (Rs2Bank.openBank()) {
+        if (Rs2Bank.walkToBankAndUseBank(BankLocation.TZHAAR)) {
             Rs2Bank.depositAll();
             if (config.teleGrabLoot()) {
                 Rs2Bank.withdrawX("Law rune", 100);

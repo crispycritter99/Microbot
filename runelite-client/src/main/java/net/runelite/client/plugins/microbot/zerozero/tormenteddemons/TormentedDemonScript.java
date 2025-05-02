@@ -337,7 +337,7 @@ public class TormentedDemonScript extends Script {
 
     private Rs2NpcModel findNewTarget(TormentedDemonConfig config) {
         return Rs2Npc.getAttackableNpcs("Tormented Demon")
-                .filter(npc -> npc.getInteracting() == null || npc.getInteracting() == Microbot.getClient().getLocalPlayer())
+                .filter(npc -> (npc.getInteracting() == null || npc.getInteracting() == Microbot.getClient().getLocalPlayer())&&Rs2Npc.hasLineOfSight(npc))
                 .filter(npc -> {
                     HeadIcon demonHeadIcon = Rs2Reflection.getHeadIcon(npc);
                     if (demonHeadIcon != null) {
@@ -487,12 +487,20 @@ public class TormentedDemonScript extends Script {
     private void evaluateAndConsumePotions(TormentedDemonConfig config) {
         int threshold = config.boostedStatsThreshold();
 
-        if (!isCombatPotionActive(config.combatPotionType(), threshold)) {
-            consumeCombatPotion(config.combatPotionType());
+        if (Rs2Player.drinkCombatPotionAt(Skill.RANGED, false)) {
+            Rs2Player.waitForAnimation();
         }
-
-        if (!isRangingPotionActive(config.rangingPotionType(), threshold)) {
-            consumeRangingPotion(config.rangingPotionType());
+        if (Rs2Player.drinkCombatPotionAt(Skill.MAGIC, false)) {
+            Rs2Player.waitForAnimation();
+        }
+        if (Rs2Player.drinkCombatPotionAt(Skill.STRENGTH)) {
+            Rs2Player.waitForAnimation();
+        }
+        if (Rs2Player.drinkCombatPotionAt(Skill.ATTACK)) {
+            Rs2Player.waitForAnimation();
+        }
+        if (Rs2Player.drinkCombatPotionAt(Skill.DEFENCE)) {
+            Rs2Player.waitForAnimation();
         }
     }
 
