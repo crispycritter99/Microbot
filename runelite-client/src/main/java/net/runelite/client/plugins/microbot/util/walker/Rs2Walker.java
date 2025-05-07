@@ -1200,7 +1200,6 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
                             sleep(600 * 2); // wait 2 ticks befor einteracting, this is a delay of ships
                         }
                     }
-                    
                     if (transport.getType() == TransportType.CANOE) {
                         if (handleCanoe(transport)) {
                             sleep(600 * 2); // wait 2 extra ticks before walking
@@ -1478,7 +1477,6 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
     }
 
     private static boolean handleTeleportItem(Transport transport) {
-        if (Rs2Pvp.isInWilderness() && (Rs2Pvp.getWildernessLevelFrom(Rs2Player.getWorldLocation()) > (transport.getMaxWildernessLevel() + 1))) return false;
         boolean succesfullAction = false;
         for (Set<Integer> itemIds : transport.getItemIdRequirements()) {
             if (succesfullAction)
@@ -1504,7 +1502,7 @@ public static List<WorldPoint> getWalkPath(WorldPoint target) {
         List<String> locationKeyWords = Arrays.asList("farm", "monastery", "lletya", "prifddinas", "rellekka", "waterbirth island", "neitiznot", "jatiszo",
                 "ver sinhaza", "darkmeyer", "slepe", "troll stronghold", "weiss", "ecto", "burgh", "duradel", "gem mine", "nardah", "kalphite cave",
                 "kourend woodland", "mount karuulm", "outside", "fishing guild", "otto's grotto", "stronghold slayer cave", "slayer tower", "fremennik", "tarn's lair", "dark beasts");
-        List<String> genericKeyWords = Arrays.asList("invoke", "empty", "consume", "teleport", "rub", "break", "reminisce", "signal", "play");
+        List<String> genericKeyWords = Arrays.asList("invoke", "empty", "consume", "teleport", "rub", "break", "reminisce", "signal", "play","commune");
 
         boolean hasMultipleDestination = transport.getDisplayInfo().contains(":");
         String destination = hasMultipleDestination
