@@ -609,6 +609,10 @@ public class Rs2Npc {
                 return false;
             }
 
+            if (!Rs2Camera.isTileOnScreen(npc.getLocalLocation())) {
+                Rs2Camera.turnTo(npc);
+            }
+
             Microbot.doInvoke(new NewMenuEntry(0, 0, menuAction.getId(), npc.getIndex(), -1, npc.getName(), npc),
                     Rs2UiHelper.getActorClickbox(npc));
             return true;
@@ -813,7 +817,7 @@ public class Rs2Npc {
             if (Rs2Combat.inCombat()) continue;
             if (npc.isInteracting() && npc.getInteracting() != Microbot.getClient().getLocalPlayer() && !Rs2Player.isInMulti())
                 continue;
-            if (npc.getHealthScale() == 0) return false;
+            if (npc.isDead()) continue;
 
             return interact(npc, "attack");
         }
