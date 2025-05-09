@@ -11,9 +11,12 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.models.RS2Item;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -24,6 +27,7 @@ import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.time.Instant;
@@ -56,6 +60,7 @@ public class DemonicGorillaScript extends Script {
     public static State BOT_STATUS = State.BANKING;
     public static TravelStep travelStep = TravelStep.GNOME_STRONGHOLD;
     public static int npcAnimationCount = 0;
+    public static boolean gorillaToggle = false;
     public static int lastAnimation = 0;
     public static int lastRealAnimation = 0;
     public static int lastAttackAnimation = 0;
@@ -135,7 +140,7 @@ public class DemonicGorillaScript extends Script {
         return true;
     }
 
-private void handleTravel(DemonicGorillaConfig config) {
+    private void handleTravel(DemonicGorillaConfig config) {
         if (Rs2Walker.walkTo(GORILLA_LOCATION)) {
             BOT_STATUS = State.FIGHTING;
         }
@@ -208,7 +213,9 @@ private void handleTravel(DemonicGorillaConfig config) {
         handleGearSwitching(config);
         if (currentTarget == null) return;
         evaluateAndConsumePotions(config);
-
+        if(!Rs2Magic.isThrallActive()&&Rs2Inventory.hasItem("Book of the dead")) {
+            Rs2Magic.cast(MagicAction.RESURRECT_GREATER_GHOST);
+        }
         if (config.enableOffensivePrayer()) {
             activateOffensivePrayer(config);
         }
@@ -302,7 +309,7 @@ private void handleTravel(DemonicGorillaConfig config) {
             if (currentTarget != null) {
                 if (!Rs2Player.isAnimating(1600)) {
                     if (currentTarget != null && !currentTarget.isDead()) {
-                        if (config.enableAutoSpecialAttacks()) {
+                        if (config.enableAutoSpecialAttacks()&&Rs2Equipment.isWearing("toxic blowpipe")) {
                             Rs2Combat.setSpecState(true, 500);
                         }
                         var didWeAttack = Rs2Npc.attack(currentTarget);
@@ -349,17 +356,33 @@ private void handleTravel(DemonicGorillaConfig config) {
                 newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
             } else if (currentAnimation == DEMONIC_GORILLA_PRAYER_SWITCH) {
                 handleGearSwitching(config);
-            } else if (lastGorillaLocation != null && currentDefensivePrayer != Rs2PrayerEnum.PROTECT_MELEE) {
+            } else if (lastGorillaLocation != null) {
                 var dist = lastGorillaLocation.distanceTo(location);
                 if (dist > 0) {
                     newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
-                } else if (dist == 0 && npcAnimationCount == 3) {
-                    if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MAGIC) {
+                    if (gorillaToggle) gorillaToggle=false;
+                } else if (dist == 0&&gorillaToggle) {
+                    sleep(300);
+                    if (currentTarget.getPoseAnimation()==7233){
+                        newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
+                    }
+                    else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MAGIC) {
                         newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
                     } else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_RANGE) {
                         newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
                     }
+                    else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MELEE){
+                        if (Rs2Random.nextInt(0,1,.2,true)==0) newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC; else newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
+                    }
+                    gorillaToggle=false;
                 }
+//            } else if (dist == 0 && npcAnimationCount == 3) {
+//                if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MAGIC) {
+//                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
+//                } else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_RANGE) {
+//                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
+//                }
+//            }
             }
 
             // Switch defensive prayer if needed
@@ -390,7 +413,8 @@ private void handleTravel(DemonicGorillaConfig config) {
                 demonicGorillaRockLifeCycle = -1;
             }
             if (!dodgedRock) {
-                if ((currentGear == ArmorEquiped.RANGED || currentGear == ArmorEquiped.MAGIC) && (currentAnimation != DEMONIC_GORILLA_MELEE_ATTACK && currentAnimation != -1 && currentDefensivePrayer != Rs2PrayerEnum.PROTECT_MELEE)) {
+//                if ((currentGear == ArmorEquiped.RANGED || currentGear == ArmorEquiped.MAGIC) && (currentAnimation != DEMONIC_GORILLA_MELEE_ATTACK && currentAnimation != -1 && currentDefensivePrayer != Rs2PrayerEnum.PROTECT_MELEE)) {
+                  if ((currentAnimation != DEMONIC_GORILLA_MELEE_ATTACK && currentAnimation != -1 && currentDefensivePrayer != Rs2PrayerEnum.PROTECT_MELEE)) {
                     var isMeleeDist = currentTarget.getWorldArea().isInMeleeDistance(Microbot.getClient().getLocalPlayer().getWorldArea());
                     if (isMeleeDist) {
                         moveAwayFromTarget();
@@ -447,8 +471,8 @@ private void handleTravel(DemonicGorillaConfig config) {
         double normalizedY = directionY / length;
 
         // Calculate the movement vector (2 tiles backwards)
-        int moveX = (int) Math.round(normalizedX * 2);
-        int moveY = (int) Math.round(normalizedY * 2);
+        int moveX = (int) Math.round(normalizedX * 1);
+        int moveY = (int) Math.round(normalizedY * 1);
 
         // Calculate the new position
         WorldPoint newPosition = new WorldPoint(playerLocation.getX() - moveX, playerLocation.getY() - moveY, playerLocation.getPlane());
@@ -636,6 +660,7 @@ private void handleTravel(DemonicGorillaConfig config) {
     }
 
     private void equipGear(Rs2InventorySetup gear) {
+        if (gear.doesEquipmentMatch()) return;
         var success = gear.wearEquipment();
         if (!success && Rs2Inventory.isFull()) {
             logOnceToChat("Failed to equip gear - Inventory full");

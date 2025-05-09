@@ -35,11 +35,13 @@ public class HighAlchScript extends Script {
                     Rs2ExplorersRing.closeInterface();
                 } else  if (Rs2Magic.canCast(MagicAction.HIGH_LEVEL_ALCHEMY)) {
                     for (Rs2ItemModel item: items) {
-                        Rs2Magic.alch(item);
-                        if (item.getHaPrice() > Rs2Settings.getMinimumItemValueAlchemyWarning()) {
-                            sleepUntil(() -> Rs2Widget.hasWidget("Proceed to cast High Alchemy on it"));
-                            if (Rs2Widget.hasWidget("Proceed to cast High Alchemy on it")) {
-                                Rs2Keyboard.keyPress('1');
+                        if (item.isHaProfitable()) {
+                            Rs2Magic.alch(item);
+                            if (item.getHaPrice() > Rs2Settings.getMinimumItemValueAlchemyWarning()) {
+                                sleepUntil(() -> Rs2Widget.hasWidget("Proceed to cast High Alchemy on it"));
+                                if (Rs2Widget.hasWidget("Proceed to cast High Alchemy on it")) {
+                                    Rs2Keyboard.keyPress('1');
+                                }
                             }
                         }
                     }

@@ -79,9 +79,11 @@ public class TemporossScript extends Script {
                 if (!super.run()) return;
 
                 if (!isInMinigame()) {
+                    BreakHandlerScript.setLockState(false);
                     handleEnterMinigame();
                 }
                 if (isInMinigame()) {
+                    BreakHandlerScript.setLockState(true);
                     if (workArea == null) {
                         determineWorkArea();
                         sleep(300, 600);

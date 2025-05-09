@@ -61,6 +61,10 @@ public class DemonicGorillaOverlay extends OverlayPanel {
                     .left("Current gear: " + DemonicGorillaScript.currentGear)
                     .leftColor(Color.WHITE)
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Toggle Prayer next: " + DemonicGorillaScript.gorillaToggle)
+                    .leftColor(Color.WHITE)
+                    .build());
 
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

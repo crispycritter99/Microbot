@@ -42,7 +42,7 @@ public class TzhaarVenatorBowScript extends Script {
     private final WorldPoint COMBAT_LOCATION = new WorldPoint(2462, 5098, 0);
     private final List<String> VALID_NPCS = List.of("TzHaar-Ket", "TzHaar-Xil", "TzHaar-Hur");
     private final List<String> INVALID_NPCS = List.of("TzHaar-Mej");
-    private final List<String> LOOT = List.of("Tzhaar-ket-em","Tzhaar-ket-om", "Toktz-ket-xil", "Obsidian cape", "Obsidian helmet", "Obsidian platebody", "Obsidian platelegs", "Onyx bolt tips", "Toktz-xil-ul", "Toktz-xil-ak", "Toktz-xil-ek", "Toktz-mej-tal");
+    private final List<String> LOOT = List.of("Ensouled","Tzhaar-ket-em","Tzhaar-ket-om", "Toktz-ket-xil", "Obsidian cape", "Obsidian helmet", "Obsidian platebody", "Obsidian platelegs", "Onyx bolt tips", "Toktz-xil-ul", "Toktz-xil-ak", "Toktz-xil-ek", "Toktz-mej-tal");
     private boolean isRunning;
     private TravelStatus TRAVEL_STATUS = TO_BANK;
 
@@ -91,6 +91,9 @@ public class TzhaarVenatorBowScript extends Script {
     }
 
     private void handleFighting(TzHaarVenatorBowConfig config) {
+        if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
+            Rs2Inventory.wear("Bracelet of slaughter");
+
         if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MELEE)) {
             Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
         }
@@ -201,7 +204,7 @@ public class TzhaarVenatorBowScript extends Script {
     private void handleTravel(TzHaarVenatorBowConfig config) {
         switch (TRAVEL_STATUS) {
             case TO_BANK:
-                Rs2Bank.walkToBank();
+                Rs2Bank.walkToBank(BankLocation.TZHAAR);
                 sleepUntil(() -> Rs2Bank.isNearBank(5));
                 BOT_STATUS = State.BANKING;
                 break;
@@ -239,7 +242,11 @@ public class TzhaarVenatorBowScript extends Script {
             }
 
             Rs2Bank.withdrawX("Prayer potion(4)", config.withdrawPrayerPotsCount() == 0 ? Rs2Inventory.getEmptySlots() - 2 : config.withdrawPrayerPotsCount());
+            Rs2Inventory.waitForInventoryChanges(1800);
+            Rs2Bank.withdrawX("Bracelet of slaughter",4);
+            Rs2Inventory.waitForInventoryChanges(1800);
             Rs2Bank.closeBank();
+//            sleep(600);
             if (Rs2Inventory.count("Prayer potion(4)") == 0) {
                 Microbot.log("Out of prayer potions, stopping script.");
                 shutdown();

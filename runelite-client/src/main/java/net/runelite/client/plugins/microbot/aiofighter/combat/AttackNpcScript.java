@@ -46,14 +46,17 @@ public class AttackNpcScript extends Script {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
+                if (!Microbot.isLoggedIn() || !super.run())
+                    return;
+                if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
+                    Rs2Inventory.wear("Bracelet of slaughter");
+                if (!config.toggleCombat())
                     return;
 //                Microbot.log(Microbot.pauseAllScripts+"");
-                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING)||Microbot.pauseAllScripts)
+                if(config.state().equals(State.BANKING) || config.state().equals(State.WALKING)||Microbot.pauseAllScripts||Rs2Player.isInteracting())
                     return;
+//                Microbot.log("0");
 
-                if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
-                        Rs2Inventory.wear("Bracelet of slaughter");
 
                 List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
                         .map(x -> x.trim().toLowerCase())
@@ -73,30 +76,36 @@ public class AttackNpcScript extends Script {
                     return;
                 }
                 messageShown = false;
-
+//                Microbot.log("1");
                 filteredAttackableNpcs = Rs2Npc.getAttackableNpcs(config.attackReachableNpcs())
-                        .filter(npc -> npc.getWorldLocation().distanceTo(config.centerLocation()) <= config.attackRadius()&&npc.getId()!=-1)
+                        .filter(npc -> npc.getWorldLocation().distanceTo(config.centerLocation()) <= config.attackRadius()&&npc.getId()!=-1&&npc.getName()!=null&&npc!=null)
                         .sorted(Comparator.comparingInt((Rs2NpcModel npc) -> npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1)
                                 .thenComparingInt(npc -> Rs2Player.getRs2WorldPoint().distanceToPath(npc.getWorldLocation())))
                         .collect(Collectors.toList());
-
-                final List<Rs2NpcModel> attackableNpcs = new ArrayList<>();
-
-                for (var attackableNpc: filteredAttackableNpcs) {
-                    if (attackableNpc == null || attackableNpc.getName() == null) continue;
-                    for (var npcToAttack: npcsToAttack) {
-                        if (npcToAttack.equalsIgnoreCase(attackableNpc.getName())) {
-                            attackableNpcs.add(attackableNpc);
-                        }
-                    }
-                }
-
+//                Microbot.log("2");
+                long startTime = System.currentTimeMillis();
+                List<Rs2NpcModel> attackableNpcs = new ArrayList<>();
+                Microbot.log("filteredAttackableNpcs size: "+filteredAttackableNpcs.size());
+//                for (var attackableNpc: filteredAttackableNpcs) {
+////                    if (attackableNpc == null || attackableNpc.getName() == null) continue;
+//                    for (var npcToAttack: npcsToAttack) {
+//                        if (npcToAttack.equalsIgnoreCase(attackableNpc.getName())) {
+////                            filteredAttackableNpcs.stream().anyMatch(npc->npc.getName().equalsIgnoreCase(npcToAttack));
+//                            Microbot.log("before");
+//                            attackableNpcs.add(attackableNpc);
+//                            Microbot.log("after");
+//                        }
+//                    }
+//                }
+               attackableNpcs=filteredAttackableNpcs.stream().filter(npc -> npc != null && npc.getName() != null)
+                        .filter(npc -> npcsToAttack.stream().anyMatch(name -> name.equalsIgnoreCase(npc.getName()))).collect(Collectors.toList());
+               Microbot.log("3: "+(System.currentTimeMillis()-startTime)+" ms");
                 if (AIOFighterPlugin.getCooldown() > 0 || Rs2Combat.inCombat()) {
                     AIOFighterPlugin.setState(State.COMBAT);
                     handleItemOnNpcToKill();
                     return;
                 }
-
+//                Microbot.log("4");
                 if (!attackableNpcs.isEmpty()) {
                     Rs2NpcModel npc = attackableNpcs.stream().findFirst().orElse(null);
 //                    if (npc == null) return;
@@ -131,7 +140,7 @@ public class AttackNpcScript extends Script {
                             Rs2Prayer.toggleQuickPrayer(true);
                         }
                     }
-
+//                    Microbot.log("5");
 
                 } else {
                     Microbot.log("No attackable NPC found");

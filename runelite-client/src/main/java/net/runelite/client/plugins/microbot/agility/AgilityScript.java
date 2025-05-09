@@ -310,6 +310,7 @@ public class AgilityScript extends Script {
 
     private boolean waitForAgilityObstabcleToFinish(final int agilityExp) {
         double healthPlaceholder= Rs2Player.getHealthPercentage();
+        BreakHandlerScript.setLockState(true);
         sleepUntilOnClientThread(() -> agilityExp != Microbot.getClient().getSkillExperience(Skill.AGILITY)||healthPlaceholder>Rs2Player.getHealthPercentage(), 15000);
 
 

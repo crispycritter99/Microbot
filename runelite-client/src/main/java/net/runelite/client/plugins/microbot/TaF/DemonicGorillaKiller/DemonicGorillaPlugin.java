@@ -8,6 +8,7 @@ import net.runelite.api.ItemComposition;
 import net.runelite.api.Projectile;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.OverheadTextChanged;
 import net.runelite.api.events.ProjectileMoved;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -18,7 +19,9 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.aiofighter.loot.LootScript;
 import net.runelite.client.plugins.microbot.util.containers.FixedSizeQueue;
 import net.runelite.client.plugins.microbot.util.misc.TimeUtils;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -29,6 +32,10 @@ import java.util.StringJoiner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.DemonicGorillaScript.currentDefensivePrayer;
+import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.DemonicGorillaScript.gorillaToggle;
+//import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.DemonicGorillaScript.currentDefensivePrayer;
+
 @PluginDescriptor(
         name = PluginDescriptor.TaFCat + "Demonic Gorillas",
         description = "Automates restocking, prayer flicking, and gear switching during Demonic Gorillas",
@@ -37,7 +44,7 @@ import java.util.concurrent.ScheduledExecutorService;
 )
 @Slf4j
 public class DemonicGorillaPlugin extends Plugin {
-
+//    Rs2PrayerEnum newDefensivePrayer;
     private static final int DEMONIC_GORILLA_ROCK = 856;
     public static FixedSizeQueue<WorldPoint> lastLocation = new FixedSizeQueue<>(2);
     private ScheduledExecutorService scheduledExecutorService;
@@ -98,4 +105,14 @@ public class DemonicGorillaPlugin extends Plugin {
         lastLocation.add(currentLocation);
         DemonicGorillaScript.gameTickCount++;
     }
+    @Subscribe
+    public void onOverheadTextChanged(OverheadTextChanged e) {
+            if (e.getActor().getInteracting() == Microbot.getClient().getLocalPlayer()){
+                gorillaToggle=true;
+            }
+
+
+
+    }
+
 }

@@ -51,6 +51,7 @@ public class AIOFighterOverlay extends OverlayPanel {
 
     @Override
     public Dimension render(Graphics2D graphics) {
+
         if (filteredAttackableNpcs == null) return null;
 
         LocalPoint lp =  LocalPoint.fromWorld(Microbot.getClient(), config.centerLocation());
@@ -84,20 +85,20 @@ public class AIOFighterOverlay extends OverlayPanel {
             }
         }
 
-        for (Monster currentMonster: currentMonstersAttackingUs) {
-            if (currentMonster != null && currentMonster.npc != null && currentMonster.npc.getCanvasTilePoly() != null) {
-                try {
-                    graphics.setColor(Color.CYAN);
-                    modelOutlineRenderer.drawOutline(currentMonster.npc, 2, Color.RED, 4);
-                    graphics.draw(currentMonster.npc.getCanvasTilePoly());
-                    graphics.drawString("" + currentMonster.lastAttack,
-                            (int) currentMonster.npc.getCanvasTilePoly().getBounds().getCenterX(),
-                            (int) currentMonster.npc.getCanvasTilePoly().getBounds().getCenterY());
-                } catch(Exception ex) {
-                    System.out.println(ex.getMessage());
-                }
-            }
-        }
+//        for (Monster currentMonster: currentMonstersAttackingUs) {
+//            if (currentMonster != null && currentMonster.npc != null && currentMonster.npc.getCanvasTilePoly() != null) {
+//                try {
+//                    graphics.setColor(Color.CYAN);
+//                    modelOutlineRenderer.drawOutline(currentMonster.npc, 2, Color.RED, 4);
+//                    graphics.draw(currentMonster.npc.getCanvasTilePoly());
+//                    graphics.drawString("" + currentMonster.lastAttack,
+//                            (int) currentMonster.npc.getCanvasTilePoly().getBounds().getCenterX(),
+//                            (int) currentMonster.npc.getCanvasTilePoly().getBounds().getCenterY());
+//                } catch(Exception ex) {
+//                    System.out.println(ex.getMessage());
+//                }
+//            }
+//        }
 
         return super.render(graphics);
     }

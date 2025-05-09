@@ -301,6 +301,7 @@ public class Rs2InventorySetup {
      */
     public boolean doesEquipmentMatch() {
         for (InventorySetupsItem inventorySetupsItem : inventorySetup.getEquipment()) {
+//            Microbot.log(inventorySetupsItem.getName());
             if (inventorySetupsItem.getId() == -1) continue;
             if (inventorySetupsItem.isFuzzy()) {
                 if (!Rs2Equipment.isWearing(inventorySetupsItem.getName(), false)) {
