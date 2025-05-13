@@ -42,7 +42,7 @@ public class TzhaarVenatorBowScript extends Script {
     private final WorldPoint COMBAT_LOCATION = new WorldPoint(2462, 5098, 0);
     private final List<String> VALID_NPCS = List.of("TzHaar-Ket", "TzHaar-Xil", "TzHaar-Hur");
     private final List<String> INVALID_NPCS = List.of("TzHaar-Mej");
-    private final List<String> LOOT = List.of("Ensouled","Tzhaar-ket-em","Tzhaar-ket-om", "Toktz-ket-xil", "Obsidian cape", "Obsidian helmet", "Obsidian platebody", "Obsidian platelegs", "Onyx bolt tips", "Toktz-xil-ul", "Toktz-xil-ak", "Toktz-xil-ek", "Toktz-mej-tal");
+    private final List<String> LOOT = List.of("Ensouled tzhaar head","Tzhaar-ket-em","Tzhaar-ket-om", "Toktz-ket-xil", "Obsidian cape", "Obsidian helmet", "Obsidian platebody", "Obsidian platelegs", "Onyx bolt tips", "Toktz-xil-ul", "Toktz-xil-ak", "Toktz-xil-ek", "Toktz-mej-tal");
     private boolean isRunning;
     private TravelStatus TRAVEL_STATUS = TO_BANK;
 

@@ -14,6 +14,7 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -42,6 +43,7 @@ public class TormentedDemonScript extends Script {
     private boolean lootAttempted = false;
     private String lastChatMessage = "";
     private boolean isRestocking = false;
+    public static boolean demonToggle = false;
 
 
     private static final int MAGIC_ATTACK_ANIMATION = 11388;
@@ -160,12 +162,14 @@ public class TormentedDemonScript extends Script {
                 int maxPrayer = Microbot.getClient().getRealSkillLevel(Skill.PRAYER);
 
                 if (currentHealth < maxHealth || currentPrayer < maxPrayer) {
-                    if (Rs2GameObject.interact(FEROX_POOL_ID, "Drink")) {
+                    if (Rs2GameObject.interact(29241, "Drink")) {
                         Rs2Player.waitForAnimation();
                         sleepUntil(() ->
                                 Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) == maxHealth &&
                                         Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) == maxPrayer
                         );
+                        Rs2GameObject.interact(29156, "Grand Exchange");
+                        Rs2Player.waitForWalking();
                         bankingStep = BankingStep.BANK;
                     }
                 } else {
@@ -289,6 +293,21 @@ public class TormentedDemonScript extends Script {
                 newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
             } else if (npcAnimation == MELEE_ATTACK_ANIMATION) {
                 newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
+            }
+            if (demonToggle) {
+                sleep(300);
+                if (currentTarget.getPoseAnimation()==11390){
+                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
+                }
+                else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MAGIC) {
+                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
+                } else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_RANGE) {
+                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
+                }
+                else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MELEE){
+                    if (Rs2Random.nextInt(0,1,.2,true)==0) newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC; else newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
+                }
+                demonToggle=false;
             }
             if (newDefensivePrayer != null && newDefensivePrayer != currentDefensivePrayer) {
                 logOnceToChat("Changing defensive prayer to " + newDefensivePrayer);
@@ -470,18 +489,21 @@ public class TormentedDemonScript extends Script {
                 ItemID.RING_OF_DUELING7,
                 ItemID.RING_OF_DUELING8
         };
-        for (int ringId : duelingRingIds) {
-            if (Rs2Inventory.hasItem(ringId)) {
-                Rs2Prayer.disableAllPrayers();
-                Rs2Inventory.interact(ringId, "Wear");
-                sleep(800);
-
-                Rs2Equipment.useRingAction(JewelleryLocationEnum.FEROX_ENCLAVE);
-                logOnceToChat("Teleporting to Ferox Enclave using Ring of Dueling");
-                return;
-            }
-        }
-        logOnceToChat("No Ring of Dueling found in inventory for teleporting to Ferox Enclave.");
+//        for (int ringId : duelingRingIds) {
+//            if (Rs2Inventory.hasItem(ringId)) {
+//                Rs2Prayer.disableAllPrayers();
+//                Rs2Inventory.interact(ringId, "Wear");
+//                sleep(800);
+//
+//                Rs2Equipment.useRingAction(JewelleryLocationEnum.FEROX_ENCLAVE);
+//                logOnceToChat("Teleporting to Ferox Enclave using Ring of Dueling");
+//                return;
+//            }
+//        }
+        Rs2Prayer.disableAllPrayers();
+        Rs2Inventory.interact("Teleport to house", "break");
+        logOnceToChat("going to POH");
+//        logOnceToChat("No Ring of Dueling found in inventory for teleporting to Ferox Enclave.");
     }
 
     private void evaluateAndConsumePotions(TormentedDemonConfig config) {
@@ -582,7 +604,7 @@ public class TormentedDemonScript extends Script {
     public void shutdown() {
         super.shutdown();
         isRunning = false;
-        disableAllPrayers();
+//        disableAllPrayers();
         BOT_STATUS = State.BANKING;
         travelStep = TravelStep.LOCATION_ONE;
         bankingStep = BankingStep.DRINK;
