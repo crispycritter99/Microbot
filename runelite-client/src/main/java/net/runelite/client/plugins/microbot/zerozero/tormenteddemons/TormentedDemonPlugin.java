@@ -27,8 +27,6 @@ import javax.inject.Inject;
 import java.awt.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import static net.runelite.client.plugins.microbot.zerozero.tormenteddemons.TormentedDemonScript.*;
-import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.DemonicGorillaScript.gorillaToggle;
 
 @PluginDescriptor(
         name = PluginDescriptor.zerozero + "Tormented Demons",
@@ -129,7 +127,6 @@ public class TormentedDemonPlugin extends Plugin {
                 Rs2Tile.addDangerousGraphicsObjectTile(graphicsObject, 600 * ticks);
                 tormentedDemonScript.logOnceToChat("Successfully dodged Tormented Demon special attack.");
                 Microbot.pauseAllScripts = false;
-                demonToggle=true;
             }, config.dodgeDelay(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Microbot.pauseAllScripts = false;

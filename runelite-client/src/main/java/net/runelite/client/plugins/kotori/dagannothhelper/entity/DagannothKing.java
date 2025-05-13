@@ -37,7 +37,6 @@ import net.runelite.api.Actor;
 import net.runelite.api.NPC;
 import net.runelite.api.NpcID;
 import net.runelite.api.Prayer;
-import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
@@ -146,12 +145,11 @@ public class DagannothKing implements Comparable<DagannothKing>
 	@RequiredArgsConstructor
 	public enum AttackStyle
 	{
-		MAGE(Prayer.PROTECT_FROM_MAGIC, Rs2PrayerEnum.PROTECT_MAGIC, 3, Color.CYAN),
-		RANGE(Prayer.PROTECT_FROM_MISSILES, Rs2PrayerEnum.PROTECT_RANGE,2, Color.GREEN),
-		MELEE(Prayer.PROTECT_FROM_MELEE,Rs2PrayerEnum.PROTECT_MELEE,1, Color.RED);
+		MAGE(Prayer.PROTECT_FROM_MAGIC, 3, Color.CYAN),
+		RANGE(Prayer.PROTECT_FROM_MISSILES, 2, Color.GREEN),
+		MELEE(Prayer.PROTECT_FROM_MELEE, 1, Color.RED);
 
 		private final Prayer prayer;
-		private final Rs2PrayerEnum microPrayer;
 		private final int priority;
 		private final Color color;
 	}
