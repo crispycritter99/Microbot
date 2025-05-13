@@ -1,9 +1,6 @@
 package net.runelite.client.plugins.microbot.mixology;
 
-import net.runelite.api.DynamicObject;
-import net.runelite.api.GameObject;
-import net.runelite.api.ItemID;
-import net.runelite.api.ObjectID;
+import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -285,12 +282,12 @@ public class MixologyScript extends Script {
                                 }
                                 agitatorQuickActionTicks = 0;
                             } else if (alembicQuickActionTicks > 0  && config.useQuickActionOnAlembic()) {
-                                Microbot.log("diddy");
+//                                Microbot.log("diddy");
 //                                Rs2GameObject.hoverOverObject(Rs2GameObject.findObjectById(AlchemyObject.ALEMBIC.objectId()));
                                 quickActionProcessPotion(nonFulfilledPotion);
                                 alembicQuickActionTicks = 0;
                             }
-                            if (nonFulfilledPotion.potionModifier().alchemyObject() == AlchemyObject.RETORT && config.useQuickActionOnRetort()) {
+                            if (nonFulfilledPotion.potionModifier().alchemyObject() == AlchemyObject.RETORT && config.useQuickActionOnRetort()&&Microbot.getVarbitValue(11327)<15&&Microbot.getVarbitValue(11327)!=0) {
                                 quickActionProcessPotion(nonFulfilledPotion);
                                 sleep(Rs2Random.randomGaussian(450,100));
                             }

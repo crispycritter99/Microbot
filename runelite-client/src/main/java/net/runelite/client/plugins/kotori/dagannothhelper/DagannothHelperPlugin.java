@@ -44,6 +44,8 @@ import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
+import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.HotkeyListener;
 
@@ -104,8 +106,8 @@ public class DagannothHelperPlugin extends Plugin
 
 	private boolean prayersDeactivated;
 	private int lastAttackStyle = -1;
-	private Set<Prayer> lastOffensivePrayers = null;
-	private Prayer lastProtectionPrayer = null;
+	private Rs2PrayerEnum lastOffensivePrayers = null;
+	private Rs2PrayerEnum lastProtectionPrayer = null;
 	private boolean finishedEquippingItems;
 	private boolean rexDeath;
 	private boolean supremeDeath;
@@ -293,7 +295,8 @@ public class DagannothHelperPlugin extends Plugin
 
 		if (dagannothKings.isEmpty())
 		{
-			deactivatePrayers();
+//			deactivatePrayers();
+			Rs2Prayer.disableAllPrayers();
 			lastAttackStyle = -1;
 			lastOffensivePrayers = null;
 			lastProtectionPrayer = null;
@@ -453,6 +456,7 @@ public class DagannothHelperPlugin extends Plugin
 		if (config.autoProtectionPrayers() || config.autoOffensiveMagicPrayer() || config.autoOffensiveMeleePrayer() || config.autoOffensiveRangedPrayer())
 		{
 			prayersDeactivated = PrayerInteractions.deactivatePrayers(config.autoPreservePrayer());
+
 		}
 	}
 
@@ -478,13 +482,13 @@ public class DagannothHelperPlugin extends Plugin
 		{
 			if (dagannothKings.stream().anyMatch(dk -> dk.getAttackStyle() == DagannothKing.AttackStyle.MELEE))
 			{
-				PrayerInteractions.deactivatePrayer(lastProtectionPrayer);
+				Rs2Prayer.toggle(lastProtectionPrayer,false);
 				lastProtectionPrayer = null;
 				return;
 			}
 		}
 
-		Prayer prayerToUse = null;
+		Rs2PrayerEnum prayerToUse = null;
 		int priority = 0;
 
 		Set<DagannothKing.AttackStyle> attacksWithTicksAtZero = new HashSet<>();
@@ -500,7 +504,7 @@ public class DagannothHelperPlugin extends Plugin
 				int attackPriority = attackStyle.getPriority();
 				if (attackPriority > priority)
 				{
-					prayerToUse = attackStyle.getPrayer();
+					prayerToUse = attackStyle.getMicroPrayer();
 					priority = attackPriority;
 				}
 			}
@@ -525,7 +529,7 @@ public class DagannothHelperPlugin extends Plugin
 				int attackPriority = attack.getPriority();
 				if (attackPriority > priority)
 				{
-					prayerToUse = attack.getPrayer();
+					prayerToUse = attack.getMicroPrayer();
 					priority = attackPriority;
 				}
 			}
@@ -540,11 +544,11 @@ public class DagannothHelperPlugin extends Plugin
 		lastProtectionPrayer = prayerToUse;
 		if (config.autoFlickPrayers() && !config.autoPreservePrayer())
 		{
-			PrayerInteractions.oneTickFlickPrayers(false, prayerToUse);
+//			PrayerInteractions.oneTickFlickPrayers(false, prayerToUse);
 		}
 		else
 		{
-			PrayerInteractions.activatePrayer(prayerToUse);
+			Rs2Prayer.toggle(prayerToUse,true);
 		}
 	}
 
@@ -566,52 +570,48 @@ public class DagannothHelperPlugin extends Plugin
 
 		lastAttackStyle = currentAttackStyle;
 
-		Set<Prayer> prayersToUse = null;
+		Rs2PrayerEnum prayersToUse = null;
 
 		switch (lastAttackStyle)
 		{
 			case 0:
 				if (config.autoOffensiveMeleePrayer())
 				{
-					prayersToUse = VarUtilities.bestOffensivePrayers(true, false);
+					prayersToUse = Rs2PrayerEnum.PIETY;
 				}
 				break;
 			case 1:
 				if (config.autoOffensiveRangedPrayer())
 				{
-					prayersToUse = VarUtilities.bestOffensivePrayers(false, false);
-				}
+					prayersToUse = Rs2PrayerEnum.RIGOUR;				}
 				break;
 			case 2:
 				if (config.autoOffensiveMagicPrayer())
 				{
-					prayersToUse = VarUtilities.bestOffensivePrayers(false, false);
-				}
+					prayersToUse = Rs2PrayerEnum.AUGURY;				}
 				break;
 		}
 
-		if (prayersToUse != null && !prayersToUse.isEmpty())
+		if (prayersToUse != null)
 		{
 			lastOffensivePrayers = prayersToUse;
 			if (config.autoFlickPrayers() && !config.autoPreservePrayer())
 			{
-				PrayerInteractions.oneTickFlickPrayers(false, prayersToUse.toArray(Prayer[]::new));
+//				PrayerInteractions.oneTickFlickPrayers(false, prayersToUse.toArray(Prayer[]::new));
 			}
 			else
 			{
-				for (Prayer prayer : prayersToUse)
-				{
-					PrayerInteractions.activatePrayer(prayer);
-				}
+
+					Rs2Prayer.toggle(prayersToUse,true);
+
 			}
 		}
 		//This deactivates offensive prayers after weapon switches if an offensive prayer is not needed
-		else if (lastOffensivePrayers != null && !lastOffensivePrayers.isEmpty())
+		else if (lastOffensivePrayers != null)
 		{
-			for (Prayer prayer : lastOffensivePrayers)
-			{
-				PrayerInteractions.deactivatePrayer(prayer);
-			}
+
+				Rs2Prayer.toggle(lastOffensivePrayers,false);
+
 			lastOffensivePrayers = null;
 		}
 	}
