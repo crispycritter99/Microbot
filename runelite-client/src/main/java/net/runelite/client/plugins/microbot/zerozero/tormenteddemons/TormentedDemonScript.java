@@ -100,54 +100,62 @@ public class TormentedDemonScript extends Script {
         WorldPoint targetLocationOne = new WorldPoint(4062, 4558, 0);
         WorldPoint targetFinalLocation = new WorldPoint(4073, 4432, 0);
         WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
-
-        switch (travelStep) {
-            case LOCATION_ONE:
-                Microbot.status = "Teleporting to Guthixian temple...";
-                if (Rs2Inventory.interact("Guthixian temple teleport", "Teleport")) {
-                    Rs2Player.waitForAnimation();
-                    sleepUntil(() -> !Rs2Player.isAnimating());
-                    sleepUntil(() -> playerLocation.distanceTo(targetLocationOne) <= 5);
-                    travelStep = TravelStep.CLIMB_FIRST_STAIRS;
-                }
-                break;
-
-            case CLIMB_FIRST_STAIRS:
-                Microbot.status = "Climbing first stairs...";
-                if (Rs2GameObject.interact(53623, "Climb-up")) {
-                    Rs2Player.waitForAnimation();
-                    sleepUntil(() -> !Rs2Player.isAnimating());
-                    travelStep = TravelStep.CLIMB_SECOND_STAIRS;
-                }
-                break;
-
-            case CLIMB_SECOND_STAIRS:
-                Microbot.status = "Climbing second stairs...";
-                if (Rs2GameObject.interact(53624, "Climb-up")) {
-                    Rs2Player.waitForAnimation();
-                    sleepUntil(() -> !Rs2Player.isAnimating());
-                    travelStep = TravelStep.CLIMB_THROUGH;
-                }
-                break;
-
-            case CLIMB_THROUGH:
-                Microbot.status = "Climbing through the path...";
-                if (Rs2GameObject.interact(54082, "Climb-through")) {
-                    Rs2Player.waitForAnimation();
-                    sleepUntil(() -> !Rs2Player.isAnimating());
-                    travelStep = TravelStep.LOCATION_THREE;
-                }
-                break;
-
-            case LOCATION_THREE:
-                Microbot.status = "Approaching Tormented Demon location...";
-                if (Rs2Walker.walkTo(targetFinalLocation, 2)) {
-                    sleepUntil(() -> Microbot.getClient().getLocalPlayer().getWorldLocation().equals(targetFinalLocation), 5000);
-                    travelStep = TravelStep.LOCATION_ONE;
-                    BOT_STATUS = State.FIGHTING;
-                }
-                break;
+        if (Rs2Bank.isOpen()) {
+            Rs2Bank.closeBank();
         }
+        if (Rs2Inventory.interact("Guthixian temple teleport", "Teleport")) {
+            sleepUntil(() -> !Rs2Player.isAnimating());
+                    sleepUntil(() -> playerLocation.distanceTo(targetLocationOne) <= 5);
+            Rs2Walker.walkTo(4124, 4381, 0);
+            travelStep = TravelStep.LOCATION_ONE;
+                    BOT_STATUS = State.FIGHTING;
+        }
+//        switch (travelStep) {
+//            case LOCATION_ONE:
+//                Microbot.status = "Teleporting to Guthixian temple...";
+//                if (Rs2Inventory.interact("Guthixian temple teleport", "Teleport")) {
+//                    Rs2Player.waitForAnimation();
+//                    sleepUntil(() -> !Rs2Player.isAnimating());
+//                    sleepUntil(() -> playerLocation.distanceTo(targetLocationOne) <= 5);
+//                    travelStep = TravelStep.CLIMB_FIRST_STAIRS;
+//                }
+//                break;
+//
+//            case CLIMB_FIRST_STAIRS:
+//                Microbot.status = "Climbing first stairs...";
+//                if (Rs2GameObject.interact(53623, "Climb-up")) {
+//                    Rs2Player.waitForAnimation();
+//                    sleepUntil(() -> !Rs2Player.isAnimating());
+//                    travelStep = TravelStep.CLIMB_SECOND_STAIRS;
+//                }
+//                break;
+//
+//            case CLIMB_SECOND_STAIRS:
+//                Microbot.status = "Climbing second stairs...";
+//                if (Rs2GameObject.interact(53624, "Climb-up")) {
+//                    Rs2Player.waitForAnimation();
+//                    sleepUntil(() -> !Rs2Player.isAnimating());
+//                    travelStep = TravelStep.CLIMB_THROUGH;
+//                }
+//                break;
+//
+//            case CLIMB_THROUGH:
+//                Microbot.status = "Climbing through the path...";
+//                if (Rs2GameObject.interact(54082, "Climb-through")) {
+//                    Rs2Player.waitForAnimation();
+//                    sleepUntil(() -> !Rs2Player.isAnimating());
+//                    travelStep = TravelStep.LOCATION_THREE;
+//                }
+//                break;
+//
+//            case LOCATION_THREE:
+//                Microbot.status = "Approaching Tormented Demon location...";
+//                if (Rs2Walker.walkTo(targetFinalLocation, 2)) {
+//                    sleepUntil(() -> Microbot.getClient().getLocalPlayer().getWorldLocation().equals(targetFinalLocation), 5000);
+//
+//                }
+//                break;
+//        }
     }
 
     private void handleBanking(TormentedDemonConfig config) {
@@ -186,7 +194,7 @@ public class TormentedDemonScript extends Script {
                 Microbot.status = "Opening bank...";
                 Rs2Bank.openBank();
                 sleepUntil(Rs2Bank::isOpen);
-                Rs2Bank.depositAll();
+//                Rs2Bank.depositAll();
                 bankingStep = BankingStep.LOAD_INVENTORY;
                 break;
 
@@ -213,7 +221,7 @@ public class TormentedDemonScript extends Script {
 
             if (!lootAttempted) {
                 Microbot.pauseAllScripts = true;
-                sleep(5000);
+                sleep(2000);
                 attemptLooting(config);
                 lootAttempted = true;
                 Microbot.pauseAllScripts = false;
@@ -221,6 +229,9 @@ public class TormentedDemonScript extends Script {
             }
 
             currentTarget = findNewTarget(config);
+            if (currentTarget.getInteracting() != Microbot.getClient().getLocalPlayer()) {
+                currentTarget = findNewTarget(config);
+            }
             if (currentTarget != null) {
                 currentOverheadIcon = Rs2Reflection.getHeadIcon(currentTarget);
                 if (currentOverheadIcon == null) {
@@ -243,6 +254,7 @@ public class TormentedDemonScript extends Script {
             Microbot.pauseAllScripts = true;
             teleportToFeroxEnclave();
             sleepUntil(() -> Microbot.getClient().getLocalPlayer().getWorldLocation().equals(SAFE_LOCATION), 5000);
+            Rs2Prayer.disableAllPrayers();
             Microbot.pauseAllScripts = false;
             BOT_STATUS = State.BANKING;
             return;
@@ -283,37 +295,7 @@ public class TormentedDemonScript extends Script {
 
         if (currentTarget == null) return;
 
-        int npcAnimation = currentTarget.getAnimation();
-        if (config.enableDefensivePrayer()) {
-            System.out.println(npcAnimation);
-            Rs2PrayerEnum newDefensivePrayer = null;
-            if (npcAnimation == MAGIC_ATTACK_ANIMATION) {
-                newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
-            } else if (npcAnimation == RANGE_ATTACK_ANIMATION) {
-                newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
-            } else if (npcAnimation == MELEE_ATTACK_ANIMATION) {
-                newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
-            }
-            if (demonToggle) {
-                sleep(300);
-                if (currentTarget.getPoseAnimation()==11390){
-                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_MELEE;
-                }
-                else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MAGIC) {
-                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
-                } else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_RANGE) {
-                    newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC;
-                }
-                else if (currentDefensivePrayer == Rs2PrayerEnum.PROTECT_MELEE){
-                    if (Rs2Random.nextInt(0,1,.2,true)==0) newDefensivePrayer = Rs2PrayerEnum.PROTECT_MAGIC; else newDefensivePrayer = Rs2PrayerEnum.PROTECT_RANGE;
-                }
-                demonToggle=false;
-            }
-            if (newDefensivePrayer != null && newDefensivePrayer != currentDefensivePrayer) {
-                logOnceToChat("Changing defensive prayer to " + newDefensivePrayer);
-                switchDefensivePrayer(newDefensivePrayer);
-            }
-        }
+
 
         if (config.enableOffensivePrayer()) {
             activateOffensivePrayer(config);
@@ -465,7 +447,7 @@ public class TormentedDemonScript extends Script {
         String ashesName = "Infernal ashes";
 
         if (!Rs2Inventory.isFull() && Rs2GroundItem.lootItemsBasedOnNames(new LootingParameters(10, 1, 1, 0, false, true, ashesName))) {
-            sleepUntil(() -> Rs2Inventory.contains(ashesName), 2000);
+            sleepUntil(() -> Rs2Inventory.contains(ashesName), 5000);
 
             if (Rs2Inventory.contains(ashesName)) {
                 Rs2Inventory.interact(ashesName, "Scatter");

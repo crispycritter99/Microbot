@@ -3,8 +3,11 @@ package net.runelite.client.plugins.microbot.zerozero.tormenteddemons;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.AnimationChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.GraphicsObjectCreated;
+import net.runelite.api.events.ProjectileMoved;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
@@ -13,22 +16,29 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 
 import java.awt.datatransfer.StringSelection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.Executors;
 
-import net.runelite.client.plugins.microbot.VardorvisHelper.VardorvisHelperScript;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
+import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import static net.runelite.client.plugins.microbot.zerozero.tormenteddemons.TormentedDemonScript.*;
-import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.DemonicGorillaScript.gorillaToggle;
+
+import static net.runelite.client.plugins.microbot.util.Global.sleep;
 
 @PluginDescriptor(
         name = PluginDescriptor.zerozero + "Tormented Demons",
@@ -38,6 +48,11 @@ import static net.runelite.client.plugins.microbot.TaF.DemonicGorillaKiller.Demo
 )
 @Slf4j
 public class TormentedDemonPlugin extends Plugin {
+
+    private static final int CHANGE_ATTACK_STYLE_ANIMATION = 11387;
+    private static final int MELEE_ATTACK_ANIMATION = 11392;
+    private static final int MAGIC_ATTACK_ANIMATION = 11388;
+    private static final int RANGE_ATTACK_ANIMATION = 11389;
 
     private ScheduledExecutorService scheduledExecutorService;
 
@@ -78,6 +93,7 @@ public class TormentedDemonPlugin extends Plugin {
             scheduledExecutorService.shutdown();
         }
     }
+
     @Subscribe
     private void onConfigChanged(ConfigChanged event) {
         if (!event.getGroup().equals("tormenteddemon")) {
@@ -111,11 +127,13 @@ public class TormentedDemonPlugin extends Plugin {
         }
     }
 
+
+
     @Subscribe
     public void onGraphicsObjectCreated(GraphicsObjectCreated event) {
         final GraphicsObject graphicsObject = event.getGraphicsObject();
         final int TORMENTED_VENGENCE_SPECIAL = 2856;
-
+Microbot.log("graphics object spotted at"+event.getGraphicsObject().getLocation());
         if (graphicsObject.getId() != TORMENTED_VENGENCE_SPECIAL) {
             return;
         }
@@ -129,7 +147,6 @@ public class TormentedDemonPlugin extends Plugin {
                 Rs2Tile.addDangerousGraphicsObjectTile(graphicsObject, 600 * ticks);
                 tormentedDemonScript.logOnceToChat("Successfully dodged Tormented Demon special attack.");
                 Microbot.pauseAllScripts = false;
-                demonToggle=true;
             }, config.dodgeDelay(), TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             Microbot.pauseAllScripts = false;
@@ -138,5 +155,55 @@ public class TormentedDemonPlugin extends Plugin {
     }
 
 
+    @Subscribe
+    public void onAnimationChanged(AnimationChanged event) {
+        if (event.getActor() instanceof NPC) {
+            NPC npc = (NPC) event.getActor();
+
+            Player localPlayer = Microbot.getClient().getLocalPlayer();
+            if (localPlayer == null || localPlayer.getInteracting() != npc) {
+                return;
+            }
+
+            int animationId = npc.getAnimation();
+
+            if (animationId == CHANGE_ATTACK_STYLE_ANIMATION) {
+                // Check which prayer is currently active
+                boolean isMeleeActive = Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MELEE);
+                boolean isRangeActive = Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_RANGE);
+                boolean isMagicActive = Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MAGIC);
+
+                // Toggle the opposite prayer based on currently active prayer
+                if (isMeleeActive) {
+                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
+                } else if (isRangeActive) {
+                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
+                } else if (isMagicActive) {
+                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
+                } else {
+                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
+                }
+//                if (isMeleeActive) {
+//                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
+//                } else if (isRangeActive&&npc.getPoseAnimation()!=11390) {
+//                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
+//                } else if (isMagicActive&&npc.getPoseAnimation()!=11390) {
+//                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
+//                } else {
+//                    Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
+//                }
+            }
+
+            if (animationId == MELEE_ATTACK_ANIMATION && !Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MELEE)) {
+                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MELEE, true);
+            }
+            if (animationId == RANGE_ATTACK_ANIMATION && !Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_RANGE)) {
+                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
+            }
+            if (animationId == MAGIC_ATTACK_ANIMATION  && !Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MAGIC)) {
+                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
+            }
+        }
+    }
 
 }

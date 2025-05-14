@@ -244,7 +244,7 @@ public class BanksBankStanderScript extends Script {
 //                        Rs2Bank.closeBank();
 //                    }
                 }else{
-                    sleepUntil(() -> !Rs2Inventory.hasItem(secondItemId), 40000);
+                    sleepUntil(() -> !Rs2Inventory.hasItem(secondItemId)||!Rs2Inventory.hasItem(firstItemId), 40000);
                 }
             } else {
                 sleepUntil(() -> !Rs2Inventory.hasItem(config.secondItemIdentifier()), 40000);

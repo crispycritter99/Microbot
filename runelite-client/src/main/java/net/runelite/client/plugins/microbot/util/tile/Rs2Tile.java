@@ -86,7 +86,7 @@ public abstract class Rs2Tile implements Tile {
      */
     public static List<WorldPoint> getSafeTiles(int radius) {
         List<WorldPoint> safeTiles = new ArrayList<>();
-
+        Microbot.log("number of dangerous tiles "+dangerousGraphicsObjectTiles.size());
         for (WorldPoint walkableTile : getWalkableTilesAroundPlayer(radius)) {
             boolean isDangerousTile = dangerousGraphicsObjectTiles.stream().anyMatch(x -> x.getKey().equals(walkableTile));
             if (isDangerousTile) continue;

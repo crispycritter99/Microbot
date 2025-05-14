@@ -53,7 +53,7 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-//                Rs2Walker.walkTo()
+                Rs2Walker.walkTo(4063, 4550, 2);
 //                Rs2Bank.withdrawX("air rune",3);
 //                Microbot.log(""+Rs2Random.nextInt(0,1,.2,true));
 //                Rs2Walker.walkTo(new WorldPoint(2828, 3695, 0), 1);
