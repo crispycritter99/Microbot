@@ -187,7 +187,7 @@ public class GotrScript extends Script {
                         if (!Rs2Inventory.isFull()) {
                             if (leaveLargeMine()) return;
 
-                            if (state == GotrState.CRAFT_GUARDIAN_ESSENCE && (Rs2Player.isAnimating() || Rs2Player.isWalking())) return;
+                            if (state == GotrState.CRAFT_GUARDIAN_ESSENCE && (Rs2Player.isAnimating() || Rs2Player.isMoving())) return;
 
                             if (craftGuardianEssences()) return;
 
@@ -277,7 +277,7 @@ public class GotrScript extends Script {
                     if (CellType.GetShieldTier(shieldCell.getId()) < cellTier) {
                         Microbot.log("Upgrading power cell at " + shieldCell.getWorldLocation());
                         Rs2GameObject.interact(shieldCell, "Place-cell");
-                        sleepUntil(() -> !Rs2Player.isWalking());
+                        sleepUntil(() -> !Rs2Player.isMoving());
                         return true;
                     }
                 }
@@ -287,7 +287,7 @@ public class GotrScript extends Script {
             if (interactedObjectId != -1) {
                 log("Using cell with id " + interactedObjectId);
                 sleep(Rs2Random.randomGaussian(1000, 300));
-                sleepUntil(() -> !Rs2Player.isWalking());
+                sleepUntil(() -> !Rs2Player.isMoving());
             }
             return true;
         }
@@ -338,7 +338,7 @@ public class GotrScript extends Script {
         if (!isInHugeMine() && Microbot.getClient().hasHintArrow() && Rs2Inventory.size() < config.maxAmountEssence()) {
             if (leaveLargeMine()) return true;
             Rs2Walker.walkFastCanvas(Microbot.getClient().getHintArrowPoint());
-            sleepUntil(Rs2Player::isWalking);
+            sleepUntil(Rs2Player::isMoving);
             Rs2GameObject.interact(Microbot.getClient().getHintArrowPoint());
             log("Found a portal spawn...interacting with it...");
             Rs2Player.waitForWalking();
@@ -422,7 +422,7 @@ public class GotrScript extends Script {
         if (!isInMainRegion() && isInMiniGame()) {
             TileObject rcAltar = findRcAltar();
             if (rcAltar != null) {
-                if (Rs2Player.isWalking()) return true;
+                if (Rs2Player.isMoving()) return true;
                 if (Rs2Inventory.anyPouchFull() && !Rs2Inventory.isFull()) {
                     Rs2Inventory.emptyPouches();
                     Rs2Inventory.waitForInventoryChanges(5000);
@@ -433,7 +433,7 @@ public class GotrScript extends Script {
                     Rs2GameObject.interact(rcAltar.getId());
                     log("Crafting runes on altar " + rcAltar.getId());
                     sleep(Rs2Random.randomGaussian(Rs2Random.between(1000, 1500), 300));
-                } else if (!Rs2Player.isWalking()) {
+                } else if (!Rs2Player.isMoving()) {
                     state = GotrState.LEAVING_ALTAR;
                     TileObject rcPortal = findPortalToLeaveAltar();
                     if (Rs2GameObject.interact(rcPortal.getId())) {

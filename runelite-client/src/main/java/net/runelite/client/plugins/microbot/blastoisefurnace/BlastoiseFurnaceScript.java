@@ -1,5 +1,3 @@
-
-
 package net.runelite.client.plugins.microbot.blastoisefurnace;
 
 import java.awt.event.KeyEvent;
@@ -147,7 +145,7 @@ public class BlastoiseFurnaceScript extends Script {
 
                         state = State.BANKING;
                         break;
-                        }
+                }
             } catch (Exception ex) {
 
                 Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
@@ -187,12 +185,17 @@ public class BlastoiseFurnaceScript extends Script {
 
         // Check if the inventory is full before interacting with the dispenser
         if (!Rs2Inventory.isFull()) {
+
+            if(!dispenserContainsBars()){
+                sleepUntil(()-> dispenserContainsBars(), Rs2Random.between(3000,5000));
+            }
+
             Rs2GameObject.interact(BAR_DISPENSER, "Take");
 
             sleepUntil(() ->
                     Rs2Widget.hasWidget("What would you like to take?") ||
-                    Rs2Widget.hasWidget("How many would you like") ||
-                    Rs2Widget.hasWidget("The bars are still molten!"), 5000);
+                            Rs2Widget.hasWidget("How many would you like") ||
+                            Rs2Widget.hasWidget("The bars are still molten!"), 5000);
 
             boolean noIceGlovesEquipped = Rs2Widget.hasWidget("The bars are still molten!");
 
