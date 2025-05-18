@@ -557,7 +557,7 @@ int plantnumber;
     }
 
     private void enter() {
-        WallObject farmDoor = Rs2GameObject.findDoor(FARM_DOOR);
+        WallObject farmDoor = Rs2GameObject.getWallObject(FARM_DOOR);
         Rs2GameObject.interact(farmDoor);
         sleepUntil(this::isInMinigame);
     }
@@ -574,7 +574,7 @@ int plantnumber;
     }
 
     private void leave() {
-        WallObject farmDoor = Rs2GameObject.findDoor(FARM_DOOR);
+        WallObject farmDoor = Rs2GameObject.getWallObject(FARM_DOOR);
         Rs2GameObject.interact(farmDoor);
         sleepUntil(() -> !Rs2Inventory.hasItem(FERTILISER), 8000);
     }

@@ -147,7 +147,7 @@ public class SalamanderScript extends Script {
 //                }
 //            }
             if (eligibletrap.isPresent()){
-                GameObject donenet = Rs2GameObject.getGameObjects(8986, eligibletrap.get().getWorldLocation()).stream().findFirst().orElse(null);
+                GameObject donenet = Rs2GameObject.findObject(8986, eligibletrap.get().getWorldLocation());
 //            if (Rs2GameObject.interact(ObjectID.NET_TRAP_8996, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8986, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_8734, "check", 10)||Rs2GameObject.interact(ObjectID.NET_TRAP_9004, "check", 10)) {
 //                if (eligibletrap.isPresent()&&Rs2GameObject.interact(eligibletrap.get().getWorldLocation(), "Check")) {
                 if (eligibletrap.isPresent() && Rs2GameObject.interact(donenet, "Check")) {

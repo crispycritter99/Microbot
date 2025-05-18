@@ -176,6 +176,7 @@ public class TormentedDemonScript extends Script {
                                 Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS) == maxHealth &&
                                         Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER) == maxPrayer
                         );
+//                        Microbot.getClient().getTopLevelWorldView().getGraphicsObjects();
                         Rs2GameObject.interact(29156, "Grand Exchange");
                         Rs2Player.waitForWalking();
                         bankingStep = BankingStep.BANK;
@@ -221,7 +222,7 @@ public class TormentedDemonScript extends Script {
 
             if (!lootAttempted) {
                 Microbot.pauseAllScripts = true;
-                sleep(2000);
+                sleep(4000);
                 attemptLooting(config);
                 lootAttempted = true;
                 Microbot.pauseAllScripts = false;
@@ -375,7 +376,7 @@ public class TormentedDemonScript extends Script {
 
             case MAGIC:
                 if (useRange && useMelee) {
-                    gearToEquip = Math.random() < 0.5 ? parseGear(config.rangeGear()) : parseGear(config.meleeGear());
+//                    gearToEquip = Math.random() < 0.5 ? parseGear(config.rangeGear()) : parseGear(config.meleeGear());
                 } else if (useRange) {
                     gearToEquip = parseGear(config.rangeGear());
                 } else if (useMelee) {

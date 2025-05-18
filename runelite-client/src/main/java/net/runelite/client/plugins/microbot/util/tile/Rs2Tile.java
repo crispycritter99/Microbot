@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.util.tile;
 
 import lombok.Getter;
 import net.runelite.api.*;
+import net.runelite.api.Deque;
 import net.runelite.api.coords.Direction;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
@@ -28,9 +29,10 @@ public abstract class Rs2Tile implements Tile {
 
     @Getter
     public static List<MutablePair<WorldPoint, Integer>> dangerousGraphicsObjectTiles = new ArrayList<>();
-
+    public static List<GraphicsObject> matchingGraphics = new ArrayList<>();
     private static ScheduledExecutorService tileExecutor;
-
+    public static GraphicsObject currentObject;
+    public static int currentTime;
     /**
      * Initializes the tile executor
      * This will handle the removal of dangerous tiles after a certain amount of time
@@ -56,7 +58,8 @@ public abstract class Rs2Tile implements Tile {
      */
     public static void addDangerousGraphicsObjectTile(GraphicsObject graphicsObject, int time) {
         WorldPoint worldPoint;
-
+        currentObject=graphicsObject;
+        currentTime=time;
         if (Microbot.getClient().getTopLevelWorldView().getScene().isInstance()) {
             worldPoint = WorldPoint.fromLocalInstance(Microbot.getClient(), graphicsObject.getLocation());
         } else {
@@ -66,7 +69,7 @@ public abstract class Rs2Tile implements Tile {
         if (worldPoint == null) return;
 
         final MutablePair<WorldPoint, Integer> dangerousTile = MutablePair.of(worldPoint, time);
-
+//        List<WorldPoint>=getWalkableTilesAroundTile(4);
         dangerousGraphicsObjectTiles.add(dangerousTile);
 
         if (Rs2Player.getWorldLocation().equals(worldPoint)) {
@@ -86,8 +89,23 @@ public abstract class Rs2Tile implements Tile {
      */
     public static List<WorldPoint> getSafeTiles(int radius) {
         List<WorldPoint> safeTiles = new ArrayList<>();
+        WorldPoint worldPoint;
+//        Microbot.log("number of dangerous tiles "+dangerousGraphicsObjectTiles.size());
+        Deque<GraphicsObject> graphicsObjects =  Microbot.getClient().getTopLevelWorldView().getGraphicsObjects();
+        for (GraphicsObject go : graphicsObjects) {
+            if (go != null && go.getId() == currentObject.getId()) {
+                if (Microbot.getClient().getTopLevelWorldView().getScene().isInstance()) {
+                    worldPoint = WorldPoint.fromLocalInstance(Microbot.getClient(), go.getLocation());
+                } else {
+                    worldPoint = WorldPoint.fromLocal(Microbot.getClient(), go.getLocation());
+                }
+                final MutablePair<WorldPoint, Integer> dangerousTile = MutablePair.of(worldPoint, currentTime);
+                dangerousGraphicsObjectTiles.add(dangerousTile);
+            }
+        }
         Microbot.log("number of dangerous tiles "+dangerousGraphicsObjectTiles.size());
         for (WorldPoint walkableTile : getWalkableTilesAroundPlayer(radius)) {
+//            getTile(walkableTile.getX(), walkableTile.getY()).
             boolean isDangerousTile = dangerousGraphicsObjectTiles.stream().anyMatch(x -> x.getKey().equals(walkableTile));
             if (isDangerousTile) continue;
             safeTiles.add(walkableTile);

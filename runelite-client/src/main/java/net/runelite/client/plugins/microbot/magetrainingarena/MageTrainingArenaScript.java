@@ -415,11 +415,12 @@ public class MageTrainingArenaScript extends Script {
             if (!Rs2Player.getWorldLocation().equals(targetConverted)
                     && (Microbot.getClient().getLocalDestinationLocation() == null
                     || !Microbot.getClient().getLocalDestinationLocation().equals(localTarget))) {
-                if (Rs2Camera.isTileOnScreen(localTarget) && Rs2Player.getWorldLocation().distanceTo(targetConverted) < 10) {
+                if (Rs2Camera.isTileOnScreen(localTarget) && Rs2Player.getWorldLocation().distanceTo(targetConverted) < 15) {
                     Rs2Walker.walkFastCanvas(targetConverted);
-                    sleepGaussian(600, 150);
+                    Rs2Player.waitForWalking();
                 } else {
                     Rs2Walker.walkTo(targetConverted);
+
                 }
             }
 
@@ -518,6 +519,9 @@ public class MageTrainingArenaScript extends Script {
         if (item != null) {
             Rs2Magic.alch(item);
             return;
+        }
+        else {
+            Rs2Inventory.dropAll(6897,6896,6895,6894,6893);
         }
 
         var timer = (AlchemyRoomTimer) Microbot.getInfoBoxManager().getInfoBoxes().stream()

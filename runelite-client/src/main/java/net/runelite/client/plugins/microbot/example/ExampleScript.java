@@ -8,6 +8,8 @@ import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
@@ -53,49 +55,36 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                Rs2Walker.walkTo(4063, 4550, 2);
-//                Rs2Bank.withdrawX("air rune",3);
-//                Microbot.log(""+Rs2Random.nextInt(0,1,.2,true));
-//                Rs2Walker.walkTo(new WorldPoint(2828, 3695, 0), 1);
-//                new WorldPoint(2828, 3695, 0)
-//                Rs2Magic.cast(MagicAction.RESURRECT_GREATER_ZOMBIE);
-//                Rs2Inventory.use("house");
-//                sleep(600);
-//                Rs2Npc.interact(Rs2Npc.getNpc("Phials"));
-//                if (Rs2Player.isInteracting())
-//                        return;
-//                Rs2Magic.cast(MagicAction.EXPERT_REANIMATION);
-//                Rs2Inventory.interact("ensouled","Reanimate");
-//                Rs2Player.waitForXpDrop(Skill.MAGIC);
-//                sleepUntilTick(15);
-////                Rs2Walker.walkFastCanvas(new WorldPoint(2799,9568,3));
-////                Rs2Player.waitForXpDrop(Skill.AGILITY);
-//                    Rs2Widget.clickWidget(49938445);
-//                    Rs2Dialogue.sleepUntilHasDialogueOption("Duels");
-//
-//                    Rs2Dialogue.clickOption("Duels group");
-//                sleepUntilTick(3);
-//                Rs2Widget.clickWidget(49938444);
-////                sleepUntilTick(3);
-//                Microbot.log(Arrays.stream(Rs2Widget.getWidget(49938444).getActions()).findFirst().get().contains("Sign")+"");
-////                Rs2Widget.clickWidget(49938444);
-//            if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8061)!=null)
-//            {
-//                Rs2Prayer.toggleQuickPrayer(true);
-//            }
-//            else if (!Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8058)!=null)
-//            {
-//                Rs2Prayer.toggleQuickPrayer(true);
-//            }
-//            else if (Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PIETY)&&Rs2Npc.getNpc(8059)!=null)
-//            {
-//                    Rs2Prayer.toggleQuickPrayer(false);
-//            }
-//Rs2Bank.walkToBankAndUseBank();
+                    if ((Rs2Player.isAnimating())&&Rs2Player.getAnimation()!=12186) {
 
+                        return;
+                }
+                if (Rs2Inventory.contains(30846)){
+                    Rs2Inventory.combine(1755,30846);
 
+                }
 
-                shutdown();
+                sleep(Rs2Random.randomGaussian(600,100));
+                Rs2Inventory.interact(30808,"Wipe");
+                GameObject gwa = Rs2GameObject.getGameObject("infernal shale rock");
+                int dx = Math.abs(Rs2Player.getWorldLocation().getX() - gwa.getWorldLocation().getX());
+                int dy = Math.abs(Rs2Player.getWorldLocation().getY() - gwa.getWorldLocation().getY());
+                if ((dx+dy ==1)) {
+                    sleep(Rs2Random.randomGaussian(400,100));
+                    }
+                else
+                {
+
+                    Rs2Walker.walkFastCanvas(gwa.getWorldLocation());
+                    sleep(300);
+                }
+                Rs2GameObject.interact("infernal shale rock","Mine");
+                if (Rs2Random.between(1,20)==5){
+                                    Rs2Antiban.takeMicroBreakByChance();
+                }
+
+//                Rs2Player.waitForAnimation(1000);
+//                shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);

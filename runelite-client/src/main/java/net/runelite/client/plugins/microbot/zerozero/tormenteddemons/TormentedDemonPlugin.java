@@ -16,9 +16,8 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 
 import java.awt.datatransfer.StringSelection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.StringJoiner;
+import java.util.*;
+import java.util.List;
 import java.util.concurrent.Executors;
 
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -32,6 +31,7 @@ import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.ui.overlay.OverlayManager;
+import org.apache.commons.lang3.tuple.MutablePair;
 
 import javax.inject.Inject;
 import java.awt.*;
@@ -55,7 +55,7 @@ public class TormentedDemonPlugin extends Plugin {
     private static final int RANGE_ATTACK_ANIMATION = 11389;
 
     private ScheduledExecutorService scheduledExecutorService;
-
+    public static List<MutablePair<WorldPoint, Integer>> dangerousGraphicsObjectTiles = new ArrayList<>();
     @Inject
     private ConfigManager configManager;
 
@@ -144,6 +144,7 @@ Microbot.log("graphics object spotted at"+event.getGraphicsObject().getLocation(
         Microbot.pauseAllScripts = true;
         try {
             scheduledExecutorService.schedule(() -> {
+//                dangerousGraphicsObjectTiles.add(graphicsObject.getLocation(),600*ticks);
                 Rs2Tile.addDangerousGraphicsObjectTile(graphicsObject, 600 * ticks);
                 tormentedDemonScript.logOnceToChat("Successfully dodged Tormented Demon special attack.");
                 Microbot.pauseAllScripts = false;

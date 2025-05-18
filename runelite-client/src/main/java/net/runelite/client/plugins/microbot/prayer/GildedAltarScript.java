@@ -268,7 +268,7 @@ public class GildedAltarScript extends Script {
 //        Rs2Inventory.interact(item,"use");
 //        Rs2Inventory.slotInteract(27,"use");
         Rs2Player.waitForXpDrop(Skill.PRAYER, 6010);
-//        Microbot.log(""+Rs2Inventory.contains(536));
+////        Microbot.log(""+Rs2Inventory.contains(536));
 //                                while (Rs2Inventory.contains(536)) {
 //                                    int skillExp = Microbot.getClient().getSkillExperience(Skill.PRAYER);
 //                                    Rs2GameObject.interact(altar);
@@ -278,7 +278,7 @@ public class GildedAltarScript extends Script {
 //                                    }
 //                                    while(Microbot.getClient().getSkillExperience(Skill.PRAYER)==skillExp){sleep(50);}
 //                                    sleep(Rs2Random.randomGaussian(50,2));
-//                                    Rs2Inventory.useItemOnObject(536,13197);
+////                                    Rs2Inventory.useItemOnObject(536,13197);
 ////                                    Rs2Inventory.useLast(536);
 ////                                    Rs2GameObject.interact(altar);
 ////                                    sleepUntilTick(1);

@@ -153,7 +153,7 @@ public class MicroAgilityPlugin extends Plugin {
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36225, 3258, -1, Operation.LESS_EQUAL, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(CHIMNEY_36227, 3272, 6106, Operation.GREATER_EQUAL, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(ROOF_EDGE, -1, 6115, Operation.GREATER, Operation.LESS_EQUAL));
-        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(DARK_HOLE_36229, 3269, 6117, Operation.EQUAL, Operation.EQUAL));
+        agilityScript.prifddinasCourse.add(new AgilityObstacleModel(DARK_HOLE_36229, -1, 6114, Operation.GREATER, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(LADDER_36231, -1, 3392, Operation.GREATER, Operation.LESS_EQUAL));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(ROPE_BRIDGE_36233, 2265, -1, Operation.GREATER_EQUAL, Operation.GREATER));
         agilityScript.prifddinasCourse.add(new AgilityObstacleModel(TIGHTROPE_36234, 2254, -1, Operation.GREATER_EQUAL, Operation.GREATER));
