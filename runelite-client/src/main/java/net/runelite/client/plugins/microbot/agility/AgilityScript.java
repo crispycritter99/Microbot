@@ -218,7 +218,7 @@ public class AgilityScript extends Script
 				long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
 				long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
 				// Normal obstacle interaction
-				if (secondsLeft > 0 && secondsLeft < 50) return;
+				if (secondsLeft > 0 && secondsLeft < 50&&config.agilityCourse().getHandler().getCurrentObstacleIndex()==7) return;
 				if (Rs2GameObject.interact(gameObject)) {
 					// Wait for completion - this now returns quickly on XP drop
 					boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp, 

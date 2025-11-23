@@ -173,4 +173,5 @@ public class MarksOfGraceCDPlugin extends Plugin
 		if (NtpClient.SyncState == NtpSyncState.NOT_SYNCED)
 			NtpClient.startSync();
 	}
+
 }
