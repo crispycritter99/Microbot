@@ -1,6 +1,9 @@
 package net.runelite.client.plugins.microbot.example;
 
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -30,9 +33,18 @@ public class ExampleOverlay extends OverlayPanel {
                     .build());
 
             panelComponent.getChildren().add(LineComponent.builder().build());
-
+            WorldPoint worldPoint =  WorldPoint.fromRegion(7222,
+                    29,
+                    42,
+                    Microbot.getClient().getPlane());
             panelComponent.getChildren().add(LineComponent.builder()
-                    .left(Rs2Player.getLocalPlayer().isInteracting()+"")
+                    .left(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint) +"")
+                    .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left(Rs2WorldPoint.toLocalInstance(worldPoint) +"")
+                    .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left(""+Rs2GameObject.getAll(o -> o.getWorldLocation().equals(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint))))
                     .build());
 
 

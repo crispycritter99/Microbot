@@ -13,6 +13,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -61,10 +62,35 @@ public class ExampleScript extends Script {
 //                        return;
 //
 //                }
-                Rs2Npc.interact(4742,"attack");
-                sleep(400,500);
-                Rs2Walker.walkFastCanvas(new WorldPoint(3371,9556,0));
-                sleepUntilTick(9);
+//                for (int i = -100; i < 100; i++) {
+//                    for (int j = -100; j < 100; j++) {
+//                        WorldPoint worldPoint = WorldPoint.getMirrorPoint( WorldPoint.fromRegion(7222,
+//                                45+i,
+//                                34+j,
+//                                Microbot.getClient().getPlane()),true);
+//                        if(Rs2GameObject.findObjectByLocation(worldPoint)!=null) {
+//                            System.out.println("hi");
+//                        }
+////                        sleep(200);
+//
+////                        System.out.println("i = " + i + ", j = " + j);
+//                    }
+//                }
+                WorldPoint worldPoint =  WorldPoint.fromRegion(7222,
+                                29,
+                                42,
+                                Microbot.getClient().getPlane());
+                ;;
+                System.out.println(Rs2GameObject.getGameObject("golo").getWorldLocation());
+                System.out.println(worldPoint);
+                System.out.println(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint));
+//                Rs2GameObject.interact(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint));
+//                Rs2GameObject.findGameObjectByLocation(worldPoint);
+                Rs2GameObject.interact(Rs2GameObject.findObjectByLocation(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint)));
+//                Rs2Npc.interact(4742,"attack");
+//                sleep(400,500);
+//                Rs2Walker.walkFastCanvas(new WorldPoint(3371,9556,0));
+//                sleepUntilTick(9);
 //                Rs2Walker.walkFastCanvas(new WorldPoint(2800,9568,3));
 //                Rs2Player.waitForXpDrop(Skill.AGILITY,3000);
 //                sleepGaussian(400,200);

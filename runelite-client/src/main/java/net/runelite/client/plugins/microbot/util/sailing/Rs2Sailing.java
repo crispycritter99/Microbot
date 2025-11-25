@@ -444,7 +444,7 @@ public class Rs2Sailing {
     }
 
     public static boolean trimSails() {
-        sleep(2500, 3500);
+//        sleep(2500, 3500);
         if (!isOnBoat()) {
             return false;
         }
