@@ -10,11 +10,12 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 @Getter
 @RequiredArgsConstructor
 public enum TitheFarmMaterial {
-    GOLOVANOVA_SEED("Golovanova seed", 34, '1', ItemID.GOLOVANOVA_FRUIT),
-    BOLOGANO_SEED("Bologano seed", 54, '2', ItemID.BOLOGANO_FRUIT),
-    LOGAVANO_SEED("Logavano seed", 74, '3', ItemID.LOGAVANO_FRUIT);
+    GOLOVANOVA_SEED("Golovanova seed", 13423,34, '1', ItemID.GOLOVANOVA_FRUIT),
+    BOLOGANO_SEED("Bologano seed", 13424,54, '2', ItemID.BOLOGANO_FRUIT),
+    LOGAVANO_SEED("Logavano seed", 13425,74, '3', ItemID.LOGAVANO_FRUIT);
 
     final String name;
+    final int id;
     final int levelRequired;
     final char option;
     final int fruitId;

@@ -351,7 +351,7 @@ int plantnumber;
         }
         WorldPoint p = new WorldPoint (plant.plantX, plant.plantY, 0);
 
-
+System.out.println(plant.isEmptyPatch());
         if (plant.isEmptyPatch()) { //start planting seeds
 
             if (Rs2Player.distanceTo(p) > 0 &&!skipnumbers.contains(plant.getIndex())) {
@@ -367,13 +367,14 @@ int plantnumber;
 
                 Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             }
-            if (Rs2Inventory.getSelectedItemId()!=13423){
+            if (Rs2Inventory.getSelectedItemId()!=13425){
                 Rs2Inventory.deselect();
                 Rs2Inventory.interact(TitheFarmMaterial.getSeedForLevel().getName(), "Use");
             }
             clickPatch(plant);
-//            Rs2Inventory.interact("gricoller's can", "Use");
-            Rs2Inventory.interact("can(", "Use");
+            Rs2Inventory.interact("gricoller's can", "Use");
+//            Rs2Inventory.interact("can("
+//            , "Use");
             sleepUntil(Rs2Player::isAnimating, config.sleepAfterPlantingSeed());
 
             TileObject gameObject = Rs2GameObject.findObjectByLocation(WorldPoint.fromRegion(Microbot.getClient().getLocalPlayer().getWorldLocation().getRegionID(),

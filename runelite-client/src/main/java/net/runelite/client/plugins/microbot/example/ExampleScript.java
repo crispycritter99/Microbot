@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
+import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.getAll;
 
 
 public class ExampleScript extends Script {
@@ -57,11 +58,11 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-//                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
+                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
 //
-//                        return;
-//
-//                }
+                        return;
+
+                }
 //                for (int i = -100; i < 100; i++) {
 //                    for (int j = -100; j < 100; j++) {
 //                        WorldPoint worldPoint = WorldPoint.getMirrorPoint( WorldPoint.fromRegion(7222,
@@ -76,17 +77,20 @@ public class ExampleScript extends Script {
 ////                        System.out.println("i = " + i + ", j = " + j);
 //                    }
 //                }
-                WorldPoint worldPoint =  WorldPoint.fromRegion(7222,
-                                29,
-                                42,
-                                Microbot.getClient().getPlane());
-                ;;
-                System.out.println(Rs2GameObject.getGameObject("golo").getWorldLocation());
-                System.out.println(worldPoint);
-                System.out.println(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint));
-//                Rs2GameObject.interact(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint));
-//                Rs2GameObject.findGameObjectByLocation(worldPoint);
-                Rs2GameObject.interact(Rs2GameObject.findObjectByLocation(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint)));
+//                System.out.println("fung");
+//                Rs2GameObject.interact(30985,"mine");
+//                Rs2Player.waitForWalking();
+
+//                if (Microbot.getClient().getHintArrowNpc()!=null) {
+//                    System.out.println("fung");
+//                    Rs2Npc.interact(Microbot.getClient().getHintArrowNpc(), "retrieve");
+//                }
+//                System.out.println("fung");
+//                Rs2Widget.waitForWidget("Items deposited here",5000);
+//                Rs2GameObject.interact(60273);
+//                Rs2Widget.waitForWidget("Large salvage",5000);
+//Rs2Widget.clickWidget("Large salvage");
+//                Rs2GameObject.interact(Rs2GameObject.findObjectByLocation(new WorldPoint(3378,2089,0)));
 //                Rs2Npc.interact(4742,"attack");
 //                sleep(400,500);
 //                Rs2Walker.walkFastCanvas(new WorldPoint(3371,9556,0));
@@ -106,7 +110,7 @@ public class ExampleScript extends Script {
 //                    sleep(400);
 
 //                Rs2Player.waitForAnimation(1000);
-//                shutdown();
+                shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);

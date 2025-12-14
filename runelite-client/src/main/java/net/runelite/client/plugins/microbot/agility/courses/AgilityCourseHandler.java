@@ -94,7 +94,7 @@ public interface AgilityCourseHandler
 	default boolean waitForCompletion(final int agilityExp, final int plane)
 	{
 		double initialHealth = Rs2Player.getHealthPercentage();
-		int timeoutMs = 15000;
+		int timeoutMs = 20000;
 		long startTime = System.currentTimeMillis();
 		long lastMovingTime = System.currentTimeMillis();
 		int waitDelay = 1000; // Default 1 second wait after movement stops

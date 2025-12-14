@@ -120,7 +120,7 @@ public class Rs2GameObject {
         return clickObject(gameObject, action);
     }
 
-    public static boolean interact(int id) {
+    public static boolean   interact(int id) {
         TileObject object = findObjectById(id);
         return clickObject(object);
     }
@@ -230,6 +230,10 @@ public class Rs2GameObject {
 	@Deprecated
     public static TileObject findObjectById(int id) {
         var list = getAll(o -> o.getId() == id);
+//                        for (TileObject i : list) {
+                    ;
+//                            System.out.println(i.getWorldLocation());
+//                }
         return list.stream().filter(x -> x.getId() == id).findFirst().orElse(null);
     }
 
