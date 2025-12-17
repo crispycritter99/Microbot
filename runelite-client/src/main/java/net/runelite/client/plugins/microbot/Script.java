@@ -74,7 +74,6 @@ public abstract class Script extends Global implements IScript {
             log.debug("Cache data is not valid, waiting...");
             return false;
         }
-
         if (Microbot.isLoggedIn()) {
             boolean hasRunEnergy = Microbot.getClient().getEnergy() > Microbot.runEnergyThreshold;
             if (Microbot.enableAutoRunOn && hasRunEnergy)
@@ -83,6 +82,7 @@ public abstract class Script extends Global implements IScript {
                 Rs2Inventory.useRestoreEnergyItem();
             }
         }
+//        System.out.println("hi");
         return true;
     }
 }

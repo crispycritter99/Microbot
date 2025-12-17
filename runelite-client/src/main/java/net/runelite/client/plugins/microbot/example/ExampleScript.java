@@ -63,6 +63,9 @@ public class ExampleScript extends Script {
                         return;
 
                 }
+                    if (Rs2Player.isInteracting()) return;
+//                    Rs2Npc.getnpc
+                    Rs2Npc.interact("Abyssal leech","attack");
 //                for (int i = -100; i < 100; i++) {
 //                    for (int j = -100; j < 100; j++) {
 //                        WorldPoint worldPoint = WorldPoint.getMirrorPoint( WorldPoint.fromRegion(7222,

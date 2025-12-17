@@ -226,11 +226,11 @@ public class Rs2Prayer {
 	private static void invokeQuickPrayer(boolean withMouse) {
 		NewMenuEntry entry = new NewMenuEntry(
 			-1,
-			QUICK_PRAYER_ORB_COMPONENT_ID,
+			QUICK_PRAYER_ORB_COMPONENT_ID+1,
 			MenuAction.CC_OP.getId(),
 			1,
 			-1,
-			"Quick-prayers"
+				!isQuickPrayerEnabled() ? "Activate" : "Deactivate"
 		);
 
 		Microbot.doInvoke(entry, withMouse ? getQuickPrayerOrbBounds() : Rs2UiHelper.getDefaultRectangle());
