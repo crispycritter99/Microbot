@@ -25,7 +25,7 @@ public class ColossalWyrmAdvancedCourse implements AgilityCourseHandler
 		return List.of(
 			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_START_LADDER_TRIGGER),
 			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_BALANCE_1_TRIGGER, -1, 2926, Operation.GREATER, Operation.GREATER_EQUAL),
-			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_ADVANCED_LADDER_1_TRIGGER, -1, 2911, Operation.GREATER, Operation.LESS_EQUAL),
+			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_ADVANCED_LADDER_1_TRIGGER, 1650, -1, Operation.LESS, Operation.GREATER),
 			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_ADVANCED_JUMP_1_TRIGGER, 1647, -1, Operation.GREATER_EQUAL, Operation.GREATER_EQUAL),
 			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_ADVANCED_BALANCE_1_TRIGGER),
 			new AgilityObstacleModel(ObjectID.VARLAMORE_WYRM_AGILITY_END_ZIPLINE_TRIGGER)

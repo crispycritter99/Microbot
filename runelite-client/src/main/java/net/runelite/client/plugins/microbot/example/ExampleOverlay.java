@@ -2,8 +2,10 @@ package net.runelite.client.plugins.microbot.example;
 
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -13,6 +15,10 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.awt.*;
+
+import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.wrecks;
+import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.findReachableObject;
+import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.getAll;
 
 public class ExampleOverlay extends OverlayPanel {
 
@@ -32,20 +38,15 @@ public class ExampleOverlay extends OverlayPanel {
                     .color(Color.GREEN)
                     .build());
 
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("" + Microbot.status)
+                    .build());
             panelComponent.getChildren().add(LineComponent.builder().build());
-            WorldPoint worldPoint =  WorldPoint.fromRegion(7222,
-                    29,
-                    42,
-                    Microbot.getClient().getPlane());
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .left(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint) +"")
-                    .build());
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .left(Rs2WorldPoint.toLocalInstance(worldPoint) +"")
-                    .build());
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .left(""+Rs2GameObject.getAll(o -> o.getWorldLocation().equals(Rs2WorldPoint.convertInstancedWorldPoint(worldPoint))))
-                    .build());
+            WorldPoint worldPoint =  Microbot.getClient().getLocalPlayer().getWorldLocation();
+
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("" + wrecks.size())
+                        .build());
 
 
         } catch(Exception ex) {

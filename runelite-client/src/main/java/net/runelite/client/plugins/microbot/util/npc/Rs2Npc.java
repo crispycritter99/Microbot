@@ -615,6 +615,7 @@ public class Rs2Npc {
      */
     @Deprecated(since = "1.7.2", forRemoval = true)
     public static boolean interact(NPC npc, String action) {
+//        System.out.println("fung");
         return interact(new Rs2NpcModel(npc), action);
     }
 
@@ -637,15 +638,20 @@ public class Rs2Npc {
      */
 
     public static boolean interact(Rs2NpcModel npc, String action) {
+        System.out.println("fung");
         if (npc == null) {
+
             log.error("Error interacting with NPC for action '{}': NPC is null", action);
             return false;
         }
 
         Microbot.status = action + " " + npc.getName();
         try {
+
             if (Microbot.isCantReachTargetDetectionEnabled && Microbot.cantReachTarget) {
+
                 if (!hasLineOfSight(npc)) {
+
                     if (Microbot.cantReachTargetRetries >= Rs2Random.between(3, 5)) {
 						Microbot.pauseAllScripts.compareAndSet(false, true);
                         Microbot.showMessage("Your bot tried to interact with an NPC for "
