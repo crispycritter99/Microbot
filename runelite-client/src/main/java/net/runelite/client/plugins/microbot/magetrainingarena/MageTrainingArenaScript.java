@@ -551,7 +551,8 @@ public class MageTrainingArenaScript extends Script {
         var item = Rs2Inventory.getLast(best.getId());
         if (item != null) {
             sleep(50,150);
-            Rs2Magic.alch(item);
+            Rs2Magic.alch(item,0,10);
+            Rs2Player.waitForXpDrop(Skill.MAGIC,1000);
             return;
         }else {
             Rs2Inventory.dropAll(6897,6896,6895,6894,6893);

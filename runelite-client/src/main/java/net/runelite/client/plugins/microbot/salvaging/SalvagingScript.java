@@ -8,13 +8,16 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.sailing.Rs2Sailing;
 import net.runelite.client.plugins.microbot.util.security.Login;
+import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.util.Arrays;
@@ -40,61 +43,68 @@ public class SalvagingScript extends Script {
 
 
                 long startTime = System.currentTimeMillis();
-                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-                        return;
+                if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
+                    return;
 
                 }
                 {
-                    String alchInput = Microbot.getConfigManager().getConfiguration(
-                            "salvage",
-                            "listOfItemsToalch",
-                            String.class);
-                    List<String> keywords = Arrays.stream(alchInput.split(","))
-                            .map(String::trim)
-                            .collect(Collectors.toList());
+                    {
+                        if (Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag")) {
+                            Rs2Inventory.interact(24482, "Fill");
+                        }
+                        String alchInput = Microbot.getConfigManager().getConfiguration(
+                                "salvage",
+                                "listOfItemsToalch",
+                                String.class);
+                        List<String> keywords = Arrays.stream(alchInput.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList());
 
-                    Rs2Inventory.all().stream()
-                            .filter(item -> {
-                                String name = item.getName().toLowerCase();
-                                return keywords.stream().anyMatch(name::contains);
-                            })
-                            .forEach(item -> {
-                                Rs2Magic.alch(item);
-                                Rs2Player.waitForXpDrop(Skill.MAGIC);
-                            });
+                        Rs2Inventory.all().stream()
+                                .filter(item -> {
+                                    String name = item.getName().toLowerCase();
+                                    return keywords.stream().anyMatch(name::contains);
+                                })
+                                .forEach(item -> {
+                                    Rs2Magic.alch(item);
+                                    Rs2Player.waitForXpDrop(Skill.MAGIC);
+                                });
 
-                    String dropInput = Microbot.getConfigManager().getConfiguration(
-                            "salvage",
-                            "listOfItemsToDrop",
-                            String.class);
-                    List<String> dropkeywords = Arrays.stream(dropInput.split(","))
-                            .map(String::trim)
-                            .collect(Collectors.toList());
+                        String dropInput = Microbot.getConfigManager().getConfiguration(
+                                "salvage",
+                                "listOfItemsToDrop",
+                                String.class);
+                        List<String> dropkeywords = Arrays.stream(dropInput.split(","))
+                                .map(String::trim)
+                                .collect(Collectors.toList());
 
-                    Rs2Inventory.all().stream()
-                            .filter(item -> {
-                                String name = item.getName().toLowerCase();
-                                return dropkeywords.stream().anyMatch(name::contains);
-                            })
-                            .forEach(item -> {
-                                Rs2Inventory.invokeMenu(item, "Drop");
-                                if (!Rs2AntibanSettings.naturalMouse)
-                                    sleep(150, 300);
-                            });
-                }
+                        Rs2Inventory.all().stream()
+                                .filter(item -> {
+                                    String name = item.getName().toLowerCase();
+                                    return dropkeywords.stream().anyMatch(name::contains);
+                                })
+                                .forEach(item -> {
+                                    Rs2Inventory.invokeMenu(item, "Drop");
+                                    if (!Rs2AntibanSettings.naturalMouse)
+                                        sleep(150, 300);
+                                });
+                    }
 //                Rs2Inventory.dropAllExcept("coins","nature","salvage","seed","amulet","dull","scroll","bottle");
 //                if (!Rs2Inventory.isFull()&&SalvagingPlugin.shouldloot) {
 //                    Rs2GameObject.interact(60273);
 //
 //
 //                }
+                }
                 if (!Rs2Inventory.isFull()&&SalvagingPlugin.shouldloot) {
                     Rs2GameObject.interact(60273);
                 Rs2Widget.waitForWidget("Dark Whip",5000);
-Rs2Widget.clickWidget("Large salvage");
+Rs2Widget.clickWidget("Plundered salvage");
                 SalvagingPlugin.shouldloot = false;
-                sleep(300,500);
+                Rs2Inventory.waitForInventoryChanges(1800);
+//                sleep(300,500);
                 }
+
                 if (!Rs2Inventory.isFull()) {
                     for (GameObject wreck : SalvagingPlugin.wrecks) {
 //                        System.out.println(wreck.getWorldLocation());
@@ -112,9 +122,12 @@ Rs2Widget.clickWidget("Large salvage");
                     }
 
                 }
-                if (Rs2Inventory.contains(32853)){
-//                    Rs2GameObject.interact(59701, "Sort-salvage");
-                    Rs2GameObject.interact(59701);
+                if (Rs2Inventory.contains("salvage",false)){
+//                    Rs2Npc.interact("Siad","command");
+//                    Rs2Dialogue.clickOption()
+                    Rs2Tile.hoverOverTile(Rs2Tile.getTile(2662,2558));
+                    Microbot.getMouse().click();
+//                    Rs2GameObject.interact("Salvaging hook");
                     sleep(1200);
                     return;
                 }

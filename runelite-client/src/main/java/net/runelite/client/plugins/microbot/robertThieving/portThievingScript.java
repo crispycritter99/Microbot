@@ -1,12 +1,15 @@
 package net.runelite.client.plugins.microbot.robertThieving;
 
 import net.runelite.api.NPC;
+import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Gembag;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -38,77 +41,33 @@ public class portThievingScript extends Script {
 
                 }
                     if (Rs2Inventory.isFull()) {
+                        Rs2Inventory.dropAll();
                         WorldPoint placeHolder = Rs2Player.getWorldLocation();
-                        Rs2DepositBox.openDepositBox();
-                        sleepUntil(Rs2DepositBox::isOpen);
-                        Rs2DepositBox.depositAll();
-////                        Rs2DepositBox.closeDepositBox();
-//                        Rs2Npc.interact("Samir","Trade");
-//                        sleepUntil(() -> Rs2Shop.openShop("Samir", false), 5000);
-                        Rs2Walker.walkFastCanvas(placeHolder);
-                        Rs2Player.waitForWalking();
-                        boolean successfullAction = false;
-                        boolean outOfStock = false;
-//                        if (Rs2Shop.isOpen()) {
-//
-//
-//                                if (Rs2Shop.isFull()) continue;
-//                                // Check if name is purely numeric or alphanumeric
-//                                if (itemName.matches("\\d+")) {
-//                                    while (isRunning() && processSellAction(Integer.parseInt(itemName), "50")) {
-//                                        sleepGaussian(200, 40);
-//
-//                                    }
-//                                } else {
-//                                    while (isRunning() && processSellAction(itemName, "50")) {
-//                                        sleepGaussian(200, 40);
-//
-//                                    }
-//                                }
-//
-//                        }
-//                        Rs2Npc.interact("Amos","Trade");
-//                        sleepUntil(() -> Rs2Shop.openShop("Amos", false), 5000);
+//                        Rs2DepositBox.openDepositBox();
+//                        sleepUntil(Rs2DepositBox::isOpen);
+//                        Rs2DepositBox.depositAll();
 //                        Rs2Walker.walkFastCanvas(placeHolder);
 //                        Rs2Player.waitForWalking();
-//
-//                        if (Rs2Shop.isOpen()) {
-//                            for (String itemName : portThievingPlugin.getItemNames()) {
-//                                if (!isRunning() || Microbot.pauseAllScripts.get()) break;
-//                                if (itemName.length() <= 1) continue;
-//
-//                                if (Rs2Shop.isFull()) continue;
-//                                // Check if name is purely numeric or alphanumeric
-//                                if (itemName.matches("\\d+")) {
-//                                    while (isRunning() && processSellAction(Integer.parseInt(itemName), "50")) {
-//                                        sleepGaussian(200, 40);
-//
-//                                    }
-//                                } else {
-//                                    while (isRunning() && processSellAction(itemName, "50")) {
-//                                        sleepGaussian(200, 40);
-//
-//                                    }
-//                                }
-//                            }
-//                        }
+                        boolean successfullAction = false;
+                        boolean outOfStock = false;
                     }
-                    WorldPoint silverPatrolSpot = new WorldPoint(1866, 3290, 0);
+                    WorldPoint silverPatrolSpot = new WorldPoint(1869, 3290, 0);
                     WorldPoint spicePatrolSpot = new WorldPoint(1864, 3290, 0);
                     Rs2NpcModel closestGuard=Rs2Npc.getNpc("Market Guard");
                     Rs2Player.getLocalPlayer().getCurrentOrientation();
                     if (closestGuard!=null) {
                         //&&Rs2Player.getLocalPlayer().getCurrentOrientation()!=1641
-                     if (closestGuard.getWorldLocation().distanceTo(silverPatrolSpot) < 1) {
-//                        sleep(0,200);
-                         sleepUntilTick(8);
-                        Rs2GameObject.interact(58104, "Steal-from");
-                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Spice stall"));
-                         sleepUntilTick(8);
-
+                     if (closestGuard.getWorldLocation().distanceTo(silverPatrolSpot) < 1&&closestGuard.getWorldLocation().distanceTo(Rs2Player.getWorldLocation())<10) {
+                         Rs2Inventory.hover(Rs2Inventory.get("Spice"));
+                         sleepUntilTick(7);
+                         Rs2Inventory.dropAmount("Spice",3, InteractOrder.ZIGZAG);
+                        Rs2GameObject.interact(58106, "Steal-from");
+//                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Spice stall"));
+                         Rs2Player.waitForXpDrop(Skill.THIEVING);
+                         Rs2Player.waitForXpDrop(Skill.THIEVING);
+                         Rs2Inventory.interact(24481,"Fill");
                          Rs2GameObject.interact(58105, "Steal-from");
-                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Silver stall"));
-//                        sleep(600);
+//                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Silver stall"));
 
                     }
 //                     else if (closestGuard.getWorldLocation().distanceTo(spicePatrolSpot) > 1&&Rs2Player.getLocalPlayer().getCurrentOrientation()!=407) {

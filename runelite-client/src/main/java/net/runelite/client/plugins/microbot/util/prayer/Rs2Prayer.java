@@ -88,7 +88,7 @@ public class Rs2Prayer {
 			MenuAction.CC_OP.getId(),
 			1,
 			-1,
-			"Activate"
+                !isPrayerActive(prayer) ? "Activate": "Deactivate"
 		);
 
 		Rectangle prayerBounds = withMouse ? getPrayerBounds(prayer) : Rs2UiHelper.getDefaultRectangle();

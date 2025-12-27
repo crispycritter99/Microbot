@@ -28,7 +28,9 @@ public class FalconryScript extends Script {
                         return;
 
                 }
-                Rs2Inventory.dropAll(false,"bones","fur");
+                if (Rs2Player.getPoseAnimation()==5160) {
+                    Rs2Inventory.dropAll(false, "bones", "fur");
+                }
                     if (FalconryPlugin.falcon!=null){
                 Rs2Npc.interact(FalconryPlugin.falcon,"retrieve");
                         sleep(500);}

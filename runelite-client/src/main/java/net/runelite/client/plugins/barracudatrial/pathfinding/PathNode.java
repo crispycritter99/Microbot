@@ -1,0 +1,20 @@
+package net.runelite.client.plugins.barracudatrial.pathfinding;
+
+import net.runelite.client.plugins.barracudatrial.route.RouteWaypoint;
+import lombok.Getter;
+import net.runelite.api.coords.WorldPoint;
+
+@Getter
+public class PathNode
+{
+	private final WorldPoint position;
+	private final double cumulativeCost;
+	private final RouteWaypoint.WaypointType waypointType;
+
+	public PathNode(WorldPoint position, double cumulativeCost)
+	{
+		this.position = position;
+		this.cumulativeCost = cumulativeCost;
+		this.waypointType = null;
+	}
+}

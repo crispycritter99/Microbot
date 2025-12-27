@@ -9,6 +9,7 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
@@ -29,6 +30,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
+import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -59,13 +61,20 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
                     if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//
+
                         return;
 
                 }
                     if (Rs2Player.isInteracting()) return;
+                    Rs2Npc.interact("Black warlock","catch");
+//                Rs2Tab.switchTo(InterfaceTab.EMOTES);
+//                Rs2Tile.hoverOverTile(Rs2Tile.getTile(3842,6441));
+
+//                Rs2Dialogue.clickOption("Other facility.");
+//                Rs2Dialogue.clickOption("Port side mithril salvaging hook (D2).");
+//                    Microbot.getMouse().click();
 //                    Rs2Npc.getnpc
-                    Rs2Npc.interact("Abyssal leech","attack");
+//                    Rs2Npc.attack("Kalphite worker");
 //                for (int i = -100; i < 100; i++) {
 //                    for (int j = -100; j < 100; j++) {
 //                        WorldPoint worldPoint = WorldPoint.getMirrorPoint( WorldPoint.fromRegion(7222,
@@ -113,7 +122,7 @@ public class ExampleScript extends Script {
 //                    sleep(400);
 
 //                Rs2Player.waitForAnimation(1000);
-                shutdown();
+//                shutdown();
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);
