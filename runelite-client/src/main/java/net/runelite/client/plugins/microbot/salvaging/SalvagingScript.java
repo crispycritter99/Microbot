@@ -7,6 +7,7 @@ import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 
+import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -15,11 +16,13 @@ import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.sailing.Rs2Sailing;
+//import net.runelite.client.plugins.microbot.util.sailing.Rs2Sailing;
+import net.runelite.client.plugins.microbot.util.player.Rs2PlayerModel;
 import net.runelite.client.plugins.microbot.util.security.Login;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +36,8 @@ public class SalvagingScript extends Script {
     NPC vorkath;
     public static boolean lootnet = false;
      boolean test = false;
+    @Inject
+    Rs2TileObjectCache rs2TileObjectCache;
     public boolean run(SalvageConfig config) {
         Microbot.enableAutoRunOn = false;
 
@@ -96,6 +101,11 @@ public class SalvagingScript extends Script {
 //
 //                }
                 }
+                var shipwreck = rs2TileObjectCache.query()
+                        .where(x -> x.getName() != null && x.getName().toLowerCase().contains("shipwreck"))
+                        .within(5)
+                        .nearestOnClientThread();
+                var player = new Rs2PlayerModel();
                 if (!Rs2Inventory.isFull()&&SalvagingPlugin.shouldloot) {
                     Rs2GameObject.interact(60273);
                 Rs2Widget.waitForWidget("Dark Whip",5000);
@@ -105,30 +115,18 @@ Rs2Widget.clickWidget("Plundered salvage");
 //                sleep(300,500);
                 }
 
-                if (!Rs2Inventory.isFull()) {
-                    for (GameObject wreck : SalvagingPlugin.wrecks) {
-//                        System.out.println(wreck.getWorldLocation());
-                        System.out.println(wreck.getWorldLocation().distanceTo(Rs2Sailing.getPlayerBoatLocation()));
-                        if (wreck.getWorldLocation().distanceTo(Rs2Sailing.getPlayerBoatLocation()) < 10) {
-                            SalvagingOverlay.isClose = true;
-
-                            Rs2GameObject.interact(60504, "Deploy");
-                            sleep(1200);
-                            return;
-                        }
-                        else {
-                            SalvagingOverlay.isClose = false;
-                        }
-                    }
+                if (!Rs2Inventory.isFull()&&shipwreck!=null) {
+                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getName().toLowerCase().contains("salvaging hook")).nearestOnClientThread().click("Deploy");
+                    sleepUntil(() -> player.getAnimation() != -1, 5000);
 
                 }
                 if (Rs2Inventory.contains("salvage",false)){
-//                    Rs2Npc.interact("Siad","command");
-//                    Rs2Dialogue.clickOption()
-                    Rs2Tile.hoverOverTile(Rs2Tile.getTile(2662,2558));
-                    Microbot.getMouse().click();
-//                    Rs2GameObject.interact("Salvaging hook");
-                    sleep(1200);
+                    rs2TileObjectCache.query()
+                            .fromWorldView()
+                            .where(x -> x.getName() != null && x.getName().equalsIgnoreCase("salvaging station"))
+                            .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
+                            .nearestOnClientThread()
+                            .click();
                     return;
                 }
                 if (2>1) return;
@@ -144,7 +142,6 @@ Rs2Widget.clickWidget("Plundered salvage");
                     Rs2Random.waitEx(3200, 800); // this sleep is required to avoid the message: please finish what you're doing before using the world switcher.
 
                 }
-                System.out.println(Rs2Sailing.getPlayerBoatLocation());
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);

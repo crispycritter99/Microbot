@@ -10,7 +10,7 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingLocalPlugin;
+import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingPlugin;
 import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingScript;
 import net.runelite.client.plugins.microbot.woodcutting.enums.ForestryEvents;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import static net.runelite.api.gameval.ObjectID.*;
 @Slf4j
 public class StrugglingSaplingEvent implements BlockingEvent {
-    private final AutoWoodcuttingLocalPlugin plugin;
+    private final AutoWoodcuttingPlugin plugin;
     private final List<Integer> ingredientIds = List.of(
         GATHERING_EVENT_SAPLING_INGREDIENT_1,
         GATHERING_EVENT_SAPLING_INGREDIENT_2,
@@ -34,7 +34,7 @@ public class StrugglingSaplingEvent implements BlockingEvent {
         GATHERING_EVENT_SAPLING_INGREDIENT_5
     );
 
-    public StrugglingSaplingEvent(AutoWoodcuttingLocalPlugin plugin) {
+    public StrugglingSaplingEvent(AutoWoodcuttingPlugin plugin) {
         this.plugin = plugin;
     }
 

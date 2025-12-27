@@ -9,7 +9,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingLocalPlugin;
+import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingPlugin;
 import net.runelite.client.plugins.microbot.woodcutting.enums.ForestryEvents;
 import org.slf4j.event.Level;
 
@@ -23,9 +23,9 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 @Slf4j
 public class RitualEvent implements BlockingEvent {
 
-    private final AutoWoodcuttingLocalPlugin plugin;
+    private final AutoWoodcuttingPlugin plugin;
 
-    public RitualEvent(AutoWoodcuttingLocalPlugin plugin) {
+    public RitualEvent(AutoWoodcuttingPlugin plugin) {
         this.plugin = plugin;
     }
 

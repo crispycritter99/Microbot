@@ -29,7 +29,7 @@ public class AutoWoodcuttingOverlay extends OverlayPanel {
 
     private final AutoWoodcuttingConfig config;
     private final Client client;
-    private final AutoWoodcuttingLocalPlugin plugin;
+    private final AutoWoodcuttingPlugin plugin;
 
     private Instant startTime;
     private int startXp;
@@ -38,7 +38,7 @@ public class AutoWoodcuttingOverlay extends OverlayPanel {
     private boolean firstRun = false;
 
     @Inject
-    AutoWoodcuttingOverlay(AutoWoodcuttingLocalPlugin plugin, AutoWoodcuttingConfig config, Client client) {
+    AutoWoodcuttingOverlay(AutoWoodcuttingPlugin plugin, AutoWoodcuttingConfig config, Client client) {
         super(plugin);
         this.plugin = plugin;
         this.config = config;
@@ -70,7 +70,7 @@ public class AutoWoodcuttingOverlay extends OverlayPanel {
 
             // Title
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("Micro Woodcutting v" + AutoWoodcuttingLocalPlugin.version)
+                    .text("Micro Woodcutting v" + AutoWoodcuttingPlugin.version)
                     .color(TITLE_COLOR)
                     .build());
 

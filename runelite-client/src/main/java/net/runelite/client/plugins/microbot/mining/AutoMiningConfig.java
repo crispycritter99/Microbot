@@ -4,9 +4,9 @@ import net.runelite.client.config.*;
 import net.runelite.client.plugins.microbot.mining.data.Rocks;
 import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
 
-@ConfigGroup("Local Mining")
+@ConfigGroup("Mining")
 @ConfigInformation("<h2>Auto Mining</h2>" +
-        "<h3>Version: "+ AutoMiningLocalPlugin.version + "</h3>" +
+        "<h3>Version: "+ AutoMiningPlugin.version + "</h3>" +
         "<p>1. <strong>Ore Selection:</strong> Choose the type of ore you wish to mine. The default ore is <em>TIN</em>.</p>" +
         "<p></p>"+
         "<p>2. <strong>Distance to Stray:</strong> Set the maximum distance in tiles that the bot can travel from its initial position. The default distance is <em>20 tiles</em>.</p>" +
@@ -107,6 +107,17 @@ public interface AutoMiningConfig extends Config {
     )
     default String itemsToBank() {
         return "ore";
+    }
+
+    @ConfigItem(
+            keyName = "clayBracelet",
+            name = "Use Clay Bracelet",
+            description = "Withdraw and equip bracelet of clay. Start script with bracelet on.",
+            position = 2,
+            section = bankingSection
+    )
+    default boolean clayBracelet() {
+        return false;
     }
 
     @ConfigItem(

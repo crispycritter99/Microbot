@@ -6,8 +6,8 @@ import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.requirement.location.ResourceLocationOption;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.woodcutting.ResourceLocationOption;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,12 +46,6 @@ public class WoodcuttingTreeLocations {
             case BLISTERWOOD:
                 return getBlisterwoodTreeLocations();
             case MAGIC:
-                return getMagicTreeLocations();
-            case CAMPHOR:
-                return getMagicTreeLocations();
-            case IRONWOOD:
-                return getMagicTreeLocations();
-            case ROSEWOOD:
                 return getMagicTreeLocations();
             case REDWOOD:
                 return getRedwoodTreeLocations();
@@ -147,13 +141,13 @@ public class WoodcuttingTreeLocations {
         
         // Lumbridge - great for beginners, close to bank
         locations.add(new ResourceLocationOption(
-                new WorldPoint(3192, 3223, 0), 
+                new WorldPoint(3192, 3223, 0),
                 "Lumbridge General Trees",false,5
         ));
         
         // Grand Exchange area - convenient banking
         locations.add(new ResourceLocationOption(
-                new WorldPoint(3151, 3231, 0), 
+                new WorldPoint(3151, 3231, 0),
                 "Grand Exchange Trees",false,1
         ));
         
@@ -388,70 +382,6 @@ public class WoodcuttingTreeLocations {
         
         
         
-        return locations;
-    }
-
-    private static List<ResourceLocationOption> getCamphorTreeLocations() {
-        List<ResourceLocationOption> locations = new ArrayList<>();
-
-        locations.add(new ResourceLocationOption(
-                new WorldPoint(2335, 3048, 0),
-                "Castle Wars Teak Trees",true,1
-        ));
-        return locations;
-    }
-
-    private static List<ResourceLocationOption> getIronwoodTreeLocations() {
-        List<ResourceLocationOption> locations = new ArrayList<>();
-
-        // Woodcutting Guild - requires 60 Woodcutting
-        Map<Skill, Integer> wcGuildSkills = new HashMap<>();
-        wcGuildSkills.put(Skill.WOODCUTTING, 60);
-        locations.add(new ResourceLocationOption(
-                new WorldPoint(1610, 3443, 0),
-                "Woodcutting Guild Magic Trees",true,1,
-                new HashMap<>(),
-                wcGuildSkills,
-                new HashMap<>(),
-                new HashMap<>(),
-                new HashMap<>()
-        ));
-
-        // Sorcerer's Tower
-        locations.add(new ResourceLocationOption(
-                new WorldPoint(2704, 3397, 0),
-                "Sorcerer's Tower Magic Tree",true,1
-        ));
-
-
-
-        return locations;
-    }
-
-    private static List<ResourceLocationOption> getRosewoodTreeLocations() {
-        List<ResourceLocationOption> locations = new ArrayList<>();
-
-        // Woodcutting Guild - requires 60 Woodcutting
-        Map<Skill, Integer> wcGuildSkills = new HashMap<>();
-        wcGuildSkills.put(Skill.WOODCUTTING, 60);
-        locations.add(new ResourceLocationOption(
-                new WorldPoint(1610, 3443, 0),
-                "Woodcutting Guild Magic Trees",true,1,
-                new HashMap<>(),
-                wcGuildSkills,
-                new HashMap<>(),
-                new HashMap<>(),
-                new HashMap<>()
-        ));
-
-        // Sorcerer's Tower
-        locations.add(new ResourceLocationOption(
-                new WorldPoint(2704, 3397, 0),
-                "Sorcerer's Tower Magic Tree",true,1
-        ));
-
-
-
         return locations;
     }
     

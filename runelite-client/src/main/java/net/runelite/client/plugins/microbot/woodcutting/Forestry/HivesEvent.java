@@ -12,7 +12,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
-import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingLocalPlugin;
+import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingPlugin;
 import net.runelite.client.plugins.microbot.woodcutting.enums.ForestryEvents;
 import net.runelite.client.plugins.microbot.woodcutting.enums.WoodcuttingTree;
 
@@ -26,12 +26,12 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 @Slf4j
 public class HivesEvent implements BlockingEvent {
 
-    private final AutoWoodcuttingLocalPlugin plugin;
+    private final AutoWoodcuttingPlugin plugin;
     private final Set<Integer> completedBeehives = new HashSet<>();
     private Rs2NpcModel currentBeehive = null;
     private int initialLogCount = -1;
     
-    public HivesEvent(AutoWoodcuttingLocalPlugin plugin) {
+    public HivesEvent(AutoWoodcuttingPlugin plugin) {
         this.plugin = plugin;
     }
 
