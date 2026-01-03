@@ -260,7 +260,7 @@ public class Rs2BoatModel implements WorldEntity, IEntity {
         return isNavigating();
     }
 
-    public  WorldPoint getPlayerBoatLocation()
+    public WorldPoint getPlayerBoatLocation()
     {
         if (boat == null)
         {

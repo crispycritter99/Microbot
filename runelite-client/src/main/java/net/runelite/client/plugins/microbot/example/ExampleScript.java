@@ -8,6 +8,7 @@ import net.runelite.api.widgets.ComponentID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.api.npc.Rs2NpcQueryable;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
@@ -60,13 +61,22 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-
-                        return;
-
-                }
-                    if (Rs2Player.isInteracting()) return;
-                    Rs2Npc.interact("Black warlock","catch");
+//                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
+//
+//                        return;
+//
+//                }
+//                    if (Rs2Player.isInteracting()) return;
+//                    Rs2Npc.interact("Black warlock","catch");
+//                    if(Rs2Dialogue.clickOption("Yes, please.")){
+//
+//                        Rs2Inventory.waitForInventoryChanges(5000);
+//                        if(Rs2Inventory.isFull()){
+//                            Rs2Inventory.dropAll("Mixed flowers");
+//                        }
+//                        Rs2Npc.interact("Flower girl","Talk-to");
+//                    }
+//                Rs2GameObject.get("pear").get
 //                Rs2Tab.switchTo(InterfaceTab.EMOTES);
 //                Rs2Tile.hoverOverTile(Rs2Tile.getTile(3842,6441));
 

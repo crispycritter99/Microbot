@@ -24,7 +24,6 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import javax.inject.Inject;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,7 @@ import java.util.stream.Collectors;
 public class AgilityScript extends Script
 {
 
-	final MicroAgilityPlugin plugin;
+	final MicroAgilityLocalPlugin plugin;
 	final MicroAgilityConfig config;
 
 	WorldPoint startPoint = null;
@@ -42,7 +41,7 @@ public class AgilityScript extends Script
 	long lastTimeoutWarning = 0;  // For throttled timeout warnings
 
 	@Inject
-	public AgilityScript(MicroAgilityPlugin plugin, MicroAgilityConfig config)
+	public AgilityScript(MicroAgilityLocalPlugin plugin, MicroAgilityConfig config)
 	{
 		this.plugin = plugin;
 		this.config = config;
@@ -71,7 +70,9 @@ public class AgilityScript extends Script
 		mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
 			try
 			{
-				if (!Microbot.isLoggedIn())
+                System.out.println("hi");
+
+                if (!Microbot.isLoggedIn())
 				{
 					return;
 				}
@@ -214,10 +215,7 @@ public class AgilityScript extends Script
 						}
 					}
 				}
-				long currentMillis = Instant.now().toEpochMilli();
-				long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
-				long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
-				// Normal obstacle interaction
+								// Normal obstacle interaction
 //				if (secondsLeft > 0 && secondsLeft < 50&&config.agilityCourse().getHandler().getCurrentObstacleIndex()==7) return;
 				if (Rs2GameObject.interact(gameObject)) {
 					// Wait for completion - this now returns quickly on XP drop

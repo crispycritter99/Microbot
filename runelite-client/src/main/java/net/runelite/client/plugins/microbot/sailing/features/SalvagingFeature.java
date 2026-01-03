@@ -54,6 +54,7 @@ public class SalvagingFeature {
                 }
 
                 rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getName().toLowerCase().contains("salvaging hook")).nearestOnClientThread().click("Deploy");
+
                 sleepUntil(() -> player.getAnimation() != -1, 5000);
 
             }

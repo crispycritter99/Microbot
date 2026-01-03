@@ -29,13 +29,14 @@ public class FalconryScript extends Script {
 
                 }
                 if (Rs2Player.getPoseAnimation()==5160) {
-                    Rs2Inventory.dropAll(false, "bones", "fur");
+                    Rs2Inventory.dropAll(false,  "fur");
+                    Rs2Inventory.dropAll(true,  "bones");
                 }
                     if (FalconryPlugin.falcon!=null){
                 Rs2Npc.interact(FalconryPlugin.falcon,"retrieve");
                         sleep(500);}
                 if (Rs2Player.getPoseAnimation()==5160){
-                    Rs2Npc.interact("Spotted kebbit", "Catch");
+                    Rs2Npc.interact("Dark kebbit", "Catch");
                     sleep(500);
                 }
                 long endTime = System.currentTimeMillis();

@@ -4,9 +4,11 @@ import net.runelite.api.GameObject;
 import net.runelite.api.GameState;
 import net.runelite.api.NPC;
 import net.runelite.api.Skill;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 
+import net.runelite.client.plugins.microbot.api.boat.models.Rs2BoatModel;
 import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
@@ -28,12 +30,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.SALVAGE_LEVEL_REQ;
 import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.findObjectById;
 
 
 public class SalvagingScript extends Script {
     public static boolean tentacle = false;
     NPC vorkath;
+    public static int chestiterate=0;
     public static boolean lootnet = false;
      boolean test = false;
     @Inject
@@ -74,7 +78,7 @@ public class SalvagingScript extends Script {
                                     Rs2Magic.alch(item);
                                     Rs2Player.waitForXpDrop(Skill.MAGIC);
                                 });
-
+                        sleep(600,1800);
                         String dropInput = Microbot.getConfigManager().getConfiguration(
                                 "salvage",
                                 "listOfItemsToDrop",
@@ -102,23 +106,37 @@ public class SalvagingScript extends Script {
 //                }
                 }
                 var shipwreck = rs2TileObjectCache.query()
-                        .where(x -> x.getName() != null && x.getName().toLowerCase().contains("shipwreck"))
-                        .within(5)
+                        .where(x -> x.getName() != null&&x.getId()==60472&& x.getName().toLowerCase().contains("shipwreck"))
+                        .within(10)
                         .nearestOnClientThread();
+                lootnet=(shipwreck!=null);
                 var player = new Rs2PlayerModel();
                 if (!Rs2Inventory.isFull()&&SalvagingPlugin.shouldloot) {
-                    Rs2GameObject.interact(60273);
+//                    Rs2GameObject.interact(60273);
+                    rs2TileObjectCache.query( )
+                            .fromWorldView()
+                            .where(x -> x.getName() != null && x.getName().toLowerCase().contains("cargo hold"))
+                            .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
+                            .nearestOnClientThread()
+                            .click();
                 Rs2Widget.waitForWidget("Dark Whip",5000);
 Rs2Widget.clickWidget("Plundered salvage");
-                SalvagingPlugin.shouldloot = false;
+
                 Rs2Inventory.waitForInventoryChanges(1800);
+                    chestiterate--;
+                    if (chestiterate<1) {
+                        SalvagingPlugin.shouldloot = false;
+                    }
 //                sleep(300,500);
+                    Rs2Widget.clickWidget("Close");
+                    sleep(600,1200);
                 }
 
                 if (!Rs2Inventory.isFull()&&shipwreck!=null) {
-                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getName().toLowerCase().contains("salvaging hook")).nearestOnClientThread().click("Deploy");
+                    //x.getName().toLowerCase().contains("salvaging hook")&&
+                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60504).nearestOnClientThread().click("Deploy");
                     sleepUntil(() -> player.getAnimation() != -1, 5000);
-
+                    return;
                 }
                 if (Rs2Inventory.contains("salvage",false)){
                     rs2TileObjectCache.query()

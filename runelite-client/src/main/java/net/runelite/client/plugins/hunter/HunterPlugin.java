@@ -78,7 +78,7 @@ public class HunterPlugin extends Plugin
 	private final Map<WorldPoint, HunterTrap> traps = new HashMap<>();
 
 	private WorldPoint lastTickLocalPlayerLocation;
-
+    public static Map<WorldPoint, HunterTrap> traplist;
 	@Provides
 	HunterConfig provideConfig(ConfigManager configManager)
 	{
@@ -382,7 +382,7 @@ public class HunterPlugin extends Plugin
 				}
 			}
 		}
-
+        traplist=traps;
 		lastTickLocalPlayerLocation = client.getLocalPlayer().getWorldLocation();
 	}
 

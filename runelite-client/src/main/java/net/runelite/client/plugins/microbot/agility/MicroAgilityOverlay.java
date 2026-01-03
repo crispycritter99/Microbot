@@ -2,7 +2,6 @@ package net.runelite.client.plugins.microbot.agility;
 
 import net.runelite.api.Skill;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.agility.ntp.NtpClient;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -10,17 +9,15 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.time.Instant;
 
 public class MicroAgilityOverlay extends OverlayPanel
 {
 	private static final int TIMEOUT_MINUTES = 5;
-	private static final long TIMEOUT_MILLIS = TIMEOUT_MINUTES * MarksOfGraceCDPlugin.MILLIS_PER_MINUTE;
-	final MicroAgilityPlugin plugin;
+	final MicroAgilityLocalPlugin plugin;
 	final MicroAgilityConfig config;
 
 	@Inject
-	MicroAgilityOverlay(MicroAgilityPlugin plugin, MicroAgilityConfig config)
+	MicroAgilityOverlay(MicroAgilityLocalPlugin plugin, MicroAgilityConfig config)
 	{
 		super(plugin);
 		this.plugin = plugin;
@@ -36,7 +33,7 @@ public class MicroAgilityOverlay extends OverlayPanel
 		{
 			panelComponent.setPreferredSize(new Dimension(200, 300));
 			panelComponent.getChildren().add(TitleComponent.builder()
-				.text("Micro Agility V" + MicroAgilityPlugin.version)
+				.text("Micro Agility V" + MicroAgilityLocalPlugin.version)
 				.color(Color.GREEN)
 				.build());
 

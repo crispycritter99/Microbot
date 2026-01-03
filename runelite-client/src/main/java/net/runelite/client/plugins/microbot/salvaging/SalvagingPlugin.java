@@ -45,7 +45,7 @@ public class SalvagingPlugin extends Plugin {
     SalvagingScript salvagingScript;
     private static final int SIZE_SALVAGEABLE_AREA = 15;
     public static boolean shouldloot = false;
-    private static final Map<Integer, Integer> SALVAGE_LEVEL_REQ = ImmutableMap.<Integer, Integer>builder()
+    public static final Map<Integer, Integer> SALVAGE_LEVEL_REQ = ImmutableMap.<Integer, Integer>builder()
             .put(ObjectID.SAILING_SMALL_SHIPWRECK, 15)
             .put(ObjectID.SAILING_FISHERMAN_SHIPWRECK, 26)
             .put(ObjectID.SAILING_BARRACUDA_SHIPWRECK, 35)
@@ -84,6 +84,7 @@ public class SalvagingPlugin extends Plugin {
             overlayManager.add(salvagingOverlay);
         }
         salvagingScript.run(config);
+
 //        wrecks.clear();
 //        stumps.clear();
     }
@@ -118,6 +119,7 @@ public class SalvagingPlugin extends Plugin {
         // Lock the plugin when the boss fight begins
         if (message.contains("cannot salvage")) {
             shouldloot=true;
+            SalvagingScript.chestiterate=5;
         }
 
     }

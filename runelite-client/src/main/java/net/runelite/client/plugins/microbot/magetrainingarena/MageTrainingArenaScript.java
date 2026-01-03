@@ -365,15 +365,16 @@ public class MageTrainingArenaScript extends Script {
         else
             itemId = bonusShape.getItemId();
         if (Rs2Inventory.contains(ItemID.MAGICTRAINING_DRAGONSTONE) || Rs2Inventory.count(itemId) >= shapesToPick) {
-            shapesToPick = Rs2Random.between(2, 4);
+            shapesToPick = Rs2Random.between(1, 3);
 
             Rs2Magic.cast(enchant);
             sleepUntil(() -> Rs2Tab.getCurrentTab() == InterfaceTab.INVENTORY);
-            sleepGaussian(600, 150);
+            sleepGaussian(300, 150);
             Rs2Inventory.interact(itemId);
-
-            sleepUntil(() -> !Rs2Inventory.contains(itemId) || itemId != ItemID.MAGICTRAINING_DRAGONSTONE && bonusShape != getBonusShape(), 20000);
-        } else if (Rs2GameObject.interact(object, "Take-from")) {
+            if (1>2) {
+                sleepUntil(() -> !Rs2Inventory.contains(itemId) || itemId != ItemID.MAGICTRAINING_DRAGONSTONE && bonusShape != getBonusShape(), 20000);
+            }
+            } else if (Rs2GameObject.interact(object, "Take-from")) {
             Rs2Inventory.waitForInventoryChanges(1000);
         } else if (Rs2Player.getWorldLocation().distanceTo(object.getWorldLocation()) > 10){
             Rs2Walker.walkFastCanvas(object.getWorldLocation());

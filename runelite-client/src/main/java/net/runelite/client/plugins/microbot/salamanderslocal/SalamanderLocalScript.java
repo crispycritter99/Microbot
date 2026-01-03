@@ -52,11 +52,11 @@ public class SalamanderLocalScript extends Script {
                 }
 
                 // Walk to area if not nearby
-                if (!isNearSalamanderArea(salamanderType)) {
-                    Microbot.log("Walking to " + salamanderType.getName() + " hunting area");
-                    Rs2Walker.walkTo(salamanderType.getHuntingPoint());
-                    return;
-                }
+//                if (!isNearSalamanderArea(salamanderType)) {
+//                    Microbot.log("Walking to " + salamanderType.getName() + " hunting area");
+//                    Rs2Walker.walkTo(salamanderType.getHuntingPoint());
+//                    return;
+//                }
 
                 // Count existing traps from plugin's trap map
                 int activeTrapCount = plugin.getTraps().size();

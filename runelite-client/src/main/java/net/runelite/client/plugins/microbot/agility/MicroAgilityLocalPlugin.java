@@ -14,8 +14,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.plugins.microbot.agility.courses.AgilityCourseHandler;
-import net.runelite.client.plugins.microbot.agility.ntp.NtpClient;
-import net.runelite.client.plugins.microbot.agility.ntp.NtpSyncState;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -23,19 +21,15 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static net.runelite.api.Skill.AGILITY;
 
 @PluginDescriptor(
 
 	name = PluginConstants.MOCROSOFT + "Local Agility",
 	description = "Microbot agility plugin",
     authors = { "Mocrosoft" },
-    version = MicroAgilityPlugin.version,
+    version = MicroAgilityLocalPlugin.version,
     minClientVersion = "2.0.0",
 	tags = {"agility", "microbot"},
     iconUrl = "https://chsami.github.io/Microbot-Hub/MicroAgilityPlugin/assets/icon.png",
@@ -44,7 +38,7 @@ import static net.runelite.api.Skill.AGILITY;
     isExternal = PluginConstants.IS_EXTERNAL
 )
 @Slf4j
-public class MicroAgilityPlugin extends Plugin
+public class MicroAgilityLocalPlugin extends Plugin
 {
 	public static final long MILLIS_PER_MINUTE = 60_000;
 	private static final int MARK_COOLDOWN_MINUTES = 3;
@@ -160,7 +154,7 @@ public class MicroAgilityPlugin extends Plugin
 		}
 	}
 
-	@Override
+
     public ConfigDescriptor getConfigDescriptor() {
 		if (Microbot.getConfigManager() == null) {
 			return null;
@@ -168,105 +162,5 @@ public class MicroAgilityPlugin extends Plugin
 		MicroAgilityConfig conf = Microbot.getConfigManager().getConfig(MicroAgilityConfig.class);
 		return Microbot.getConfigManager().getConfigDescriptor(conf);
 	}
-	@Subscribe
-	public void onStatChanged(StatChanged statChanged)
-	{
-		if (statChanged.getSkill() != AGILITY)
-			return;
 
-		Courses course = Courses.getCourse(this.client.getLocalPlayer().getWorldLocation().getRegionID());
-
-		if (course != null && Arrays.stream(course.getCourseEndWorldPoints()).anyMatch((wp) ->
-				wp.equals(this.client.getLocalPlayer().getWorldLocation())))
-		{
-			currentCourse = course;
-			lastCompleteTimeMillis = Instant.now().toEpochMilli();
-			CheckNtpSync();
-
-			hasReducedCooldown = currentCourse == Courses.ARDOUGNE &&
-					client.getVarbitValue(Varbits.DIARY_ARDOUGNE_ELITE) == 1;
-		}
-	}
-
-	@Subscribe
-	public void onGameTick(GameTick tick)
-	{
-		if (isOnCooldown)
-		{
-			if (lastCompleteMarkTimeMillis == 0)
-			{
-				isOnCooldown = false;
-				return;
-			}
-
-			long cooldownTimestamp = getCooldownTimestamp(true);
-
-			if (Instant.now().toEpochMilli() >= cooldownTimestamp)
-			{
-				isOnCooldown = false;
-				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Marks of grace cooldown has finished, run until you find your next mark.", null);
-
-				if (config.sendNotification())
-				{
-					notifier.notify("Marks of grace cooldown has finished.");
-				}
-			}
-		}
-	}
-
-	@Subscribe
-	public void onItemSpawned(ItemSpawned itemSpawned)
-	{
-		if (currentCourse == null)
-			return;
-
-		final TileItem item = itemSpawned.getItem();
-
-		if (item.getId() == ItemID.MARK_OF_GRACE)
-		{
-			lastCompleteMarkTimeMillis = lastCompleteTimeMillis;
-			isOnCooldown = true;
-		}
-	}
-
-	@Subscribe
-	public void onMenuEntryAdded(MenuEntryAdded e)
-	{
-		if (!isOnCooldown || currentCourse == null)
-			return;
-
-		if (config.swapLeftClickOnWait() && e.getIdentifier() == currentCourse.getLastObstacleId())
-		{
-			long millisLeft = getCooldownTimestamp(true) - Instant.now().toEpochMilli();
-			if (millisLeft > 0 && millisLeft / 1000 < config.swapLeftClickTimeLeft())
-			{
-				e.getMenuEntry().setDeprioritized(true);
-			}
-		}
-	}
-
-	public long getCooldownTimestamp(boolean checkForReduced)
-	{
-		if (lastCompleteMarkTimeMillis == 0)
-			return lastCompleteMarkTimeMillis;
-
-		// First convert to server timestamp to get the correct minute
-		long offsetMillis = lastCompleteMarkTimeMillis + NtpClient.SyncedOffsetMillis;
-		long minuteTruncatedMillis = offsetMillis - (offsetMillis % MILLIS_PER_MINUTE);
-		long localCooldownMillis = minuteTruncatedMillis + (MARK_COOLDOWN_MINUTES * MILLIS_PER_MINUTE);
-		long leewayAdjusted = localCooldownMillis + ((long)config.leewaySeconds() * 1000);
-		// We revert the ntp offset to get back to a local time that we locally wait for
-		long ntpAdjusted = leewayAdjusted - NtpClient.SyncedOffsetMillis;
-
-		if (checkForReduced && hasReducedCooldown && config.useShortArdougneTimer())
-			ntpAdjusted -= MILLIS_PER_MINUTE;
-
-		return ntpAdjusted;
-	}
-
-	private void CheckNtpSync()
-	{
-		if (NtpClient.SyncState == NtpSyncState.NOT_SYNCED)
-			NtpClient.startSync();
-	}
 }

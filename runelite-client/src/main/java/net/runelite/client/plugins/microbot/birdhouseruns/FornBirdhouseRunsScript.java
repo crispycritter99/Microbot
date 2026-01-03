@@ -57,7 +57,6 @@ public class FornBirdhouseRunsScript extends Script {
                 if (!initialized) {
                     if (Rs2Player.getQuestState(Quest.BONE_VOYAGE) != QuestState.FINISHED) {
                         log.error("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'");
-                        plugin.reportFinished("Birdhouse run failed, you need to finish the quest 'BONE VOYAGE'", false);
                         this.shutdown();
                         return;
                     }
@@ -71,7 +70,6 @@ public class FornBirdhouseRunsScript extends Script {
                                 Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
                                 if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
                                     log.error("Birdhouse run failed to load inventory setup");
-                                    plugin.reportFinished("Birdhouse run failed to load inventory setup", false);
                                     this.shutdown();
                                     return;
                                 }
@@ -79,7 +77,6 @@ public class FornBirdhouseRunsScript extends Script {
                             }
                         } else {
                             log.error("Failed to load inventory, inventory setup not found: {}", config.inventorySetup());
-                            plugin.reportFinished("Birdhouse run failed to load inventory setup", false);
                             this.shutdown();
                             return;
                         }
@@ -87,7 +84,6 @@ public class FornBirdhouseRunsScript extends Script {
                         // Auto bank withdrawal
                         if (!setupManualInventory()) {
                             log.error("Birdhouse run failed: {}", setupErrorMessage);
-                            plugin.reportFinished("Birdhouse run failed: " + setupErrorMessage, false);
                             this.shutdown();
                             return;
                         }
@@ -162,7 +158,6 @@ public class FornBirdhouseRunsScript extends Script {
 
                         botStatus = states.FINISHED;
                         notifier.notify(Notification.ON, "Birdhouse run is finished.");
-                        plugin.reportFinished("Birdhouse run finished",true);
                         this.shutdown();
                         break;
                     case FINISHED:
@@ -254,14 +249,14 @@ public class FornBirdhouseRunsScript extends Script {
         Rs2Inventory.waitForInventoryChanges(5000);
         
         // Withdraw chisel
-        if (!Rs2Bank.withdrawX(ItemID.CHISEL, 1)) {
+        if (!Rs2Bank.withdrawOne(ItemID.CHISEL)) {
             setupErrorMessage = "Missing chisel in bank";
             log.error(setupErrorMessage);
             return false;
         }
         
         // Withdraw hammer
-        if (!Rs2Bank.withdrawX(ItemID.HAMMER, 1)) {
+        if (!Rs2Bank.withdrawOne(ItemID.HAMMER)) {
             setupErrorMessage = "Missing hammer in bank";
             log.error(setupErrorMessage);
             return false;
@@ -279,7 +274,7 @@ public class FornBirdhouseRunsScript extends Script {
         
         for (int pendantId : pendantIds) {
             if (!isRunning()) break;
-            if (Rs2Bank.withdrawX(pendantId, 1)) {
+            if (Rs2Bank.withdrawOne(pendantId)) {
                 pendantWithdrawn = true;
                 break;
             }
@@ -307,6 +302,7 @@ public class FornBirdhouseRunsScript extends Script {
         }
         
         // Withdraw seeds (smart selection)
+        sleep(2400);
         boolean seedsWithdrawn = withdrawSeeds();
         if (!seedsWithdrawn) {
             // setupErrorMessage is set in withdrawSeeds
