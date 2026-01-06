@@ -61,13 +61,14 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-//                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//
-//                        return;
-//
-//                }
-//                    if (Rs2Player.isInteracting()) return;
-//                    Rs2Npc.interact("Black warlock","catch");
+                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
+
+                        return;
+
+                }
+                    if (Rs2Player.isInteracting()) return;
+                    Rs2Npc.interact("Black warlock","catch");
+                    sleep(600);
 //                    if(Rs2Dialogue.clickOption("Yes, please.")){
 //
 //                        Rs2Inventory.waitForInventoryChanges(5000);

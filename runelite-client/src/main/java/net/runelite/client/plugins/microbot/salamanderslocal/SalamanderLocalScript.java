@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.salamanderslocal;
 
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.hunter.HunterTrap;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -10,6 +11,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -23,6 +25,7 @@ public class SalamanderLocalScript extends Script {
     public static final int ROPE = 954;
     public static int SalamandersCaught = 0;
     public boolean hasDied = false;
+    private final String itemsToLoot = "rope,small fishing net";
 
     public boolean run(SalamanderLocalConfig config, SalamanderLocalPlugin plugin) {
         Rs2Antiban.resetAntibanSettings();
@@ -51,17 +54,21 @@ public class SalamanderLocalScript extends Script {
                     return;
                 }
 
-                // Walk to area if not nearby
-//                if (!isNearSalamanderArea(salamanderType)) {
-//                    Microbot.log("Walking to " + salamanderType.getName() + " hunting area");
-//                    Rs2Walker.walkTo(salamanderType.getHuntingPoint());
-//                    return;
-//                }
+//                 Walk to area if not nearby
+                if (!isNearSalamanderArea(salamanderType)) {
+                    Microbot.log("Walking to " + salamanderType.getName() + " hunting area");
+                    Rs2Walker.walkTo(salamanderType.getHuntingPoint());
+                    return;
+                }
 
                 // Count existing traps from plugin's trap map
                 int activeTrapCount = plugin.getTraps().size();
+                if(getSalamander(config).getName().toLowerCase().equals("red salamander")){activeTrapCount=3;}
                 int maxTraps = getMaxTrapsForHunterLevel(config);
-
+                lootRobeAndNets();
+                if (Rs2Inventory.count() > 20) {
+                    cleanInventory();
+                }
                 // Tend to active traps
                 boolean handledTrap = handleExistingTraps(plugin, config);
                 if (handledTrap) return;
@@ -184,5 +191,28 @@ public class SalamanderLocalScript extends Script {
     public void shutdown() {
         super.shutdown();
         SalamandersCaught = 0;
+    }
+    private void cleanInventory() {
+        Rs2Inventory.items().forEachOrdered(item -> {
+            if (item.getId() == ItemID.BLACK_SALAMANDER || item.getId() == ItemID.GREEN_SALAMANDER || item.getId() == ItemID.ORANGE_SALAMANDER || item.getId() == ItemID.RED_SALAMANDER || item.getId() == ItemID.IMMATURE_MOUNTAIN_SALAMANDER) {
+                Rs2Inventory.interact(item, "Release");
+                sleep(150, 350);
+            }
+        });
+    }
+
+    private void lootRobeAndNets() {
+        LootingParameters valueParams = new LootingParameters(
+                15,
+                1,
+                1,
+                1,
+                false,
+                true,
+                itemsToLoot.trim().split(",")
+        );
+        if (Rs2GroundItem.lootItemsBasedOnNames(valueParams)) {
+            Microbot.pauseAllScripts.compareAndSet(true, false);
+        }
     }
 }

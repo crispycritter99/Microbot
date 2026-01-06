@@ -119,7 +119,7 @@ public class SalvagingPlugin extends Plugin {
         // Lock the plugin when the boss fight begins
         if (message.contains("cannot salvage")) {
             shouldloot=true;
-            SalvagingScript.chestiterate=5;
+            SalvagingScript.chestiterate=10;
         }
 
     }

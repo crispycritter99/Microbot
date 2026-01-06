@@ -3,7 +3,8 @@ package net.runelite.client.plugins.microbot.sailing;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.sailing.features.SalvagingFeature;
+import net.runelite.client.plugins.microbot.sailing.features.salvaging.SalvagingScript;
+import net.runelite.client.plugins.microbot.sailing.features.trials.TrialsScript;
 
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
@@ -11,14 +12,15 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SailingScript extends Script {
 
-    private final SailingPlugin plugin;
-	private final SailingConfig config;
+    private final SailingConfig config;
+    private final SalvagingScript salvagingFeature;
+    private final TrialsScript trialsFeature;
 
-    private final SalvagingFeature salvagingFeature = new SalvagingFeature();
 	@Inject
-	public SailingScript(SailingPlugin plugin, SailingConfig config) {
-		this.plugin = plugin;
+	public SailingScript(SailingConfig config, SalvagingScript salvagingFeature, TrialsScript trialsFeature) {
 		this.config = config;
+		this.salvagingFeature = salvagingFeature;
+		this.trialsFeature = trialsFeature;
 	}
 
     public boolean run() {
@@ -27,21 +29,20 @@ public class SailingScript extends Script {
             try {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
-                long startTime = System.currentTimeMillis();
 
                 if (config.salvaging()) {
                     salvagingFeature.run(config);
                 }
 
+                if (config.trials()) {
+                    trialsFeature.run(config);
+                }
 
-                long endTime = System.currentTimeMillis();
-                long totalTime = endTime - startTime;
-                log.info("Total time for loop {}ms", totalTime);
 
             } catch (Exception ex) {
                 log.trace("Exception in main loop: ", ex);
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
     
