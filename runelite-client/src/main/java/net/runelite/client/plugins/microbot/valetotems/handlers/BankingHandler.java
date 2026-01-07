@@ -821,7 +821,8 @@ public class BankingHandler {
             int logsToWithdraw = InventoryUtils.getOptimalLogBasketLogAmountForExtendedRoute(gameSession) - InventoryUtils.getLogCount();
             int logId = InventoryUtils.getLogId();
 
-            if (!Rs2Bank.withdrawX(logId, logsToWithdraw)) {
+            if (!Rs2Bank.withdrawAll(logId)) {
+//                if (!Rs2Bank.withdrawX(logId, logsToWithdraw)) {
                 Microbot.log("Failed to withdraw logs to fill inventory");
                 return false;
             }
@@ -849,7 +850,8 @@ public class BankingHandler {
             int logsStillNeeded = InventoryUtils.getOptimalLogAmountForExtendedRoute(gameSession);
             if (logsStillNeeded > 0) {
                 Microbot.log("Withdrawing additional " + logsStillNeeded + " logs for extended route");
-                if (!Rs2Bank.withdrawX(logId, logsStillNeeded)) {
+//                if (!Rs2Bank.withdrawX(logId, logsStillNeeded)) {
+                    if (!Rs2Bank.withdrawAll(logId)) {
                     Microbot.log("Failed to withdraw additional logs");
                     return false;
                 }

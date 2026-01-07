@@ -29,7 +29,7 @@ import static net.runelite.client.plugins.microbot.util.Global.*;
 public class TotemHandler {
 
     private static final int TOTEM_INTERACTION_DISTANCE = 10;
-    private static final int ANIMAL_SEARCH_RADIUS = 17;
+    private static final int ANIMAL_SEARCH_RADIUS =  18;
     private static final long INTERACTION_TIMEOUT_MS = 5000; // 5 seconds
     private static final long CARVING_DELAY_MS = 1500; // Delay between key presses for carving
 

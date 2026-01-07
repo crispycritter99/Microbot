@@ -314,13 +314,13 @@ public class InventoryUtils {
                 }
 
                 // Interact with log basket to empty it
-                if (Rs2Inventory.interact(LOG_BASKET_ID, "Check")) {
-                    Rs2Dialogue.sleepUntilHasContinue();
-                    sleepGaussian(200, 100);
-                    Rs2Dialogue.clickContinue();
-                    Rs2Dialogue.sleepUntilHasDialogueOption("Yes");
-                    sleepGaussian(200, 100);
-                    Rs2Dialogue.keyPressForDialogueOption("Yes");
+                if (Rs2Inventory.interact(LOG_BASKET_ID, "Empty")) {
+//                    Rs2Dialogue.sleepUntilHasContinue();
+//                    sleepGaussian(200, 100);
+//                    Rs2Dialogue.clickContinue();
+//                    Rs2Dialogue.sleepUntilHasDialogueOption("Yes");
+//                    sleepGaussian(200, 100);
+//                    Rs2Dialogue.keyPressForDialogueOption("Yes");
                     Rs2Inventory.waitForInventoryChanges(1000);
                     sleepGaussian(400, 200);
                     interacted = true;

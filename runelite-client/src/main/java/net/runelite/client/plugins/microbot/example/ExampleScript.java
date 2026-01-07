@@ -61,76 +61,29 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-
-                        return;
-
-                }
-                    if (Rs2Player.isInteracting()) return;
-                    Rs2Npc.interact("Black warlock","catch");
-                    sleep(600);
-//                    if(Rs2Dialogue.clickOption("Yes, please.")){
+//                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
 //
-//                        Rs2Inventory.waitForInventoryChanges(5000);
-//                        if(Rs2Inventory.isFull()){
-//                            Rs2Inventory.dropAll("Mixed flowers");
-//                        }
-//                        Rs2Npc.interact("Flower girl","Talk-to");
-//                    }
-//                Rs2GameObject.get("pear").get
-//                Rs2Tab.switchTo(InterfaceTab.EMOTES);
-//                Rs2Tile.hoverOverTile(Rs2Tile.getTile(3842,6441));
-
-//                Rs2Dialogue.clickOption("Other facility.");
-//                Rs2Dialogue.clickOption("Port side mithril salvaging hook (D2).");
-//                    Microbot.getMouse().click();
-//                    Rs2Npc.getnpc
-//                    Rs2Npc.attack("Kalphite worker");
-//                for (int i = -100; i < 100; i++) {
-//                    for (int j = -100; j < 100; j++) {
-//                        WorldPoint worldPoint = WorldPoint.getMirrorPoint( WorldPoint.fromRegion(7222,
-//                                45+i,
-//                                34+j,
-//                                Microbot.getClient().getPlane()),true);
-//                        if(Rs2GameObject.findObjectByLocation(worldPoint)!=null) {
-//                            System.out.println("hi");
-//                        }
-////                        sleep(200);
+//                        return;
 //
-////                        System.out.println("i = " + i + ", j = " + j);
-//                    }
 //                }
-//                System.out.println("fung");
-//                Rs2GameObject.interact(30985,"mine");
-//                Rs2Player.waitForWalking();
+//                    if (Rs2Player.isInteracting()) return;
+                    if (Rs2Widget.hasVisibleWidgetText("Join fight")){
+                        Rs2Widget.clickWidget(Rs2Widget.findWidget("Join fight"));
+                        sleep(600);
+                    }
+                    if (Rs2Widget.isWidgetVisible(49938445)){
+                        Rs2Widget.clickWidget(49938445);
+                        Rs2Dialogue.sleepUntilSelectAnOption();
+                        Rs2Dialogue.keyPressForDialogueOption(1);
+                        sleep(600);
+                    }
+                    if (Rs2Widget.hasVisibleWidgetText("Sign up")){
+                        Rs2Widget.clickWidget("Sign up");
+                        sleep(600);
+                    }
+//                    Rs2Npc.interact("Black warlock","catch");
+//                    sleep(600);
 
-//                if (Microbot.getClient().getHintArrowNpc()!=null) {
-//                    System.out.println("fung");
-//                    Rs2Npc.interact(Microbot.getClient().getHintArrowNpc(), "retrieve");
-//                }
-//                System.out.println("fung");
-//                Rs2Widget.waitForWidget("Items deposited here",5000);
-//                Rs2GameObject.interact(60273);
-//                Rs2Widget.waitForWidget("Large salvage",5000);
-//Rs2Widget.clickWidget("Large salvage");
-//                Rs2GameObject.interact(Rs2GameObject.findObjectByLocation(new WorldPoint(3378,2089,0)));
-//                Rs2Npc.interact(4742,"attack");
-//                sleep(400,500);
-//                Rs2Walker.walkFastCanvas(new WorldPoint(3371,9556,0));
-//                sleepUntilTick(9);
-//                Rs2Walker.walkFastCanvas(new WorldPoint(2800,9568,3));
-//                Rs2Player.waitForXpDrop(Skill.AGILITY,3000);
-//                sleepGaussian(400,200);
-//                Rs2Player.eatAt(40);
-//                    if (Rs2Inventory.get(20885).getQuantity()>27){
-//                        Rs2Inventory.drop(20885);
-//                    }
-//
-////                Rs2GameObject.interact("Chest","Open");
-//
-//                    Rs2GameObject.interact(29742,"Open");
-//                    Rs2Player.waitForXpDrop(Skill.THIEVING,7000);
-//                    sleep(400);
 
 //                Rs2Player.waitForAnimation(1000);
 //                shutdown();

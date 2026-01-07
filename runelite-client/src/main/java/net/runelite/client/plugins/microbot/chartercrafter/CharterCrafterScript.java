@@ -136,7 +136,7 @@ public class CharterCrafterScript extends Script {
         boolean hasAstral = Rs2Inventory.hasItemAmount("Astral rune", 2);
 
         boolean hasAirSupport = ensureElementSupport("Air rune", 10, STAFF_OF_AIR, AIR_BATTLESTAFF);
-        boolean hasFireSupport = ensureElementSupport("Fire rune", 6, STAFF_OF_FIRE, FIRE_BATTLESTAFF);
+        boolean hasFireSupport = ensureElementSupport("Fire rune", 6, STAFF_OF_FIRE, "Tome of fire");
 
         hasSetup = hasPipe && hasCoins && hasAstral && hasAirSupport && hasFireSupport;
         if (!hasSetup) {
