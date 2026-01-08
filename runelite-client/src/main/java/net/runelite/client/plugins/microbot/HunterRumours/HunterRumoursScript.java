@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.HunterRumours;
 
 import net.runelite.api.NpcID;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.falconry.FalconryConfig;
@@ -20,6 +21,8 @@ import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 
 import java.util.concurrent.TimeUnit;
 
+
+
 /**
  * High-level controller for Hunter Rumours.
  * Delegates to FalconryScript / SalamanderLocalScript / AutoChinScript based on config.
@@ -27,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class HunterRumoursScript extends Script
 {
     // Wolf (Master) is in the Hunter Guild basement; taken from quest helper data.
-    private static final WorldPoint HUNTER_GUILD_WOLF_TILE = new WorldPoint(1555, 9462, 0);
+    private static final WorldPoint HUNTER_GUILD_ACO_TILE = new WorldPoint(1561, 9461, 0);
 
     private final FalconryScript falconryScript;
     private final FalconryConfig falconryConfig;
@@ -49,21 +52,25 @@ public class HunterRumoursScript extends Script
 
     public HunterRumoursScript(
             HunterRumoursConfig config,
-            FalconryScript falconryScript,
-            FalconryConfig falconryConfig,
-            AutoChinScript autoChinScript,
-            AutoHunterConfig autoHunterConfig,
-            SalamanderLocalScript salamanderScript,
-            SalamanderLocalConfig salamanderConfig
+            FalconryScript falconryScript, FalconryConfig falconryConfig,
+
+            AutoChinScript autoChinScript, AutoHunterConfig autoHunterConfig,
+
+            SalamanderLocalScript salamanderScript, SalamanderLocalConfig salamanderConfig
+
     )
     {
+
         this.config = config;
         this.falconryScript = falconryScript;
         this.falconryConfig = falconryConfig;
+
         this.autoChinScript = autoChinScript;
         this.autoHunterConfig = autoHunterConfig;
+
         this.salamanderScript = salamanderScript;
         this.salamanderConfig = salamanderConfig;
+
 
         // Stub plugin solely so salamanderScript.getTraps() doesn't NPE
         this.salamanderPluginStub = new SalamanderLocalPlugin();
@@ -106,6 +113,7 @@ public class HunterRumoursScript extends Script
         // If we're in the middle of turning in a rumour, keep doing that first.
         if (turningInRumour)
         {
+            stopActiveTask();
             if (handleTurnInRumour())
             {
                 // Turn-in complete
@@ -166,13 +174,13 @@ public class HunterRumoursScript extends Script
         switch (type)
         {
             case FALCONRY:
-                itemName = config.falconryCompletionItem();
+                itemName = "Kebbity tuft";
                 break;
             case SALAMANDERS:
-                itemName = config.salamanderCompletionItem();
+                itemName = "salamander claw";
                 break;
             case CHINCHOMPAS:
-                itemName = config.chinCompletionItem();
+                itemName = "Red chinchompa tuft";
                 break;
             default:
                 break;
@@ -183,7 +191,7 @@ public class HunterRumoursScript extends Script
             return false;
         }
 
-        return Rs2Inventory.contains(itemName);
+        return Rs2Inventory.contains(false,itemName);
     }
 
     private void startTask(HunterRumourTaskType type)
@@ -235,6 +243,7 @@ public class HunterRumoursScript extends Script
                 default:
                     break;
             }
+
         }
         catch (Exception e)
         {
@@ -255,24 +264,24 @@ public class HunterRumoursScript extends Script
     private boolean handleTurnInRumour()
     {
         // 1) Walk to Wolf if we're not close.
-        if (Rs2Player.getWorldLocation().distanceTo(HUNTER_GUILD_WOLF_TILE) > 5)
+        if (Rs2Player.getWorldLocation().distanceTo(HUNTER_GUILD_ACO_TILE) > 5)
         {
             Microbot.status = "Walking to Hunter Guild (Wolf)";
-            Rs2Walker.walkTo(HUNTER_GUILD_WOLF_TILE);
+            Rs2Walker.walkTo(HUNTER_GUILD_ACO_TILE);
             return false;
         }
 
         // 2) If not in dialogue, initiate a talk.
         if (!Rs2Dialogue.isInDialogue() && !Rs2Player.isMoving() && !Rs2Player.isAnimating())
         {
-            Rs2NpcModel wolf = Rs2Npc.getNpcs("Guild Hunter Wolf", true)
+            Rs2NpcModel wolf = Rs2Npc.getNpcs("Guild Hunter Aco", true)
                     .findFirst()
                     .orElse(null);
 
             if (wolf == null)
             {
                 // Fallback: try by ID if name lookup fails
-                wolf = Rs2Npc.getNpcs(npc -> npc.getId() == NpcID.GUILD_HUNTER_WOLF_MASTER)
+                wolf = Rs2Npc.getNpcs(npc -> npc.getId() == NpcID.GUILD_HUNTER_ACO_EXPERT)
                         .findFirst()
                         .orElse(null);
             }
@@ -285,7 +294,7 @@ public class HunterRumoursScript extends Script
             {
                 // We're near his tile but can't see him (instance/phase issue),
                 // just keep trying in future ticks.
-                Microbot.status = "Looking for Guild Hunter Wolf...";
+                Microbot.status = "Looking for Guild Hunter Aco...";
             }
             return false;
         }
@@ -306,7 +315,7 @@ public class HunterRumoursScript extends Script
 
         // 4) Once dialogue ends and we're still at Wolf, assume turn-in is done.
         if (!Rs2Dialogue.isInDialogue()
-                && Rs2Player.getWorldLocation().distanceTo(HUNTER_GUILD_WOLF_TILE) <= 5)
+                && Rs2Player.getWorldLocation().distanceTo(HUNTER_GUILD_ACO_TILE) <= 5)
         {
             // At this point, a new rumour should be assigned.
             return true;

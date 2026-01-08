@@ -63,7 +63,7 @@ public class SalamanderLocalScript extends Script {
 
                 // Count existing traps from plugin's trap map
                 int activeTrapCount = plugin.getTraps().size();
-                if(getSalamander(config).getName().toLowerCase().equals("red salamander")){activeTrapCount=3;}
+                if(getSalamander(config).getName().equals("Red salamander")){activeTrapCount=3;}
                 int maxTraps = getMaxTrapsForHunterLevel(config);
                 lootRobeAndNets();
                 if (Rs2Inventory.count() > 20) {

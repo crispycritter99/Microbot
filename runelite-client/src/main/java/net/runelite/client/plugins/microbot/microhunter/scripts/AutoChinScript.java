@@ -69,7 +69,26 @@ public class AutoChinScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-
+                if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>10){
+                    Rs2Walker.walkTo(new WorldPoint(3259,2377,0));
+                    sleep(2400);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(3258,2377+1,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(3258+1,2377,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(3258,2377-1,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(3258-1,2377,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                };
                 switch (currentState) {
                     case IDLE:
                         handleBreaks();

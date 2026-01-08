@@ -47,11 +47,7 @@ public class HunterRumoursPlugin extends Plugin
     @Inject
     private FalconryConfig falconryConfig;
 
-    @Provides
-    FalconryConfig provideFalconryConfig(ConfigManager configManager)
-    {
-        return configManager.getConfig(FalconryConfig.class);
-    }
+
 
     @Inject
     private FalconryScript falconryScript;
@@ -60,11 +56,7 @@ public class HunterRumoursPlugin extends Plugin
     @Inject
     private AutoHunterConfig autoHunterConfig;
 
-    @Provides
-    AutoHunterConfig provideAutoHunterConfig(ConfigManager configManager)
-    {
-        return configManager.getConfig(AutoHunterConfig.class);
-    }
+
 
     @Inject
     private AutoChinScript autoChinScript;
@@ -73,11 +65,7 @@ public class HunterRumoursPlugin extends Plugin
     @Inject
     private SalamanderLocalConfig salamanderConfig;
 
-    @Provides
-    SalamanderLocalConfig provideSalamanderConfig(ConfigManager configManager)
-    {
-        return configManager.getConfig(SalamanderLocalConfig.class);
-    }
+
 
     // Salamander script (uses stub plugin internally in HunterRumoursScript)
     @Inject

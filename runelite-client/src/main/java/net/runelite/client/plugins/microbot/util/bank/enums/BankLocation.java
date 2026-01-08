@@ -38,6 +38,7 @@ public enum BankLocation {
     CRAFTING_GUILD(new WorldPoint(2936, 3281, 0), true),
 	DARKFROST(new WorldPoint(1527, 3292, 0), true),
     DARKMEYER(new WorldPoint(3604, 3366, 0), true),
+    DEEPFIN_POINT(new WorldPoint(1936, 2754, 0), true),
     DORGESH_KAAN_BANK(new WorldPoint(2702, 5350, 0), true),
     DRAYNOR_VILLAGE(new WorldPoint(3093, 3245, 0), false),
     DUEL_ARENA(new WorldPoint(3381, 3268, 0), true),
