@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, LlemonDuck <napkinorton@gmail.com>
+ * Copyright (c) 2025, Zoinkwiz <https://github.com/Zoinkwiz>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +22,40 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package net.runelite.client.plugins.microbot.questhelper.panel;
 
-rootProject.name = "jshell"
-apply(from = "../common.settings.gradle.kts")
+import net.runelite.client.plugins.microbot.questhelper.steps.QuestStep;
+import lombok.Getter;
+
+import java.util.ArrayList;
+import java.util.List;
+
+// The intention is to contain a set of PanelDetails.
+// This is intended to be the structure used for containing a reorderable set of PanelDetails
+public class TopLevelPanelDetails extends PanelDetails
+{
+    @Getter
+    private final List<PanelDetails> panelDetails;
+	
+    public TopLevelPanelDetails(String header, PanelDetails... panelDetails)
+	{
+		super(header);
+		this.panelDetails = new ArrayList<>(List.of(panelDetails));
+	}
+
+	public void addPanelDetails(PanelDetails panelDetail)
+	{
+		panelDetails.add(panelDetail);
+	}
+
+	@Override
+	public boolean contains(QuestStep questStep)
+	{
+		for (PanelDetails panelDetail : panelDetails)
+		{
+			if (panelDetail.contains(questStep)) return true;
+		}
+
+		return false;
+	}
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024, LlemonDuck <napkinorton@gmail.com>
+ * Copyright (c) 2025, Zoinkwiz <https://github.com/Zoinkwiz>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,9 +22,30 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package net.runelite.client.plugins.microbot.questhelper.helpers.activities.charting.steps;
 
-rootProject.name = "client"
-apply(from = "../common.settings.gradle.kts")
+import net.runelite.client.plugins.microbot.questhelper.helpers.activities.charting.ChartingTaskDefinition;
+import net.runelite.client.plugins.microbot.questhelper.questhelpers.QuestHelper;
+import net.runelite.client.plugins.microbot.questhelper.requirements.Requirement;
+import net.runelite.api.GameObject;
+import net.runelite.api.TileObject;
 
-includeBuild("../runelite-gradle-plugin")
-includeBuild("../runelite-jshell")
+// This is a lazy implementation where we fully trust the location of the object to only have one thing to work
+public class ChartingGenericObjectStep extends ChartingTaskObjectStep
+{
+	public ChartingGenericObjectStep(QuestHelper questHelper, ChartingTaskDefinition definition, Requirement... requirements)
+	{
+		super(questHelper, -1, definition, requirements);
+	}
+
+	@Override
+	protected void handleObjects(TileObject object)
+	{
+		if (!(object instanceof GameObject))
+		{
+			return;
+		}
+
+		setObjects(object);
+	}
+}
