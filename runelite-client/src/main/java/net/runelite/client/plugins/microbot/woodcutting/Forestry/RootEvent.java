@@ -9,18 +9,17 @@ import net.runelite.client.plugins.microbot.BlockingEventPriority;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingPlugin;
+import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingLocalPlugin;
 import net.runelite.client.plugins.microbot.woodcutting.enums.ForestryEvents;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 @Slf4j
 public class RootEvent implements BlockingEvent {
 
-    private final AutoWoodcuttingPlugin plugin;
-    public RootEvent(AutoWoodcuttingPlugin plugin) {
+    private final AutoWoodcuttingLocalPlugin plugin;
+    public RootEvent(AutoWoodcuttingLocalPlugin plugin) {
         this.plugin = plugin;
     }
 
@@ -35,10 +34,12 @@ public class RootEvent implements BlockingEvent {
             // Is the hasAction Check needed?
             // If special root is present
             if (specialRoot != null)
-                return Rs2GameObject.hasAction(specialRoot.getObjectComposition(), "Chop down");
+//                return Rs2GameObject.hasAction(specialRoot.getObjectComposition(), "Chop down");
+                return true;
             // If regular root is present
             if (root != null)
-                return (Rs2GameObject.hasAction(root.getObjectComposition(), "Chop down"));
+//                return (Rs2GameObject.hasAction(root.getObjectComposition(), "Chop down"));
+            return true;
 
             return false; // No roots found
         } catch (Exception e) {

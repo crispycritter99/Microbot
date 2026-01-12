@@ -9,7 +9,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingPlugin;
+import net.runelite.client.plugins.microbot.woodcutting.AutoWoodcuttingLocalPlugin;
 import net.runelite.client.plugins.microbot.woodcutting.enums.ForestryEvents;
 
 import java.util.Comparator;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EntlingsEvent implements BlockingEvent {
 
-    private final AutoWoodcuttingPlugin plugin;
-    public EntlingsEvent(AutoWoodcuttingPlugin plugin) {
+    private final AutoWoodcuttingLocalPlugin plugin;
+    public EntlingsEvent(AutoWoodcuttingLocalPlugin plugin) {
         this.plugin = plugin;
     }
 

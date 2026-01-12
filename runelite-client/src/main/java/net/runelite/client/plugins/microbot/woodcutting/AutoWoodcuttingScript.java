@@ -72,12 +72,12 @@ public class AutoWoodcuttingScript extends Script {
     public volatile boolean cannotLightFire = false;
     WoodcuttingScriptState woodcuttingScriptState = WoodcuttingScriptState.WOODCUTTING;
     private boolean hasAutoHopMessageShown = false;
-    private final AutoWoodcuttingPlugin plugin;
+    private final AutoWoodcuttingLocalPlugin plugin;
     public int currentLogBasketCount = -1;
     private WoodcuttingTree activeTree = WoodcuttingTree.TREE;
     private ResourceLocationOption activeLocation;
     @Inject
-    public AutoWoodcuttingScript(AutoWoodcuttingPlugin plugin) {
+    public AutoWoodcuttingScript(AutoWoodcuttingLocalPlugin plugin) {
         this.plugin = plugin;
     }
     @Inject
@@ -348,6 +348,8 @@ public class AutoWoodcuttingScript extends Script {
     private boolean handleBanking(AutoWoodcuttingConfig config) {
         BankLocation nearestBank = Rs2Bank.getNearestBank();
         boolean isBankOpen = Rs2Bank.isNearBank(nearestBank, 8) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(nearestBank);
+//        boolean isBankOpen =  Rs2Bank.walkToBankAndUseBank(BankLocation.THE_GREAT_CONCH);
+
         if (!isBankOpen || !Rs2Bank.isOpen()) return false;
 
         // empty log basket first if we have one

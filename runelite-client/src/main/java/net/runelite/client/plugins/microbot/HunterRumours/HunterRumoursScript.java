@@ -9,6 +9,9 @@ import net.runelite.client.plugins.microbot.falconry.FalconryConfig;
 import net.runelite.client.plugins.microbot.falconry.FalconryScript;
 import net.runelite.client.plugins.microbot.microhunter.AutoHunterConfig;
 import net.runelite.client.plugins.microbot.microhunter.scripts.AutoChinScript;
+import net.runelite.client.plugins.microbot.sailing.SailingConfig;
+import net.runelite.client.plugins.microbot.sailing.features.salvaging.SalvagingScript;
+import net.runelite.client.plugins.microbot.sailing.features.trials.TrialsScript;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalConfig;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalPlugin;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalScript;
@@ -19,6 +22,7 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 
+import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 
@@ -29,6 +33,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class HunterRumoursScript extends Script
 {
+
     // Wolf (Master) is in the Hunter Guild basement; taken from quest helper data.
     private static final WorldPoint HUNTER_GUILD_ACO_TILE = new WorldPoint(1561, 9461, 0);
 

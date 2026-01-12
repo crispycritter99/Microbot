@@ -58,7 +58,7 @@ public class SalvagingScript extends Script {
                 }
                 {
                     {
-                        if (Rs2Inventory.contains("seed box")&&Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag","ironwood")) {
+                        if (Rs2Inventory.contains("open seed box")&&Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag","ironwood")) {
                             Rs2Inventory.interact(24482, "Fill");
                         }
                         String alchInput = Microbot.getConfigManager().getConfiguration(
@@ -106,7 +106,7 @@ public class SalvagingScript extends Script {
 //                }
                 }
                 var shipwreck = rs2TileObjectCache.query()
-                        .where(x -> x.getName() != null&&x.getId()==60474&& x.getName().toLowerCase().contains("shipwreck"))
+                        .where(x -> x.getName() != null&&(x.getId()==60474||x.getId()==60470)&& x.getName().toLowerCase().contains("shipwreck"))
                         .within(10)
                         .nearestOnClientThread();
                 lootnet=(shipwreck!=null);
@@ -120,7 +120,7 @@ public class SalvagingScript extends Script {
                             .nearestOnClientThread()
                             .click();
                 Rs2Widget.waitForWidget("Dark Whip",5000);
-Rs2Widget.clickWidget("Martial salvage");
+Rs2Widget.clickWidget("salvage");
 
                 Rs2Inventory.waitForInventoryChanges(1800);
                     chestiterate--;
