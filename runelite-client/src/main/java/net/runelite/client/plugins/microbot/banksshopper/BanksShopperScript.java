@@ -51,6 +51,10 @@ public class BanksShopperScript extends Script {
 
                 switch (state) {
                     case SHOPPING:
+                        if (Rs2Inventory.isFull()){
+                            state = ShopperState.BANKING;
+                            break;
+                        }
                         boolean missingAllRequiredItems = plugin.getItemNames().stream().noneMatch((itemName) -> {
                             if (itemName == null || itemName.isEmpty()) return false;
                             if (itemName.matches("\\d+")) {
@@ -137,7 +141,8 @@ public class BanksShopperScript extends Script {
                         if (Rs2Inventory.isFull()) {
                             WorldPoint placeHolder = Rs2Player.getWorldLocation();
                             Rs2DepositBox.openDepositBox();
-                            sleepUntil(Rs2DepositBox::isOpen);
+                            sleepUntil(Rs2DepositBox::isOpen,10000);
+                            sleep(200,700);
                             Rs2DepositBox.depositAll();
 ////                        Rs2DepositBox.closeDepositBox();
 //                        Rs2Npc.interact("Samir","Trade");
