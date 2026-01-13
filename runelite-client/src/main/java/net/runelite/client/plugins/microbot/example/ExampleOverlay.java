@@ -7,6 +7,7 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -45,7 +46,7 @@ public class ExampleOverlay extends OverlayPanel {
             WorldPoint worldPoint =  Microbot.getClient().getLocalPlayer().getWorldLocation();
 
                 panelComponent.getChildren().add(LineComponent.builder()
-                        .left("" + wrecks.size())
+                        .left("" + Rs2Widget.hasVisibleWidgetText("Join fight")+" "+Rs2Widget.hasWidget("Join fight") +" "+Rs2Widget.isWidgetVisible(49938444))
                         .build());
 
 

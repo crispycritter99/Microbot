@@ -2549,6 +2549,10 @@ public class Rs2Walker {
             Rs2Inventory.equip(finalStartingWeapon.getId());
             sleepUntil(() -> Rs2Equipment.isWearing(finalStartingWeapon.getId()));
         }
+        else{
+            Rs2Equipment.unEquip("Dramen staff");
+            sleepUntil(() -> !Rs2Equipment.isWearing("Dramen staff"));
+        }
         return true;
     }
 

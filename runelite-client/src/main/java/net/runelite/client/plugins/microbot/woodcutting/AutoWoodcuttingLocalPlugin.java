@@ -37,11 +37,11 @@ import java.util.regex.Pattern;
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Mocrosoft + "Auto Woodcutting",
+        name = PluginDescriptor.Mocrosoft + "Auto Woodcutting Local",
         description = "Microbot woodcutting plugin",
         tags = {"Woodcutting", "microbot", "skilling"},
         authors = {"Mocrosoft"},
-        version = AutoWoodcuttingPlugin.version,
+        version = AutoWoodcuttingLocalPlugin.version,
         minClientVersion = "2.0.7",
         cardUrl = "https://chsami.github.io/Microbot-Hub/AutoWoodcuttingPlugin/assets/card.jpg",
         iconUrl = "https://chsami.github.io/Microbot-Hub/AutoWoodcuttingPlugin/assets/icon.jpg",
@@ -49,7 +49,7 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
         isExternal = PluginConstants.IS_EXTERNAL
 )
 @Slf4j
-public class AutoWoodcuttingPlugin extends Plugin {
+public class AutoWoodcuttingLocalPlugin extends Plugin {
     public static final String version = "1.7.8";
     @Inject
     @Getter(AccessLevel.MODULE)

@@ -229,6 +229,8 @@ public class FornBirdhouseRunsScript extends Script {
         Rs2GameObject.interact(itemId, "Reset");
         Rs2Player.waitForXpDrop(Skill.CRAFTING,4000);
         Rs2Inventory.waitForInventoryChanges(1800);
+
+        Rs2Inventory.waitForInventoryChanges(1800);
         botStatus = status;
     }
 

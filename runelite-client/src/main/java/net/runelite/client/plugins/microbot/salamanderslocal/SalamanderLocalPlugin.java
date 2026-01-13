@@ -70,8 +70,8 @@ public class SalamanderLocalPlugin extends Plugin {
         overlayManager.add(salamanderOverlay);
         script = new SalamanderLocalScript();
         script.run(config, this);
-        looter = new SalamanderGroundItemLooter();
-        looter.run(config, script);
+//        looter = new SalamanderGroundItemLooter();
+//        looter.run(config, script);
     }
 
     @Override

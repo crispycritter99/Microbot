@@ -374,7 +374,8 @@ public class Rs2Magic {
         Rs2Widget.sleepUntilHasWidget("Can you repair my pouches?");
         sleep(Rs2Random.randomGaussian(900, 300));
         Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
-        Rs2Widget.clickWidget("Can you repair my pouches?", Optional.of(162), 0, true);
+//        Rs2Widget.clickWidget("Can you repair my pouches?", Optional.of(162), 0, true);
+        Rs2Dialogue.keyPressForDialogueOption("Can you repair my pouches?");
         sleep(Rs2Random.randomGaussian(900, 200));
         Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
         sleepGaussian(700,200);
