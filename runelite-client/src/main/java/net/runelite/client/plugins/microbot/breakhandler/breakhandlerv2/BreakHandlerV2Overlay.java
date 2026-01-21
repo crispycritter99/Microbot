@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.breakhandler.breakhandlerv2;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigProfile;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.breakhandler.breakhandlerv2.PluginStopHelper;
 import net.runelite.client.plugins.microbot.util.security.LoginManager;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -118,6 +119,22 @@ public class BreakHandlerV2Overlay extends OverlayPanel {
                 }
 
                 // World selection mode
+                panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Stay on current:")
+                    .right(config.ignoreWorldSwitching() ? "Yes" : "No")
+                    .rightColor(config.ignoreWorldSwitching() ? Color.GREEN : Color.LIGHT_GRAY)
+                    .build());
+
+                String stopConfigValue = config.pluginToStop();
+                String stopDisplay = PluginStopHelper.resolveDisplayName(stopConfigValue, Microbot.getPluginManager());
+                boolean hasStopTarget = !PluginStopHelper.isNone(PluginStopHelper.normalizeStoredValue(stopConfigValue, Microbot.getPluginManager()));
+
+                panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Stop plugin:")
+                    .right(stopDisplay)
+                    .rightColor(hasStopTarget ? Color.ORANGE : Color.LIGHT_GRAY)
+                    .build());
+
                 panelComponent.getChildren().add(LineComponent.builder()
                     .left("World mode:")
                     .right(config.worldSelectionMode().name())
