@@ -61,7 +61,7 @@ public enum Rs2EnsouledHead {
     }
 
     public Rs2ItemModel getInventoryHead() {
-        return Rs2Inventory.get(getItemId());
+        return Rs2Inventory.get(getItemId()-1);
     }
 
     /**
@@ -72,6 +72,7 @@ public enum Rs2EnsouledHead {
     public boolean reanimate() {
         Rs2ItemModel head = getInventoryHead();
         if (head == null || !Rs2Magic.cast(magicSpell)) {
+//            System.out.println(!Rs2Magic.canCast(magicSpell)||head==null);
             return false;
         }
         sleepUntil(() -> Microbot.getClientThread().runOnClientThreadOptional(() -> Rs2Tab.getCurrentTab() == InterfaceTab.INVENTORY).orElse(false), 5000);
@@ -85,7 +86,7 @@ public enum Rs2EnsouledHead {
     public static Rs2EnsouledHead forItem(Rs2ItemModel item) {
         if (item == null) return null;
         int itemId = item.getId();
-        return Arrays.stream(values()).filter(e -> e.getItemId() == itemId).findFirst().orElse(null);
+        return Arrays.stream(values()).filter(e -> e.getItemId()-1 == itemId).findFirst().orElse(null);
     }
 
     public static boolean isNpcReanimated(Rs2NpcModel npc) {

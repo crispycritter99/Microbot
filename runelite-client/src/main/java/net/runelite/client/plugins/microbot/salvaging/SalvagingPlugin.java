@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.salvaging;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
+import net.runelite.api.Client;
 import net.runelite.api.events.*;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -14,11 +15,13 @@ import net.runelite.api.GameObject;
 import net.runelite.api.gameval.ObjectID;
 import com.google.common.collect.ImmutableMap;
 import net.runelite.client.util.Text;
-
+import net.runelite.api.DynamicObject;
+import net.runelite.api.Renderable;
 import java.awt.Color;
 import java.util.*;
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 @PluginDescriptor(
@@ -31,20 +34,28 @@ import java.util.stream.Collectors;
 public class SalvagingPlugin extends Plugin {
     @Inject
     private SalvageConfig config;
+
+//    public SalvagingPlugin(Client client) {
+//        this.client = client;
+//    }
+    private final Map<Integer, GameObject> extractors = new HashMap<>();
     @Provides
     SalvageConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(SalvageConfig.class);
     }
-
+    private boolean notified = false;
     @Inject
     private OverlayManager overlayManager;
     @Inject
     private SalvagingOverlay salvagingOverlay;
-
+//    private final Client client;
     @Inject
     SalvagingScript salvagingScript;
     private static final int SIZE_SALVAGEABLE_AREA = 15;
+    private static final int ANIMATION_CRYSTAL_EXTRACTOR_CRYSTAL_HARVESTABLE = 13177;
     public static boolean shouldloot = false;
+    public static boolean shouldHarvest = false;
+    public static boolean Harvestable = false;
     public static final Map<Integer, Integer> SALVAGE_LEVEL_REQ = ImmutableMap.<Integer, Integer>builder()
             .put(ObjectID.SAILING_SMALL_SHIPWRECK, 15)
             .put(ObjectID.SAILING_FISHERMAN_SHIPWRECK, 26)
@@ -106,6 +117,31 @@ public class SalvagingPlugin extends Plugin {
         } else {
             ticks = 10;
         }
+        int wvId = Microbot.getClient().getLocalPlayer().getWorldView().getId();
+        GameObject extractor = extractors.get(wvId);
+        if (extractor == null)
+        {
+         return;
+        }
+
+        if (extractor.getId() == ObjectID.SAILING_CRYSTAL_EXTRACTOR_ACTIVATED) {
+            Renderable r = extractor.getRenderable();
+            if (!(r instanceof DynamicObject)) {
+                return;
+            }
+
+            DynamicObject dyn = (DynamicObject) r;
+            int anim = dyn.getAnimation() != null ? dyn.getAnimation().getId() : -1;
+            if (anim == ANIMATION_CRYSTAL_EXTRACTOR_CRYSTAL_HARVESTABLE) {
+                shouldHarvest = true;
+                Harvestable = true;
+            } else {
+                shouldHarvest = false;
+                Harvestable = false;
+                notified = false;
+
+            }
+        }
 
     }
     @Subscribe
@@ -119,9 +155,11 @@ public class SalvagingPlugin extends Plugin {
         // Lock the plugin when the boss fight begins
         if (message.contains("cannot salvage")) {
             shouldloot=true;
-            SalvagingScript.chestiterate=10;
+            SalvagingScript.chestiterate=8;
         }
-
+        if (message.contains("Your crystal extractor has harvested a crystal mote")){
+            shouldHarvest=true;
+        }
     }
 
     @Subscribe
@@ -258,5 +296,18 @@ public class SalvagingPlugin extends Plugin {
                 .map(Text::standardize)
                 .filter(entry -> !entry.isEmpty())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+
+    public Dimension render(Graphics2D g)
+    {
+
+
+
+
+
+
+
+        return null;
     }
 }

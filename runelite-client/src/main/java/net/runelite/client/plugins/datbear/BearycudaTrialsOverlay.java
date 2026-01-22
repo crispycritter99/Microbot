@@ -1,0 +1,548 @@
+package net.runelite.client.plugins.datbear;
+
+import net.runelite.api.Point;
+import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.*;
+import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.SpriteManager;
+import net.runelite.client.ui.overlay.Overlay;
+import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.ui.overlay.OverlayPosition;
+import net.runelite.client.ui.overlay.OverlayUtil;
+import net.runelite.client.ui.overlay.outline.ModelOutlineRenderer;
+
+import javax.inject.Inject;
+
+import net.runelite.client.plugins.datbear.data.Directions;
+import net.runelite.client.plugins.datbear.data.TrialRoute;
+import net.runelite.client.plugins.datbear.overlay.WorldLines;
+import net.runelite.client.plugins.datbear.overlay.WorldPerspective;
+
+import lombok.extern.slf4j.Slf4j;
+
+import java.awt.*;
+
+@Slf4j
+public class BearycudaTrialsOverlay extends Overlay {
+    @Inject
+    private ItemManager itemManager;
+
+    @Inject
+    private SpriteManager spriteManager;
+
+    @Inject
+    private ModelOutlineRenderer modelOutlineRenderer;
+
+    private Client client;
+    private BearycudaTrialsPlugin plugin;
+    private BearycudaTrialsConfig config;
+
+    private final int MOTE_SPRITE_ID = 7075;
+    private int nextMoteIndex = -1;
+
+    @Inject
+    public BearycudaTrialsOverlay(Client client, BearycudaTrialsPlugin plugin, BearycudaTrialsConfig config) {
+        super();
+        setPosition(OverlayPosition.DYNAMIC);
+        setLayer(OverlayLayer.ABOVE_WIDGETS);
+        this.client = client;
+        this.plugin = plugin;
+        this.config = config;
+    }
+
+    @Override
+    public Dimension render(Graphics2D graphics) {
+        if (client.getGameState() != GameState.LOGGED_IN)
+            return null;
+
+        var player = client.getLocalPlayer();
+        if (player == null)
+            return null;
+
+        var boatLocation = BoatLocation.fromLocal(client, player.getLocalLocation());
+        if (boatLocation == null)
+            return null;
+
+        var playerLocation = player.getWorldLocation();
+
+        renderLastMenuCanvasWorldPointOutline(graphics);
+        highlightTrimmableSails(graphics);
+
+        var route = plugin.getActiveTrialRoute();
+        if (route == null) {
+            if (config.showDebugOverlay()) {
+                renderDebugInfo(graphics, route);
+            }
+            return null;
+        }
+
+        renderTrueInfo(graphics, boatLocation, playerLocation);
+        renderPortalArrows(graphics, route, playerLocation);
+        highlightToadFlags(graphics, boatLocation);
+        highlightCrates(graphics);
+
+        renderWindMote(graphics);
+        renderWindMoteCooldown(graphics);
+        highlightTrialBoat(graphics, boatLocation);
+
+        var visible = plugin.getVisibleActiveLineForPlayer(boatLocation, 5);
+        if (config.showRouteLines() && visible.size() >= 2) {
+            WorldLines.drawLinesOnWorld(graphics, client, visible, config.routeLineColor(), boatLocation.getPlane());
+        }
+
+        renderRouteDots(graphics, route);
+
+        if (config.showDebugOverlay()) {
+            renderDebugInfo(graphics, route);
+        }
+        return null;
+    }
+
+    private void renderTrueInfo(Graphics2D graphics, WorldPoint boatLocation, WorldPoint playerLocation) {
+        if (config.showBoatTrueTile()) {
+            highlightBoatTrueTile(graphics, boatLocation);
+        }
+
+        if (config.showHoveredHeading()) {
+            renderHeadingTriangle(graphics, playerLocation, plugin.getHoveredHeadingDirection(), config.hoveredHeadingColor(), 30, 8);
+        }
+
+        if (config.showRequestedHeading()) {
+            renderHeadingTriangle(graphics, playerLocation, plugin.getRequestedHeadingDirection(), config.requestedHeadingColor(), 30, 8);
+        }
+
+        if (config.showCurrentHeading()) {
+            renderHeadingTriangle(graphics, playerLocation, plugin.getCurrentHeadingDirection(), config.currentHeadingColor(), 30, 8);
+        }
+    }
+
+    private void renderRouteDots(Graphics2D graphics, TrialRoute route) {
+        var nextIndices = plugin.getNextUnvisitedIndicesForActiveRoute(5);
+        if (config.showRouteDots()) {
+            for (int idx : nextIndices) {
+                if (route.Points == null || idx < 0 || idx >= route.Points.size())
+                    continue;
+                var real = route.Points.get(idx);
+                var wp = WorldPerspective.getInstanceWorldPointFromReal(client, client.getTopLevelWorldView(), real);
+                if (wp == null)
+                    continue;
+                var pts = WorldPerspective.worldToCanvasWithOffset(client, wp, wp.getPlane());
+                if (pts.isEmpty())
+                    continue;
+                var p = pts.get(0);
+
+                renderLineDots(graphics, wp, config.routeDotColor(), idx, p);
+            }
+        }
+    }
+
+    private void renderLineDots(Graphics2D graphics, WorldPoint wp, Color color, int i, Point start) {
+        final int size = (i == 0 ? 10 : 6);
+        final Color fill = color;
+        final Color border = new Color(0, 0, 0, 200);
+
+        graphics.setColor(fill);
+        graphics.fillOval(start.getX() - size / 2, start.getY() - size / 2, size, size);
+
+        graphics.setColor(border);
+        graphics.setStroke(new BasicStroke(2f));
+        graphics.drawOval(start.getX() - size / 2, start.getY() - size / 2, size, size);
+
+        // Draw label (index) near the point so it's easy to match route-to-data
+        final String label = String.valueOf(i);
+        graphics.setColor(Color.BLACK);
+        graphics.setFont(graphics.getFont().deriveFont(Font.BOLD, 12f));
+        graphics.drawString(label, start.getX() + (size / 2) + 2, start.getY() - (size / 2) - 2);
+    }
+
+    private void renderDebugInfo(Graphics2D graphics, TrialRoute active) {
+        if (client.getGameState() != GameState.LOGGED_IN) {
+            return;
+        }
+
+        var player = client.getLocalPlayer();
+        if (player == null)
+            return;
+
+        int x = 10;
+        int y = 200;
+        graphics.setFont(graphics.getFont().deriveFont(Font.BOLD, 15f));
+        graphics.setColor(Color.WHITE);
+
+        graphics.drawString("tick = " + client.getTickCount(), x, y += 15);
+        graphics.drawString("boarded boat = " + plugin.getBoardedBoat(), x, y += 15);
+
+        var boatLoc = BoatLocation.fromLocal(client, player.getLocalLocation());
+        var playerLoc = player.getWorldLocation();
+        graphics.drawString("boat loc = " + (boatLoc == null ? "null" : boatLoc.toString()), x, y += 15);
+        graphics.drawString("player loc = " + (playerLoc == null ? "null" : playerLoc.toString()), x, y += 15);
+        if (active != null) {
+            graphics.drawString("active route = " + active.Location + " " + active.Rank, x, y += 15);
+        } else {
+            graphics.drawString("active route = null", x, y += 15);
+        }
+        graphics.drawString("last visited idx = " + plugin.getLastVisitedIndex(), x, y += 15);
+        graphics.drawString("toad flag idx = " + plugin.getHighlightedToadFlagIndex(), x, y += 15);
+        graphics.drawString("next mote idx = " + nextMoteIndex, x, y += 15);
+
+        // Varbit-derived plugin state
+        graphics.drawString("boatSpawnedAngle = " + plugin.getBoatSpawnedAngle(), x, y += 15);
+        graphics.drawString("boatSpawnedFineX = " + plugin.getBoatSpawnedFineX(), x, y += 15);
+        graphics.drawString("boatSpawnedFineZ = " + plugin.getBoatSpawnedFineZ(), x, y += 15);
+        graphics.drawString("boatBaseSpeed = " + plugin.getBoatBaseSpeed(), x, y += 15);
+        graphics.drawString("boatSpeedCap = " + plugin.getBoatSpeedCap(), x, y += 15);
+        graphics.drawString("boatSpeedBoostDuration = " + plugin.getBoatSpeedBoostDuration(), x, y += 15);
+        graphics.drawString("windMoteReleasedTick = " + plugin.getWindMoteReleasedTick(), x, y += 15);
+        graphics.drawString("isInTrial = " + plugin.getIsInTrial(), x, y += 15);
+        if (config.enableCratePickupDebug()) {
+            if (plugin.getLastCratePickupDistance() > 0) {
+                graphics.drawString("lastCratePickupDistance = " + plugin.getLastCratePickupDistance(), x, y += 15);
+            }
+            if (plugin.getMinCratePickupDistance() > 0) {
+                graphics.drawString("minCratePickupDistance = " + plugin.getMinCratePickupDistance(), x, y += 15);
+            }
+            if (plugin.getMaxCratePickupDistance() > 0) {
+                graphics.drawString("maxCratePickupDistance = " + plugin.getMaxCratePickupDistance(), x, y += 15);
+            }
+        }
+
+    }
+
+    private void renderLastMenuCanvasWorldPointOutline(Graphics2D graphics) {
+        var pos = plugin.getLastMenuCanvasWorldPoint();
+        if (pos == null) {
+            return;
+        }
+
+        var localPoints = WorldPerspective.getInstanceLocalPointFromReal(client, pos);
+        if (localPoints == null || localPoints.isEmpty()) {
+            return;
+        }
+
+        for (var lp : localPoints) {
+            if (lp == null)
+                continue;
+            Polygon poly = Perspective.getCanvasTilePoly(client, lp);
+            if (poly == null)
+                continue;
+
+            // Draw a translucent fill and a bold border so the tile is obvious
+            Color fill = new Color(255, 0, 255, 45);
+            Color border = Color.MAGENTA;
+            Stroke oldStroke = graphics.getStroke();
+            Composite oldComposite = graphics.getComposite();
+
+            graphics.setColor(fill);
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.35f));
+            graphics.fill(poly);
+
+            graphics.setComposite(oldComposite);
+            graphics.setColor(border);
+            graphics.setStroke(new BasicStroke(3f));
+            graphics.draw(poly);
+
+            // restore previous graphics state
+            graphics.setStroke(oldStroke);
+            graphics.setComposite(oldComposite);
+
+            // only draw first matching instance tile
+            break;
+        }
+    }
+
+    private void highlightToadFlags(Graphics2D graphics, WorldPoint boatLocation) {
+        if (!config.showJubblyToadHighlights()) {
+            return;
+        }
+        var toadGameObjects = plugin.getToadFlagToHighlight();
+        if (toadGameObjects == null || toadGameObjects.isEmpty()) {
+            return;
+        }
+        Color inRangeColor = config.jubblyToadInRangeColor();
+        Color outRangeColor = config.jubblyToadOutOfRangeColor();
+        for (var toadGameObject : toadGameObjects) {
+            var color = toadGameObject.getWorldLocation().distanceTo(boatLocation) <= 15 ? inRangeColor : outRangeColor;
+            modelOutlineRenderer.drawOutline(toadGameObject, 3, color, 2);
+        }
+    }
+
+    private void highlightCrates(Graphics2D graphics) {
+        if (!config.showCrateHighlights()) {
+            return;
+        }
+        var crates = plugin.getTrialCratesById();
+        Color crateColor = config.crateHighlightColor();
+        for (var crate : crates.values()) {
+            modelOutlineRenderer.drawOutline(crate, 2, crateColor, 2);
+        }
+    }
+
+    private void highlightTrialBoat(Graphics2D graphics, WorldPoint boatLocation) {
+        if (!config.showTrialBoatHighlights()) {
+            return;
+        }
+        var boats = plugin.getTrialBoatsToHighlight();
+        if (boats == null || boats.isEmpty()) {
+            return;
+        }
+        Color highlightColor = config.trialBoatHighlightColor();
+        for (var boat : boats) {
+            modelOutlineRenderer.drawOutline(boat, 3, highlightColor, 2);
+        }
+    }
+
+    private void renderWindMote(Graphics2D graphics) {
+        var route = plugin.getActiveTrialRoute();
+        if (route == null || plugin.getLastVisitedIndex() < 0) {
+            return;
+        }
+        var optionalMoteIndex = route.WindMoteIndices.stream().filter(x -> x >= plugin.getLastVisitedIndex()).min(Integer::compareTo);
+        nextMoteIndex = optionalMoteIndex.isPresent() ? optionalMoteIndex.get() : -1;
+        var moteWorldPoint = nextMoteIndex != -1 && nextMoteIndex - Math.max(0, plugin.getLastVisitedIndex()) < 3 ? route.Points.get(nextMoteIndex) : null;
+        if (moteWorldPoint == null) {
+            return;
+        }
+
+        var localPoint = WorldPerspective.getInstanceLocalPointFromReal(client, moteWorldPoint);
+        if (localPoint == null || localPoint.isEmpty()) {
+            return;
+        }
+
+        var img = spriteManager.getSprite(MOTE_SPRITE_ID, 0);
+        OverlayUtil.renderImageLocation(client, graphics, localPoint.get(0), img, 0);
+    }
+
+    private void highlightTrimmableSails(Graphics2D graphics) {
+        if (!config.showTrimSailHighlights() || !plugin.isNeedsTrim()) {
+            return;
+        }
+        var sail = plugin.getSailGameObject();
+        if (sail == null || sail.getWorldView() == null) {
+            return;
+        }
+        var hull = sail.getConvexHull();
+        if (hull == null) {
+            return;
+        }
+        OverlayUtil.renderPolygon(graphics, hull, config.trimSailHighlightColor());
+    }
+
+    private void renderPortalArrows(Graphics2D graphics, TrialRoute route, WorldPoint boatLoc) {
+        var portalDirection = plugin.getVisiblePortalDirection(route);
+        if (portalDirection == null) {
+            return;
+        }
+
+        if (config.showPortalBoatArrows()) {
+            renderHeadingTriangle(graphics, boatLoc, portalDirection.BoatDirection, config.portalBoatArrowColor(), 100, 18);
+        }
+
+        if (config.showPortalRouteArrows() && portalDirection.FirstMovementDirection != portalDirection.BoatDirection) {
+            renderHeadingTriangle(graphics, boatLoc, portalDirection.FirstMovementDirection, config.portalRouteArrowColor(), 100, 18);
+            renderHeadingTriangle(graphics, boatLoc, plugin.getHoveredHeadingDirection(), config.hoveredHeadingColor(), 100, 12);
+        }
+    }
+
+    private void highlightBoatTrueTile(Graphics2D graphics, WorldPoint worldPoint) {
+        var localPoints = WorldPerspective.getInstanceLocalPointFromReal(client, worldPoint);
+        if (localPoints == null || localPoints.isEmpty()) {
+            return;
+        }
+
+        for (var lp : localPoints) {
+            if (lp == null)
+                continue;
+            var poly = Perspective.getCanvasTilePoly(client, lp);
+            if (poly == null)
+                continue;
+
+            // Draw a translucent fill and a bold border so the tile is obvious
+            Color fill = config.boatTrueTileFillColor();
+            Color border = config.boatTrueTileBorderColor();
+            Stroke oldStroke = graphics.getStroke();
+            Composite oldComposite = graphics.getComposite();
+
+            graphics.setColor(fill);
+            graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f));
+            graphics.fill(poly);
+
+            graphics.setComposite(oldComposite);
+            graphics.setColor(border);
+            graphics.setStroke(new BasicStroke(3f));
+            graphics.draw(poly);
+
+            // restore previous graphics state
+            graphics.setStroke(oldStroke);
+            graphics.setComposite(oldComposite);
+
+            // only draw first matching instance tile
+            break;
+        }
+    }
+
+    private void renderHeadingTriangle(Graphics2D graphics, WorldPoint worldPoint, Directions direction, Color color, int offset, int size) {
+        if (graphics == null || worldPoint == null || direction == null) {
+            return;
+        }
+
+        if (color == null) {
+            color = Color.WHITE;
+        }
+
+        if (offset <= 0) {
+            offset = 10;
+        }
+
+        var lp = LocalPoint.fromWorld(client, worldPoint);
+
+        if (lp == null) {
+            //log.info("LP is null for worldPoint {}", worldPoint);
+            return;
+        }
+
+        var poly = Perspective.getCanvasTilePoly(client, lp);
+        if (poly == null) {
+            //log.info("Poly is null for localPoint {}", lp);
+            return;
+        }
+
+        Rectangle bounds = poly.getBounds();
+        int centerX = bounds.x + bounds.width / 2;
+        int centerY = bounds.y + bounds.height / 2;
+
+        // Compute a world-space direction vector from the enum ordinal, then rotate by camera yaw.
+        // Assume Directions is ordered starting at South and rotating counter-clockwise in 22.5° steps.
+        int stepIndex = direction.ordinal();
+        double angleRad = Math.toRadians(stepIndex * 22.5);
+        // For stepIndex = 0 (South), we want wx=0, wy=-1, so use sin/cos with a 90° phase shift.
+        double wx = -Math.sin(angleRad);
+        double wy = -Math.cos(angleRad);
+
+        int yaw = client.getCameraYaw() & 2047;
+        double yawRad = yaw * (Math.PI / 1024.0);
+        double baseAngle = Math.atan2(wx, wy);
+        double total = yawRad + baseAngle;
+
+        double dx = Math.sin(total);
+        double dy = -Math.cos(total);
+
+        int tipX = (int) Math.round(centerX + dx * offset);
+        int tipY = (int) Math.round(centerY + dy * offset);
+
+        int baseHalfWidth = size * 3 / 4;
+        int baseBack = size;
+
+        double leftAngle = Math.atan2(dy, dx) + Math.PI / 2.0;
+        double rightAngle = Math.atan2(dy, dx) - Math.PI / 2.0;
+
+        int baseCenterX = (int) Math.round(centerX + dx * (offset - baseBack));
+        int baseCenterY = (int) Math.round(centerY + dy * (offset - baseBack));
+
+        int leftX = (int) Math.round(baseCenterX + Math.cos(leftAngle) * baseHalfWidth);
+        int leftY = (int) Math.round(baseCenterY + Math.sin(leftAngle) * baseHalfWidth);
+        int rightX = (int) Math.round(baseCenterX + Math.cos(rightAngle) * baseHalfWidth);
+        int rightY = (int) Math.round(baseCenterY + Math.sin(rightAngle) * baseHalfWidth);
+
+        int[] xs = new int[] { tipX, leftX, rightX };
+        int[] ys = new int[] { tipY, leftY, rightY };
+
+        Color border = new Color(0, 0, 0, Math.min(255, color.getAlpha()));
+        Stroke previous = graphics.getStroke();
+
+        graphics.setColor(color);
+        graphics.fillPolygon(xs, ys, 3);
+
+        graphics.setColor(border);
+        graphics.setStroke(new BasicStroke(1f));
+        graphics.drawPolygon(xs, ys, 3);
+
+        graphics.setStroke(previous);
+    }
+
+    void renderWindMoteCooldown(Graphics2D graphics) {
+        if (!config.showSpeedBoostRemaining()) {
+            return;
+        }
+
+        var durationTicks = plugin.getBoatSpeedBoostDuration();
+        var elapsedTicks = client.getTickCount() - plugin.getWindMoteReleasedTick();
+
+        if (plugin.getBoatSpeedBoostDuration() <= 0 || plugin.getWindMoteReleasedTick() <= 0 || elapsedTicks >= durationTicks) {
+            return;
+        }
+
+        var remainingRatio = 1.0 - (double) elapsedTicks / (double) durationTicks;
+        var button = plugin.getWindMoteButtonWidget();
+        if (button == null || button.isHidden() || remainingRatio <= 0) {
+            return;
+        }
+
+        var bounds = button.getBounds();
+        if (bounds == null) {
+            return;
+        }
+
+        var x = bounds.x;
+        var y = bounds.y;
+        var width = bounds.width;
+        var height = bounds.height;
+        //log.info("rendering wind mote cooldown overlay at x={}, y={}, width={}, height={}", x, y, width, height);
+
+        if (width <= 0 || height <= 0) {
+            return;
+        }
+
+        // Lerp color: remainingRatio=1 => green (0,255,0); remainingRatio=0 => red (255,0,0)
+        int r = (int) Math.round(255 * (1.0 - remainingRatio));
+        int g = (int) Math.round(255 * remainingRatio);
+        int b = 0;
+        Color durationColor = new Color(r, g, b, 150);
+
+        var oldClip = graphics.getClip();
+        var oldComposite = graphics.getComposite();
+        var oldColor = graphics.getColor();
+
+        graphics.setClip(new Rectangle(x, y, width, height));
+        //graphics.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .6f));
+        graphics.setColor(durationColor);
+
+        var centerX = x + width / 2;
+        var centerY = y + height / 2;
+        var radius = Math.max(width, height);
+        var angle = (int) Math.round(remainingRatio * 360.0);
+        // Draw remaining cooldown as a clockwise pie slice (use negative arcAngle for clockwise in AWT)
+        graphics.fillArc(centerX - radius, centerY - radius, radius * 2, radius * 2, 90, angle);
+
+        // Ticks remaining label (large font, centered). Color lerps from green->red as duration lowers.
+        int ticksRemaining = durationTicks - elapsedTicks;
+        if (ticksRemaining < 0) {
+            ticksRemaining = 0;
+        }
+
+        var textColor = Color.YELLOW;
+
+        // Choose a font size that fits inside the widget
+        int baseSize = Math.min(width, height);
+        float fontSize = Math.max(12f, baseSize * 0.6f);
+        Font oldFont = graphics.getFont();
+        Font bigFont = oldFont.deriveFont(Font.BOLD, fontSize);
+        graphics.setFont(bigFont);
+        FontMetrics fm = graphics.getFontMetrics();
+        String label = String.valueOf(ticksRemaining);
+        int textWidth = fm.stringWidth(label);
+        int textHeight = fm.getAscent();
+        int textX = x + (width - textWidth) / 2;
+        int textY = y + (height + textHeight) / 2 - fm.getDescent();
+        graphics.setColor(Color.BLACK);
+        graphics.drawString(label, textX + 1, textY + 1); // shadow for readability
+        graphics.setColor(textColor);
+        graphics.drawString(label, textX, textY);
+        graphics.setFont(oldFont);
+
+        graphics.setClip(oldClip);
+        graphics.setComposite(oldComposite);
+        graphics.setColor(oldColor);
+    }
+
+}

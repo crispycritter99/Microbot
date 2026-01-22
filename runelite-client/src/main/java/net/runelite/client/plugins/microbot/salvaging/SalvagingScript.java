@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.SALVAGE_LEVEL_REQ;
+import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.*;
 import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.findObjectById;
 
 
@@ -52,14 +52,55 @@ public class SalvagingScript extends Script {
 
 
                 long startTime = System.currentTimeMillis();
+                var extractor = rs2TileObjectCache.query()
+                        .fromWorldView()
+                        .where(x -> x.getName() != null && x.getId()==59703&&x.getName().equalsIgnoreCase("crystal extractor"))
+                        .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
+                        .nearestOnClientThread();
+                if (extractor!=null){
+                    extractor.click();
+                    sleep(2000);
+                    if(Rs2Player.getAnimation()!=13584)return;
+                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60508).nearestOnClientThread().click("Deploy");
+                }
+
+                var activeextractor = rs2TileObjectCache.query()
+                        .fromWorldView()
+                        .where(x -> x.getName() != null && x.getId()==59702&&x.getName().equalsIgnoreCase("crystal extractor"))
+                        .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
+                        .nearestOnClientThread();
+//                if (activeextractor!=null&& Harvestable&&Rs2Player.getAnimation()!=13599){
+                    if (activeextractor!=null&&SalvagingPlugin.shouldHarvest&&Rs2Player.getAnimation()!=13599){
+                    sleep(2400,5400);
+                    activeextractor.click();
+                    SalvagingPlugin.shouldHarvest=false;
+                    sleepUntilTick(4);
+                    sleepUntil(()-> !Harvestable);
+                    if(Rs2Player.getAnimation()!=13584)return;
+                    sleepGaussian(1400,600);
+                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60508).nearestOnClientThread().click("Deploy");
+                }
                 if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
                     return;
 
                 }
                 {
                     {
-                        if (Rs2Inventory.contains("open seed box")&&Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag","ironwood")) {
+                        if (Rs2Inventory.contains("open seed box")&&Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag","ironwood","toadflax","irit","avantoe","kwuarm","snapdragon","cadantine")) {
                             Rs2Inventory.interact(24482, "Fill");
+                            sleep(600,1200);
+                        }
+                        if (Rs2Inventory.contains("ensouled",false)) {
+                            Rs2Inventory.interact(19634, "Fill");
+                            sleep(600,1200);
+                        }
+                        if (Rs2Inventory.contains("grimy",false)) {
+                            Rs2Inventory.interact(24478, "Fill");
+                            sleep(600,1200);
+                        }
+                        if (Rs2Inventory.contains(false,"uncut sapphire","uncut ruby","uncut emerald")) {
+                            Rs2Inventory.interact(24481, "Fill");
+                            sleep(600,1200);
                         }
                         String alchInput = Microbot.getConfigManager().getConfiguration(
                                 "salvage",
@@ -106,7 +147,7 @@ public class SalvagingScript extends Script {
 //                }
                 }
                 var shipwreck = rs2TileObjectCache.query()
-                        .where(x -> x.getName() != null&&(x.getId()==60474||x.getId()==60470)&& x.getName().toLowerCase().contains("shipwreck"))
+                        .where(x -> x.getName() != null&&(x.getId()==60474||x.getId()==60470||x.getId()==60476||x.getId()==60478)&& x.getName().toLowerCase().contains("shipwreck"))
                         .within(10)
                         .nearestOnClientThread();
                 lootnet=(shipwreck!=null);
@@ -119,7 +160,7 @@ public class SalvagingScript extends Script {
                             .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
                             .nearestOnClientThread()
                             .click();
-                Rs2Widget.waitForWidget("Dark Whip",5000);
+                Rs2Widget.waitForWidget("Cargo Hold: Dark Whip",5000);
 Rs2Widget.clickWidget("salvage");
 
                 Rs2Inventory.waitForInventoryChanges(1800);
@@ -132,9 +173,9 @@ Rs2Widget.clickWidget("salvage");
                     sleep(600,1200);
                 }
 
-                if (!Rs2Inventory.isFull()&&shipwreck!=null) {
+                if (!Rs2Inventory.isFull()&&shipwreck!=null&&!SalvagingPlugin.shouldHarvest) {
                     //x.getName().toLowerCase().contains("salvaging hook")&&
-                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60506).nearestOnClientThread().click("Deploy");
+                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60508).nearestOnClientThread().click("Deploy");
                     sleepUntil(() -> player.getAnimation() != -1, 5000);
                     return;
                 }
@@ -145,6 +186,7 @@ Rs2Widget.clickWidget("salvage");
                             .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
                             .nearestOnClientThread()
                             .click();
+                    sleep(1200);
                     return;
                 }
                 if (2>1) return;

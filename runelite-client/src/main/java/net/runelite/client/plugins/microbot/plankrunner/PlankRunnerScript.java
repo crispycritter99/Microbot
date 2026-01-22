@@ -59,9 +59,13 @@ public class PlankRunnerScript extends Script {
 
                 switch (state) {
                     case BANKING:
-                        boolean isNearBank = Rs2Bank.isNearBank(plugin.getSawmillLocation().getBankLocation(), 15) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(plugin.getSawmillLocation().getBankLocation());
-                        if (!isNearBank || !Rs2Bank.isOpen()) return;
+//                        boolean isNearBank = Rs2Bank.isNearBank(plugin.getSawmillLocation().getBankLocation(), 15) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(plugin.getSawmillLocation().getBankLocation());
 
+                        Rs2Walker.walkFastCanvas(new WorldPoint(1408+ Rs2Random.between(-2,2),3358+Rs2Random.between(-2,2),0));
+                        sleep(3000,4000);
+                        Rs2Bank.openBank();
+                        sleepUntil(Rs2Bank::isOpen,5000);
+                        if (!Rs2Bank.isOpen()) return;
                         if (Rs2Inventory.contains(plugin.getPlank().getPlankItemId())) {
                             Rs2Bank.depositAll(plugin.getPlank().getPlankItemId());
                             Rs2Inventory.waitForInventoryChanges(1800);
@@ -132,7 +136,7 @@ public class PlankRunnerScript extends Script {
                             Microbot.status = "Running to Sawmill";
 //                            Rs2Walker.walkTo(plugin.getSawmillLocation().getWorldPoint());
                             Rs2Walker.walkFastCanvas(new WorldPoint(1396+ Rs2Random.between(-2,2),3366+Rs2Random.between(-2,2),0));
-                            sleep(3600);
+                            sleep(3000,4000);
 
                             sleepUntil(()->Rs2Npc.getNpc(NpcID.AUBURN_SAWMILL_OPERATOR)!=null,5000);
                             return;

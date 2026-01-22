@@ -42,6 +42,9 @@ public static boolean isClose = false;
             panelComponent.getChildren().add(LineComponent.builder()
                     .left(""+ SalvagingPlugin.shouldloot+" "+SalvagingScript.lootnet+" "+SalvagingScript.chestiterate)
                     .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("Harvestable "+SalvagingPlugin.Harvestable+", should Harvest "+SalvagingPlugin.shouldHarvest)
+                    .build());
 
 //            panelComponent.getChildren().add(LineComponent.builder()
 //                    .left(""+ rs2TileObjectCache.query()

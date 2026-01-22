@@ -21,6 +21,7 @@ import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
@@ -62,25 +63,18 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//
+//                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
+//                sleep(2500,7800);
+//                Rs2GameObject.interact(39095);
+//                sleep(1200);
+                Rs2Inventory.slotInteract(27,"use");
+                Rs2GameObject.interact("Chaos Altar");
+
 //                        return;
 //
 //                }
 //                    if (Rs2Player.isInteracting()) return;
-                    if (Rs2Widget.hasVisibleWidgetText("Join fight")){
-                        Rs2Widget.clickWidget(Rs2Widget.findWidget("Join fight"));
-                        sleep(600);
-                    }
-                    if (Rs2Widget.isWidgetVisible(49938445)){
-                        Rs2Widget.clickWidget(49938445);
-                        Rs2Dialogue.sleepUntilSelectAnOption();
-                        Rs2Dialogue.keyPressForDialogueOption(1);
-                        sleep(600);
-                    }
-                    if (Rs2Widget.hasVisibleWidgetText("Sign up")){
-                        Rs2Widget.clickWidget("Sign up");
-                        sleep(600);
-                    }
+
 //                    Rs2Npc.interact("Black warlock","catch");
 //                    sleep(600);
 
@@ -94,7 +88,7 @@ public class ExampleScript extends Script {
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 10, TimeUnit.MILLISECONDS);
         return true;
     }
 

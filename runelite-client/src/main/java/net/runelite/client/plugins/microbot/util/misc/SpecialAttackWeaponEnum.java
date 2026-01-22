@@ -13,6 +13,7 @@ public enum SpecialAttackWeaponEnum {
     ANCIENT_MACE("ancient mace", 1000, true),
     ARMADYL_CROSSBOW("armadyl crossbow", 400, false),
     ARMADYL_GODSWORD("armadyl godsword", 500, true),
+    ARKAN_BLADE("arkan blade",300,false),
     BANDOS_GODSWORD("bandos godsword", 500, true),
     BARRELCHEST_ANCHOR("barrelchest anchor", 500, true),
     BONE_DAGGER("bone dagger", 750, false),
