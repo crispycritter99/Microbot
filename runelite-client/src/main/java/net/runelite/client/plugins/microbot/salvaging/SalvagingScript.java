@@ -86,6 +86,7 @@ public class SalvagingScript extends Script {
                 }
                 {
                     {
+                        //squid
                         if (Rs2Inventory.contains("open seed box")&&Rs2Inventory.contains(false, "hemp", "cotton", "camphor", "frag","ironwood","toadflax","irit","avantoe","kwuarm","snapdragon","cadantine")) {
                             Rs2Inventory.interact(24482, "Fill");
                             sleep(600,1200);
