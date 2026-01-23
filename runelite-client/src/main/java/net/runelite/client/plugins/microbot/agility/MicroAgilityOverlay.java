@@ -9,13 +9,14 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.time.Instant;
 
 public class MicroAgilityOverlay extends OverlayPanel
 {
-	private static final int TIMEOUT_MINUTES = 5;
 	final MicroAgilityLocalPlugin plugin;
 	final MicroAgilityConfig config;
-
+	private static final int TIMEOUT_MINUTES = 5;
+	private static final long TIMEOUT_MILLIS = TIMEOUT_MINUTES * MicroAgilityLocalPlugin.MILLIS_PER_MINUTE;
 	@Inject
 	MicroAgilityOverlay(MicroAgilityLocalPlugin plugin, MicroAgilityConfig config)
 	{
@@ -48,65 +49,50 @@ public class MicroAgilityOverlay extends OverlayPanel
 				.left("Current Obstacle")
 				.right(Integer.toString(config.agilityCourse().getHandler().getCurrentObstacleIndex()))
 				.build());
-//			if (plugin.lastCompleteMarkTimeMillis == 0)
-//			{
-//				return null;
-//			}
-//
-//			long currentMillis = Instant.now().toEpochMilli();
-//			long millisSinceLastComplete = currentMillis - plugin.lastCompleteTimeMillis;
-//
-//			if (millisSinceLastComplete > TIMEOUT_MILLIS)
-//			{
-//				plugin.lastCompleteMarkTimeMillis = 0;
-//				plugin.lastCompleteTimeMillis = 0;
-//				plugin.currentCourse = null;
-//				return null;
-//			}
-//
-//			if (plugin.isOnCooldown)
-//			{
-//				panelComponent.getChildren().add(TitleComponent.builder()
-//						.text("Wait")
-//						.color(Color.RED)
-//						.build());
-//			}
-//			else
-//			{
-//				panelComponent.getChildren().add(TitleComponent.builder()
-//						.text("Run")
-//						.color(Color.GREEN)
-//						.build());
-//			}
-//
-//			long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
-//			long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
-//			panelComponent.getChildren().add(LineComponent.builder()
-//					.left("Time until run:")
-//					.right(String.format("%d:%02d", (secondsLeft % 3600) / 60, (secondsLeft % 60)))
-//					.build());
-//
-//			if (plugin.hasReducedCooldown)
-//			{
-//				long shortTimeSecondsLeft = Math.max(secondsLeft - 60, 0);
-//				panelComponent.getChildren().add(LineComponent.builder()
-//						.left("Reduced time:")
-//						.right(String.format("%d:%02d", (shortTimeSecondsLeft % 3600) / 60, (shortTimeSecondsLeft % 60)))
-//						.build());
-//			}
-//
-//			if (config.showDebugValues())
-//			{
-//				panelComponent.getChildren().add(LineComponent.builder()
-//						.left("NTP State:")
-//						.right(String.valueOf(NtpClient.SyncState))
-//						.build());
-//
-//				panelComponent.getChildren().add(LineComponent.builder()
-//						.left("Time offset:")
-//						.right(getReadableOffset(NtpClient.SyncedOffsetMillis))
-//						.build());
-//			}
+			long currentMillis = Instant.now().toEpochMilli();
+			long millisSinceLastComplete = currentMillis - plugin.lastCompleteTimeMillis;
+
+			if (millisSinceLastComplete > TIMEOUT_MILLIS)
+			{
+				plugin.lastCompleteMarkTimeMillis = 0;
+				plugin.lastCompleteTimeMillis = 0;
+				plugin.currentCourse = null;
+				return null;
+			}
+
+			if (plugin.isOnCooldown)
+			{
+				panelComponent.getChildren().add(TitleComponent.builder()
+						.text("Wait")
+						.color(Color.RED)
+						.build());
+			}
+			else
+			{
+				panelComponent.getChildren().add(TitleComponent.builder()
+						.text("Run")
+						.color(Color.GREEN)
+						.build());
+			}
+
+			long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
+			long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
+			panelComponent.getChildren().add(LineComponent.builder()
+					.left("Time until run:")
+					.right(String.format("%d:%02d", (secondsLeft % 3600) / 60, (secondsLeft % 60)))
+					.build());
+
+			if (plugin.hasReducedCooldown)
+			{
+				long shortTimeSecondsLeft = Math.max(secondsLeft - 60, 0);
+				panelComponent.getChildren().add(LineComponent.builder()
+						.left("Reduced time:")
+						.right(String.format("%d:%02d", (shortTimeSecondsLeft % 3600) / 60, (shortTimeSecondsLeft % 60)))
+						.build());
+			}
+
+
+
 		}
 		catch (Exception ex)
 		{

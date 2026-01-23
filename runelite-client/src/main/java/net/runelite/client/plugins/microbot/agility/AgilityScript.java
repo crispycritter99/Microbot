@@ -24,6 +24,7 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import javax.inject.Inject;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -70,9 +71,7 @@ public class AgilityScript extends Script
 		mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
 			try
 			{
-                System.out.println("hi");
-
-                if (!Microbot.isLoggedIn())
+				if (!Microbot.isLoggedIn())
 				{
 					return;
 				}
@@ -215,8 +214,12 @@ public class AgilityScript extends Script
 						}
 					}
 				}
-								// Normal obstacle interaction
-//				if (secondsLeft > 0 && secondsLeft < 50&&config.agilityCourse().getHandler().getCurrentObstacleIndex()==7) return;
+				long currentMillis = Instant.now().toEpochMilli();
+				long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
+				long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
+				int obstacleSize= config.agilityCourse().getHandler().getObstacles().size();
+								if (secondsLeft > 0 && secondsLeft < 50&&obstacleSize-config.agilityCourse().getHandler().getCurrentObstacleIndex()==1&&config.waitForMark()) return;
+				// Normal obstacle interaction
 				if (Rs2GameObject.interact(gameObject)) {
 					// Wait for completion - this now returns quickly on XP drop
 					boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp, 

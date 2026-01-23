@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.agility;
 import net.runelite.client.config.*;
 import net.runelite.client.plugins.microbot.agility.enums.AgilityCourse;
 
-@ConfigGroup("MicroLocalAgility")
+@ConfigGroup("MicroAgility")
 @ConfigInformation("Enable the plugin near the start of your selected agility course. <br />" +
 	"<b>Course requirements:</b>" +
 	"<ul>" +
@@ -110,71 +110,23 @@ public interface MicroAgilityConfig extends Config
 	{
 		return 5;
 	}
-
-	@ConfigItem(
-			keyName = "sendNotification",
-			name = "Send notification",
-			description = "Should a notification be send when the cooldown has expired",
-			position = 0
-	)
-	default boolean sendNotification()
-	{
-		return true;
-	}
-
-	@ConfigItem(
-			keyName = "swapLeftClickOnWait",
-			name = "Swap left click on wait",
-			description = "Swaps left click of last obstacle while wait is on to prevent accidental lap completion",
-			position = 1
-	)
-	default boolean swapLeftClickOnWait()
-	{
-		return false;
-	}
-
-	@ConfigItem(
-			keyName = "swapLeftClickTimeLeft",
-			name = "Swap left click on time left",
-			description = "Only swap left click when the cooldown time remaining is below this number.",
-			position = 2
-	)
-	@Units(Units.SECONDS)
-	default int swapLeftClickTimeLeft()
-	{
-		return 180;
-	}
-
-	@ConfigItem(
-			keyName = "leewaySeconds",
-			name = "Seconds of leeway",
-			description = "Grace period for when timer is triggered, increase if timings are off.",
-			position = 3
-	)
-	@Units(Units.SECONDS)
-	default int leewaySeconds()
-	{
-		return 1;
-	}
-
 	@ConfigItem(
 			keyName = "useShortArdougneTimer",
 			name = "Use short Ardougne timer",
 			description = "When having the elite Ardougne diary, there is a 50% chance to reduce the Ardougne cooldown to 2 min. Would you want to be notified after the reduced time or normal time?",
-			position = 4
+			position = 9
 	)
 	default boolean useShortArdougneTimer()
 	{
 		return true;
 	}
-
 	@ConfigItem(
-			keyName = "showDebugValues",
-			name = "Show debug values",
-			description = "Displays plugin debug values like ntp offset and state",
-			position = 5
+			keyName = "waitForMark",
+			name = "Wait for the Mark ",
+			description = "Wait at the end of the course if close to a mark being spawned",
+			position = 10
 	)
-	default boolean showDebugValues()
+	default boolean waitForMark()
 	{
 		return false;
 	}

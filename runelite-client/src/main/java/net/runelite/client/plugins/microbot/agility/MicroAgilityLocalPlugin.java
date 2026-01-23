@@ -3,17 +3,17 @@ package net.runelite.client.plugins.microbot.agility;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
-import net.runelite.api.events.*;
-import net.runelite.client.Notifier;
-import net.runelite.client.config.ConfigDescriptor;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.events.ItemSpawned;
+import net.runelite.api.events.StatChanged;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.plugins.microbot.agility.courses.AgilityCourseHandler;
+import net.runelite.client.plugins.microbot.agility.ntp.NtpClient;
+import net.runelite.client.plugins.microbot.agility.ntp.NtpSyncState;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -21,16 +21,20 @@ import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static net.runelite.api.Skill.AGILITY;
+
 @PluginDescriptor(
 
-	name = PluginConstants.MOCROSOFT + "Local Agility",
+	name = PluginConstants.MOCROSOFT + "Agility Local",
 	description = "Microbot agility plugin",
     authors = { "Mocrosoft" },
     version = MicroAgilityLocalPlugin.version,
-    minClientVersion = "2.0.0",
+        minClientVersion = "2.1.0",
 	tags = {"agility", "microbot"},
     iconUrl = "https://chsami.github.io/Microbot-Hub/MicroAgilityPlugin/assets/icon.png",
     cardUrl = "https://chsami.github.io/Microbot-Hub/MicroAgilityPlugin/assets/card.png",
@@ -40,31 +44,24 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MicroAgilityLocalPlugin extends Plugin
 {
-	public static final long MILLIS_PER_MINUTE = 60_000;
-	private static final int MARK_COOLDOWN_MINUTES = 3;
-
-	public static final String version = "1.2.3";
+	public static final String version = "1.2.4";
 	@Inject
 	private MicroAgilityConfig config;
 	@Inject
-	private Client client;
-	@Inject
 	private OverlayManager overlayManager;
-	@Inject
-	private Notifier notifier;
 	@Inject
 	private MicroAgilityOverlay agilityOverlay;
 	@Inject
+	private Client client;
+	@Inject
 	private AgilityScript agilityScript;
-
-
 	public long lastCompleteMarkTimeMillis;
 	public long lastCompleteTimeMillis;
-
+	public static final long MILLIS_PER_MINUTE = 60_000;
+	private static final int MARK_COOLDOWN_MINUTES = 3;
 	public boolean isOnCooldown = false;
 	public Courses currentCourse;
 	public boolean hasReducedCooldown = false;
-
 
 
 	@Provides
@@ -84,18 +81,14 @@ public class MicroAgilityLocalPlugin extends Plugin
 		{
 			overlayManager.add(agilityOverlay);
 		}
-
-
-	}
+        agilityScript.run();
+    }
 
 	protected void shutDown()
 	{
-
 		agilityScript.shutdown();
 		overlayManager.remove(agilityOverlay);
-
 	}
-
 
 	public AgilityCourseHandler getCourseHandler()
 	{
@@ -125,42 +118,87 @@ public class MicroAgilityLocalPlugin extends Plugin
 	public AgilityScript getAgilityScript() {
 		return agilityScript;
 	}
-
 	@Subscribe
-	public void onGameStateChanged(GameStateChanged event) {
-		if (event.getGameState() == GameState.LOGGED_IN) {
-			log.debug("GameState changed to LOGGED_IN - initializing Agility tasks");
-
-
-		} else if (event.getGameState() == GameState.LOGIN_SCREEN) {
-			// Reset pre/post schedule tasks on logout for fresh initialization
-			log.debug("GameState changed to LOGIN_SCREEN - resetting Agility tasks");
-		}
-	}
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
+	public void onStatChanged(StatChanged statChanged)
 	{
+		if (statChanged.getSkill() != AGILITY)
+			return;
 
-		final ConfigDescriptor desc = getConfigDescriptor();
-		if (desc != null && desc.getGroup() != null && event.getGroup().equals(desc.getGroup().value())) {
-			log.info(
-					"Config change detected for {}: {}={}, config group {}",
-					getName(),
-					event.getGroup(),
-					event.getKey(),
-					desc.getGroup().value()
-			);
+		Courses course = Courses.getCourse(this.client.getLocalPlayer().getWorldLocation().getRegionID());
 
+		if (course != null && Arrays.stream(course.getCourseEndWorldPoints()).anyMatch((wp) ->
+				wp.equals(this.client.getLocalPlayer().getWorldLocation())))
+		{
+			currentCourse = course;
+			lastCompleteTimeMillis = Instant.now().toEpochMilli();
+			CheckNtpSync();
+
+			hasReducedCooldown = currentCourse == Courses.ARDOUGNE &&
+					client.getVarbitValue(Varbits.DIARY_ARDOUGNE_ELITE) == 1;
+		}
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick tick)
+	{
+		if (isOnCooldown)
+		{
+			if (lastCompleteMarkTimeMillis == 0)
+			{
+				isOnCooldown = false;
+				return;
+			}
+
+			long cooldownTimestamp = getCooldownTimestamp(true);
+
+			if (Instant.now().toEpochMilli() >= cooldownTimestamp)
+			{
+				isOnCooldown = false;
+				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Marks of grace cooldown has finished, run until you find your next mark.", null);
+
+
+			}
+		}
+	}
+
+	@Subscribe
+	public void onItemSpawned(ItemSpawned itemSpawned)
+	{
+		if (currentCourse == null)
+			return;
+
+		final TileItem item = itemSpawned.getItem();
+
+		if (item.getId() == ItemID.MARK_OF_GRACE)
+		{
+			lastCompleteMarkTimeMillis = lastCompleteTimeMillis;
+			isOnCooldown = true;
 		}
 	}
 
 
-    public ConfigDescriptor getConfigDescriptor() {
-		if (Microbot.getConfigManager() == null) {
-			return null;
-		}
-		MicroAgilityConfig conf = Microbot.getConfigManager().getConfig(MicroAgilityConfig.class);
-		return Microbot.getConfigManager().getConfigDescriptor(conf);
+	public long getCooldownTimestamp(boolean checkForReduced)
+	{
+		if (lastCompleteMarkTimeMillis == 0)
+			return lastCompleteMarkTimeMillis;
+
+		// First convert to server timestamp to get the correct minute
+		long offsetMillis = lastCompleteMarkTimeMillis + NtpClient.SyncedOffsetMillis;
+		long minuteTruncatedMillis = offsetMillis - (offsetMillis % MILLIS_PER_MINUTE);
+		long localCooldownMillis = minuteTruncatedMillis + (MARK_COOLDOWN_MINUTES * MILLIS_PER_MINUTE);
+
+		// We revert the ntp offset to get back to a local time that we locally wait for
+		long ntpAdjusted =  NtpClient.SyncedOffsetMillis;
+
+		if (checkForReduced && hasReducedCooldown && config.useShortArdougneTimer())
+			ntpAdjusted -= MILLIS_PER_MINUTE;
+
+		return ntpAdjusted;
 	}
 
+	private void CheckNtpSync()
+	{
+		if (NtpClient.SyncState == NtpSyncState.NOT_SYNCED)
+			NtpClient.startSync();
+	}
 }

@@ -144,6 +144,10 @@ public class BanksShopperScript extends Script {
                             sleepUntil(Rs2DepositBox::isOpen,10000);
                             sleep(200,700);
                             Rs2DepositBox.depositAll();
+//                            Rs2Bank.walkToBankAndUseBank();
+//                            sleepUntil(Rs2Bank::isOpen,10000);
+//                            sleep(200,700);
+//                            Rs2Bank.depositAll();
 ////                        Rs2DepositBox.closeDepositBox();
 //                        Rs2Npc.interact("Samir","Trade");
 //                        sleepUntil(() -> Rs2Shop.openShop("Samir", false), 5000);

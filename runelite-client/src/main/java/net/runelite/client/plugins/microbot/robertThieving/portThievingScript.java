@@ -1,25 +1,16 @@
 package net.runelite.client.plugins.microbot.robertThieving;
 
 import net.runelite.api.NPC;
-import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
-import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Gembag;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.shop.Rs2Shop;
-import net.runelite.client.plugins.microbot.util.shop.models.Rs2ShopSource;
-import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
-import java.awt.*;
 import java.util.concurrent.TimeUnit;
 
 
@@ -36,10 +27,7 @@ public class portThievingScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-                        return;
-
-                }
+                    if (Rs2Player.isMoving()) return;
                     if (Rs2Inventory.isFull()) {
                         Rs2Inventory.dropAll();
                         WorldPoint placeHolder = Rs2Player.getWorldLocation();
@@ -51,33 +39,27 @@ public class portThievingScript extends Script {
                         boolean successfullAction = false;
                         boolean outOfStock = false;
                     }
-                    WorldPoint silverPatrolSpot = new WorldPoint(1869, 3290, 0);
+                    WorldPoint gemPatrolSpot = new WorldPoint(1869, 3291, 0);
                     WorldPoint spicePatrolSpot = new WorldPoint(1864, 3290, 0);
                     Rs2NpcModel closestGuard=Rs2Npc.getNpc("Market Guard");
                     Rs2Player.getLocalPlayer().getCurrentOrientation();
-                    if (closestGuard!=null) {
+                if (Rs2Player.getWorldLocation().distanceTo(new WorldPoint(1866,3293,0))>10) return;
                         //&&Rs2Player.getLocalPlayer().getCurrentOrientation()!=1641
-                     if (closestGuard.getWorldLocation().distanceTo(silverPatrolSpot) < 1&&closestGuard.getWorldLocation().distanceTo(Rs2Player.getWorldLocation())<10) {
-                         Rs2Inventory.hover(Rs2Inventory.get("Spice"));
-                         sleepUntilTick(7);
-                         Rs2Inventory.dropAmount("Spice",3, InteractOrder.ZIGZAG);
-                        Rs2GameObject.interact(58106, "Steal-from");
-//                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Spice stall"));
-                         Rs2Player.waitForXpDrop(Skill.THIEVING);
-                         Rs2Player.waitForXpDrop(Skill.THIEVING);
-                         Rs2Inventory.interact(24481,"Fill");
-                         Rs2GameObject.interact(58105, "Steal-from");
+                if (!portThievingPlugin.watching.get(portThievingPlugin.StallTypes.GEM)&&Rs2Player.getWorldLocation().distanceTo(gemPatrolSpot)>3){                            Rs2Inventory.dropAmount("Spice", 3, InteractOrder.ZIGZAG);
+                    Rs2GameObject.interact(58106, "Steal-from"); //steal from gem stall
+                    sleep(600);
+
 //                         Rs2GameObject.hoverOverObject(Rs2GameObject.get("Silver stall"));
 
-                    }
-//                     else if (closestGuard.getWorldLocation().distanceTo(spicePatrolSpot) > 1&&Rs2Player.getLocalPlayer().getCurrentOrientation()!=407) {
-////                        sleep(0,200);
-//                            Rs2GameObject.interact(58105, "Steal-from");
-//                            Rs2GameObject.hoverOverObject(Rs2GameObject.get("Silver stall"));
-//                            sleep(600);
-//                        }
+                }
+                else  if (portThievingPlugin.watching.get(portThievingPlugin.StallTypes.GEM)&&Rs2Player.getWorldLocation().distanceTo(gemPatrolSpot)<3) {
+                    Rs2Inventory.interact(24481, "Fill");
+                    Rs2GameObject.interact(58105, "Steal-from");//steal from silver stall
+                    sleep(600);
+                }
 
-                            }
+
+
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);
@@ -93,35 +75,5 @@ public class portThievingScript extends Script {
     public void shutdown() {
         super.shutdown();
     }
-    /**
-     * Processes the sell action for the specified item.
-     * @param itemName The name of the item to sell.
-     * @param quantity The quantity of the item to sell.
-     * @return true if sold successfully, false otherwise.
-     */
-    private boolean processSellAction(String itemName, String quantity) {
-        if (Rs2Inventory.hasItem(itemName)) {
-            boolean soldItem = Rs2Inventory.sellItem(itemName, quantity);
-            System.out.println(soldItem ? "Successfully sold " + quantity + " " + itemName : "Failed to sell " + quantity + " " + itemName);
-            return soldItem;
-        }
-        System.out.println("Item " + itemName + " not found in inventory.");
-        return false;
-    }
 
-    /**
-     * Processes the sell action for the specified item.
-     * @param itemID The name of the item to sell.
-     * @param quantity The quantity of the item to sell.
-     * @return true if sold successfully, false otherwise.
-     */
-    private boolean processSellAction(int itemID, String quantity) {
-        if (Rs2Inventory.hasItem(itemID)) {
-            boolean soldItem = Rs2Inventory.sellItem(itemID, quantity);
-            System.out.println(soldItem ? "Successfully sold " + quantity + ", item ID:" + itemID : "Failed to sell " + quantity + ", item ID: " + itemID);
-            return soldItem;
-        }
-        System.out.println("Item ID" + itemID + " not found in inventory.");
-        return false;
-    }
 }
