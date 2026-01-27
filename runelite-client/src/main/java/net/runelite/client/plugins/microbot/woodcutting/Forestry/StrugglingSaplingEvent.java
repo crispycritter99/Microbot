@@ -98,7 +98,8 @@ public class StrugglingSaplingEvent implements BlockingEvent {
                 if (Rs2Inventory.contains(ItemID.GATHERING_EVENT_SAPLING_MULCH_STAGE3)) {
                     Microbot.log("StrugglingSaplingEvent: Adding mulch to the struggling sapling.");
                     Rs2GameObject.interact(sapling, "Add-mulch");
-                    Rs2Player.waitForAnimation();
+                    Rs2Inventory.waitForInventoryChanges(5000);
+//                    Rs2Player.waitForAnimation();
                     continue;
                 }
 
@@ -121,7 +122,8 @@ public class StrugglingSaplingEvent implements BlockingEvent {
                             // Collect this ingredient as it's known to be correct
                             Microbot.log("StrugglingSaplingEvent: Collecting known correct ingredient: " + ingredient.getWorldLocation());
                             Rs2GameObject.interact(ingredient, "Collect");
-                            Rs2Player.waitForAnimation();
+                            Rs2Inventory.waitForInventoryChanges(5000);
+//                            Rs2Player.waitForAnimation();
                         }
                     }
                     continue;
@@ -146,7 +148,8 @@ public class StrugglingSaplingEvent implements BlockingEvent {
                 Microbot.log("StrugglingSaplingEvent: Collecting random ingredient: " + randomIngredient.getWorldLocation());
                 Rs2GameObject.interact(randomIngredient, "Collect");
                 triedIngredients.add(randomIngredient.getId());
-                Rs2Player.waitForAnimation();
+                Rs2Inventory.waitForInventoryChanges(5000);
+//                Rs2Player.waitForAnimation();
             }
 
             Microbot.log("StrugglingSaplingEvent: Finished processing struggling sapling.");

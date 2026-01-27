@@ -8,6 +8,7 @@ import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -43,10 +44,13 @@ public class ExampleOverlay extends OverlayPanel {
                     .left("" + Microbot.status)
                     .build());
             panelComponent.getChildren().add(LineComponent.builder().build());
-            WorldPoint worldPoint =  Microbot.getClient().getLocalPlayer().getWorldLocation();
-
+//            WorldPoint worldPoint =  Microbot.getClient().getLocalPlayer().getWorldLocation();
+                int deayaltFragments=Rs2Inventory.itemQuantity("Daeyalt shard");
+                long shardsGained=deayaltFragments-ExamplePlugin.startingDaeyaltShard;
+                long timeElapsed=ExamplePlugin.initialTime-System.currentTimeMillis();
+                int shardsPerHour = Math.toIntExact( shardsGained / timeElapsed);
                 panelComponent.getChildren().add(LineComponent.builder()
-                        .left("" + Rs2Widget.hasVisibleWidgetText("Join fight")+" "+Rs2Widget.hasWidget("Join fight") +" "+Rs2Widget.isWidgetVisible(49938444))
+                        .left("" + deayaltFragments)
                         .build());
 
 

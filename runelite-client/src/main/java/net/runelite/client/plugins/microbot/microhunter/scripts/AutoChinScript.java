@@ -71,20 +71,26 @@ public class AutoChinScript extends Script {
                 long startTime = System.currentTimeMillis();
                 if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>10){
                     Rs2Walker.walkTo(new WorldPoint(3259,2377,0));
+                     int x=3258;
+                     int y=2377;
                     sleep(2400);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(3258,2377+1,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(3258+1,2377,0));
+                    Rs2Walker.walkFastCanvas(new WorldPoint(x,y,0));
                     sleep(2400);
                     Rs2Inventory.interact("box trap","lay");
                     sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(3258,2377-1,0));
+                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y+1,0));
                     sleep(2400);
                     Rs2Inventory.interact("box trap","lay");
                     sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(3258-1,2377,0));
+                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y+1,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y-1,0));
+                    sleep(2400);
+                    Rs2Inventory.interact("box trap","lay");
+                    sleepUntilTick(9);
+                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y-1,0));
                     sleep(2400);
                     Rs2Inventory.interact("box trap","lay");
                     sleepUntilTick(9);
@@ -141,7 +147,10 @@ public class AutoChinScript extends Script {
                 if (state.equals(HunterTrap.State.FULL)||state.equals(HunterTrap.State.EMPTY)) {
 //                    foundPoint = entry.getKey();
                     HunterTrap foundTrap = entry.getValue();
-                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation()) &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread().click("Reset");
+                    rs2TileObjectCache.query().fromWorldView().
+                    where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
+                    &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread()
+                    .click("Reset");
                     sleep(1200);
                     Rs2Player.waitForAnimation();
                     Rs2GameObject.hoverOverObject(Rs2GameObject.getGameObject(new Integer[]{9383, 9385}));

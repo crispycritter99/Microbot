@@ -4,6 +4,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.player.Rs2PlayerModel;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -11,6 +12,7 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.Arrays;
 
 import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.SALVAGE_LEVEL_REQ;
 import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.findObjectById;
@@ -45,7 +47,14 @@ public static boolean isClose = false;
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("Harvestable "+SalvagingPlugin.Harvestable+", should Harvest "+SalvagingPlugin.shouldHarvest)
                     .build());
-
+            var extractor = rs2TileObjectCache.query()
+                    .fromWorldView()
+                    .where(x -> x.getName() != null && x.getId()==59702&&x.getName().equalsIgnoreCase("crystal extractor"))
+                    .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
+                    .nearestOnClientThread();
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left(""+extractor)
+                    .build());
 //            panelComponent.getChildren().add(LineComponent.builder()
 //                    .left(""+ rs2TileObjectCache.query()
 //                            .where(x -> x.getName() != null&& x.getName().toLowerCase().contains("shipwreck"))

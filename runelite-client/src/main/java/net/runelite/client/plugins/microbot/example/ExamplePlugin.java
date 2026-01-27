@@ -8,6 +8,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.MicrobotApi;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -35,13 +36,15 @@ public class ExamplePlugin extends Plugin {
 
     @Inject
     ExampleScript exampleScript;
-
-
+public static int startingDaeyaltShard = 0;
+public static long initialTime=System.currentTimeMillis();
     @Override
     protected void startUp() throws AWTException {
         if (overlayManager != null) {
             overlayManager.add(exampleOverlay);
         }
+        startingDaeyaltShard= Rs2Inventory.itemQuantity("Daeyalt shard");
+
         exampleScript.run(config);
     }
 

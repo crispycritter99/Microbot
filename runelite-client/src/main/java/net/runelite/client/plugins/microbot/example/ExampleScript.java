@@ -63,19 +63,24 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
-//                sleep(2500,7800);
-//                Rs2GameObject.interact(39095);
-//                sleep(1200);
-                Rs2Inventory.slotInteract(27,"use");
-                Rs2GameObject.interact("Chaos Altar");
-
-//                        return;
+                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
+                sleep(2500,7800);
+                Rs2GameObject.interact(39095);
+                sleep(1200);
+//                Rs2Inventory.slotInteract(27,"use");
+//                Rs2GameObject.interact("Chaos Altar");
 //
-//                }
+////                        return;
+////
+////                }
 //                    if (Rs2Player.isInteracting()) return;
-
-//                    Rs2Npc.interact("Black warlock","catch");
+//                if (Rs2Inventory.contains("wing",false)){
+//                    Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
+//                    shutdown();
+////                        sleep(6000);
+//                    return;
+//                }
+//                    Rs2Npc.interact("Sunlight Moth","catch");
 //                    sleep(600);
 
 

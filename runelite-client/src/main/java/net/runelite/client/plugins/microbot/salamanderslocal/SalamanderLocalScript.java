@@ -63,7 +63,7 @@ public class SalamanderLocalScript extends Script {
 
                 // Count existing traps from plugin's trap map
                 int activeTrapCount = plugin.getTraps().size();
-                if(getSalamander(config).getName().equals("Red salamander")){activeTrapCount=3;}
+//                if(getSalamander(config).getName().equals("Red salamander")){activeTrapCount=3;}
                 int maxTraps = getMaxTrapsForHunterLevel(config);
                 lootRobeAndNets();
                 if (Rs2Inventory.count() > 20) {
@@ -72,9 +72,16 @@ public class SalamanderLocalScript extends Script {
                 // Tend to active traps
                 boolean handledTrap = handleExistingTraps(plugin, config);
                 if (handledTrap) return;
+                if (activeTrapCount==0&&Rs2Inventory.contains("claw",false)){
+                    Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
+                    Rs2Inventory.dropAll(true,  config.salamanderHunting().getName());
 
+                    shutdown();
+//                        sleep(6000);
+                    return;
+                }
                 // Set new traps if we have space and supplies
-                if (activeTrapCount < maxTraps && !IsRopeOnTheGround()) {
+                if (activeTrapCount < config.withdrawNumber() && !IsRopeOnTheGround()&&Rs2Inventory.contains("rope")&&!Rs2Inventory.contains("claw",false)) {
                     setNewTrap(salamanderType, config);
                 }
 
@@ -167,7 +174,7 @@ public class SalamanderLocalScript extends Script {
         if (!Rs2Player.isAnimating() && !Rs2Player.isMoving()) {
             var gameObject = Rs2GameObject.getGameObject(location);
             if (gameObject != null) {
-                Rs2GameObject.interact(gameObject, "Reset");
+                Rs2GameObject.interact(gameObject, Rs2Inventory.contains(false,"claw")?"Check":"Reset");
                 SalamandersCaught++;
                 sleep(config.minSleepAfterCatch(), config.maxSleepAfterCatch());
                 return true;
