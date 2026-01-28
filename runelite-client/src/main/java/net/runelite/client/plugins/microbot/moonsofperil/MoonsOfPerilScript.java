@@ -1,0 +1,189 @@
+package net.runelite.client.plugins.microbot.moonsofperil;
+
+import lombok.Getter;
+import net.runelite.api.Skill;
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.moonsofperil.enums.State;
+import net.runelite.client.plugins.microbot.moonsofperil.handlers.BaseHandler;
+import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+
+import javax.inject.Inject;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static net.runelite.client.plugins.microbot.bloodmoons.MoonsScript.attackBoss;
+
+public class MoonsOfPerilScript extends Script {
+    
+	private Rs2InventorySetup bloodEquipment;
+	private Rs2InventorySetup blueEquipment;
+	private Rs2InventorySetup eclipseEquipment;
+	private Rs2InventorySetup eclipseClones;
+
+    @Getter
+    private State state = State.IDLE;
+    public static boolean test = false;
+    public static volatile State CURRENT_STATE = State.IDLE;
+	private final MoonsOfPerilConfig config;
+    private static final int EAT_COOLDOWN_MS = 2000;
+    private static final int PRAYER_COOLDOWN_MS = 2000;
+    private final Map<State, BaseHandler> handlers = new EnumMap<>(State.class);
+    private long lastEatTime = -1;
+	@Inject
+	public MoonsOfPerilScript(MoonsOfPerilConfig config) {
+		this.config = config;
+	}
+
+    public boolean run() {
+
+        this.bloodEquipment = new Rs2InventorySetup(config.bloodEquipmentNormal(), mainScheduledFuture);
+        this.blueEquipment = new Rs2InventorySetup(config.blueEquipmentNormal(), mainScheduledFuture);
+        this.eclipseEquipment = new Rs2InventorySetup(config.eclipseEquipmentNormal(), mainScheduledFuture);
+        this.eclipseClones = new Rs2InventorySetup(config.eclipseEquipmentClones(), mainScheduledFuture);
+
+        initHandlers();
+
+        Microbot.enableAutoRunOn = false;
+        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            try {
+                if (!Microbot.isLoggedIn()) return;
+                if (!super.run()) return;
+                long start = System.currentTimeMillis();
+                long currentTime = System.currentTimeMillis();
+                /* ---------------- MAIN LOOP ---------------- */
+                state = determineState();
+                int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
+                if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= 40) {
+                    Rs2Player.useFood();
+                    if (Rs2Npc.getNpc(13011)!=null&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
+                        Rs2Inventory.wear(4151);
+                        Rs2Inventory.wear(12954  );
+                        //Rs2Npc.interact(npcToAttack, "attack");
+                        attackBoss("Blood moon");
+                    }
+                    lastEatTime = currentTime;
+                    Microbot.log("Eating food at " + 40 + "% health.");
+                }
+
+                int currentPrayerPoints = Microbot.getClient().getBoostedSkillLevel(Skill.PRAYER);
+//                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS && currentPrayerPoints <= maxPrayer&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
+                if (Rs2Npc.getNpcs("blood jaguar").count()==0) {
+                    if (Rs2Player.drinkPrayerPotion()) {
+                        if (Rs2Npc.getNpc(13011) != null) {
+                            Rs2Inventory.wear(4151);
+                            Rs2Inventory.wear(12954);
+                            //Rs2Npc.interact(npcToAttack, "attack");
+//                                        attackBoss("Blood moon");
+                        }
+                    }
+//                            lastPrayerTime = currentTime;
+//                            Microbot.log("Drinking prayer potion at " + maxPrayer + "% prayer points.");
+                }
+                CURRENT_STATE = state;
+                BaseHandler h = handlers.get(state);
+                if (h != null && h.validate()) {
+                    h.execute();
+                }
+                /* ------------------------------------------- */
+
+                Microbot.log("Loop " + (System.currentTimeMillis() - start) + " ms");
+            } catch (Exception ex) {
+                Microbot.log("MoonsOfPerilScript error: " + ex.getMessage());
+            }
+        }, 0, 600, TimeUnit.MILLISECONDS);            // 600 ms ≈ one game tick
+
+        return true;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* One-off wiring of state → handler instances                        */
+    /* ------------------------------------------------------------------ */
+    private void initHandlers() {
+        handlers.put(State.IDLE,        new net.runelite.client.plugins.microbot.moonsofperil.handlers.IdleHandler(config));
+        handlers.put(State.RESUPPLY,    new net.runelite.client.plugins.microbot.moonsofperil.handlers.ResupplyHandler(config));
+        handlers.put(State.ECLIPSE_MOON,new net.runelite.client.plugins.microbot.moonsofperil.handlers.EclipseMoonHandler(config, eclipseEquipment, eclipseClones));
+        handlers.put(State.BLUE_MOON,   new net.runelite.client.plugins.microbot.moonsofperil.handlers.BlueMoonHandler(config, blueEquipment));
+        handlers.put(State.BLOOD_MOON,  new net.runelite.client.plugins.microbot.moonsofperil.handlers.BloodMoonHandler(config, bloodEquipment));
+        handlers.put(State.REWARDS,     new net.runelite.client.plugins.microbot.moonsofperil.handlers.RewardHandler(config));
+        handlers.put(State.DEATH,       new net.runelite.client.plugins.microbot.moonsofperil.handlers.DeathHandler(config));
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* state logic                */
+    /* ------------------------------------------------------------------ */
+    private State determineState() {
+        /* 1 ─ In case of death */
+        if (isPlayerDead())                 return State.DEATH;
+
+        /* 2 ─ if all bosses are dead --> end-of-run chest loot */
+        if (readyToLootChest())             return State.REWARDS;
+
+        /* 3 ─ Do resupply as needed before boss phases */
+        if (needsResupply())                  return State.RESUPPLY;
+
+        /* 4 ─ boss phases in order */
+        if (eclipseMoonSequence())       return State.ECLIPSE_MOON;
+        if (blueMoonSequence())         return State.BLUE_MOON;
+        if (bloodMoonSequence())         return State.BLOOD_MOON;
+
+        /* 5 ─ nothing to do */
+        return State.IDLE;
+    }
+
+    /* ---------- Supplies ------------------------------------------------- */
+    private boolean needsResupply()
+    {
+        // Skip while we're already resupplying
+        if (state == State.RESUPPLY) {
+            return false;
+        }
+        BaseHandler resupply = handlers.get(State.RESUPPLY);
+        return resupply != null && resupply.validate();
+    }
+
+    /* ---------- Eclipse Moon -------------------------------------------- */
+    private boolean eclipseMoonSequence()
+    {
+        BaseHandler eclipse = handlers.get(State.ECLIPSE_MOON);
+        return eclipse != null && eclipse.validate();
+    }
+
+    /* ---------- Blue Moon ------------------------------------------------ */
+    private boolean blueMoonSequence()
+    {
+        BaseHandler blue = handlers.get(State.BLUE_MOON);
+        return blue != null && blue.validate();
+    }
+
+    /* ---------- Blood Moon ---------------------------------------------- */
+    private boolean bloodMoonSequence()
+    {
+        BaseHandler blood = handlers.get(State.BLOOD_MOON);
+        return blood != null && blood.validate();
+    }
+
+    /* ---------- Rewards Chest ---------------------------------------------- */
+    private boolean readyToLootChest() {
+        BaseHandler reward = handlers.get(State.REWARDS);
+        return reward != null && reward.validate();
+    }
+
+    /* ---------- Death Handler ---------------------------------------------- */
+    private boolean isPlayerDead() {
+        BaseHandler reward = handlers.get(State.DEATH);
+        return reward != null && reward.validate();
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Clean shutdown – cancels the scheduled task and frees resources    */
+    /* ------------------------------------------------------------------ */
+    @Override
+    public void shutdown() {
+        super.shutdown();
+    }
+}

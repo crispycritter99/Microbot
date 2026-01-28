@@ -63,10 +63,18 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
-                sleep(2500,7800);
-                Rs2GameObject.interact(39095);
+//                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
+//                sleep(2500,7800);
+//                Rs2GameObject.interact(39095);
+//                sleep(1200);
+                if (Rs2Player.isInteracting())return;
+//                Rs2Npc.interact("kalphite worker","attack");
+                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("brine rat").findFirst().orElse(null);
+                if (npc == null) return;
+                Rs2Npc.interact(npc);
                 sleep(1200);
+
+
 //                Rs2Inventory.slotInteract(27,"use");
 //                Rs2GameObject.interact("Chaos Altar");
 //
