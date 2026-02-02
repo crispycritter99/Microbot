@@ -69,7 +69,7 @@ public class ExampleScript extends Script {
 //                sleep(1200);
                 if (Rs2Player.isInteracting())return;
 //                Rs2Npc.interact("kalphite worker","attack");
-                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("brine rat").findFirst().orElse(null);
+                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("terrorbird").findFirst().orElse(null);
                 if (npc == null) return;
                 Rs2Npc.interact(npc);
                 sleep(1200);

@@ -86,7 +86,8 @@ public class AutoFishingScript extends Script {
     }
 
     private AutoFishingState determineState() {
-        if (Rs2Inventory.isFull()) {
+        System.out.println("diddy 2");
+        if (Rs2Inventory.isFull()&&selectedFish != Fish.KARAMBWANJI) {
             if (isSpecialFish(selectedFish)) return AutoFishingState.PROCESSING_FISH;
             if (config.cookFish() && !getRawFishInInventory().isEmpty()) return AutoFishingState.COOKING;
             if (config.useBank()) return AutoFishingState.DEPOSITING;
@@ -98,6 +99,7 @@ public class AutoFishingScript extends Script {
         }
 
         if (!isAtFishingLocation()) {
+            System.out.println("diddy");
             return AutoFishingState.TRAVELING;
         }
 
@@ -134,7 +136,13 @@ public class AutoFishingScript extends Script {
     }
 
     private void handleDropping() {
-        Rs2Inventory.dropAll(selectedFish.getItemNames().toArray(new String[0]));
+        if (selectedFish == Fish.KARAMBWANJI){
+            Rs2Inventory.dropAll("raw shrimp");
+
+        }
+        else {
+            Rs2Inventory.dropAll(selectedFish.getItemNames().toArray(new String[0]));
+        }
     }
 
     // we process fish that require special handling
@@ -224,7 +232,7 @@ public class AutoFishingScript extends Script {
 //            sleepUntil(() -> Rs2Bank.lockAllBySlot(slotsToLock));
             Rs2Bank.emptyFishBarrel();
 //            Rs2Bank.depositAll();
-            Rs2Bank.depositAllExcept(false,"feather","fish barrel","rod");
+            Rs2Bank.depositAllExcept(false,"feather","fish barrel","rod","karambwan vessel","karambwanji");
             sleepUntil(() -> !Rs2Inventory.isFull());
 //            Rs2Bank.toggleAllLocks();
             Rs2Bank.closeBank();
@@ -278,8 +286,9 @@ public class AutoFishingScript extends Script {
     }
 
     private boolean isAtFishingLocation() {
+        System.out.println(fishingLocation);
         if (fishingLocation == null) return false;
-        return Rs2Player.getWorldLocation().distanceTo(fishingLocation) <= 5;
+        return Rs2Player.getWorldLocation().distanceTo(fishingLocation) <= 10;
     }
 
     private void activateSpec() {

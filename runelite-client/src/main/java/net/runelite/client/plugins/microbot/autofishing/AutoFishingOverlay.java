@@ -10,10 +10,10 @@ import java.awt.*;
 
 public class AutoFishingOverlay extends OverlayPanel {
 
-    private final AutoFishingPlugin plugin;
+    private final AutoFishingLocalPlugin plugin;
 
     @Inject
-    AutoFishingOverlay(AutoFishingPlugin plugin)
+    AutoFishingOverlay(AutoFishingLocalPlugin plugin)
     {
         super(plugin);
         this.plugin = plugin;

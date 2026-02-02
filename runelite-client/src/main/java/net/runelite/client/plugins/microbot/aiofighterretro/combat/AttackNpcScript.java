@@ -206,7 +206,7 @@ public class AttackNpcScript extends Script {
 //                        return;
 //                    }
 //                }
-                if (Rs2Player.isInteracting())return;
+//                if (Rs2Player.isInteracting())return;
                 if (!attackableNpcs.isEmpty()) {
                     noNpcCount = 0;
 
@@ -218,7 +218,7 @@ public class AttackNpcScript extends Script {
                     Rs2Npc.interact(npc, "attack");
                     Microbot.status = "Attacking " + npc.getName();
                     sleep(600);
-//                    Rs2Antiban.actionCooldown();
+                    Rs2Antiban.actionCooldown();
                     //sleepUntil(Rs2Player::isInteracting, 1000);
 
                     if (config.togglePrayer()) {

@@ -14,11 +14,11 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginConstants.DEFAULT_PREFIX + "Fishing",
+        name = PluginConstants.DEFAULT_PREFIX + "Fishing Local",
         description = "Automated fishing plugin with banking support",
         tags = {"fishing", "skilling"},
         authors = {"AI Agent"},
-        version = AutoFishingPlugin.version,
+        version = AutoFishingLocalPlugin.version,
         minClientVersion = "1.9.8",
         iconUrl = "https://chsami.github.io/Microbot-Hub/AutoFishingPlugin/assets/icon.png",
         cardUrl = "https://chsami.github.io/Microbot-Hub/AutoFishingPlugin/assets/card.png",
@@ -26,7 +26,7 @@ import java.awt.*;
         isExternal = PluginConstants.IS_EXTERNAL
 )
 @Slf4j
-public class AutoFishingPlugin extends Plugin {
+public class AutoFishingLocalPlugin extends Plugin {
     static final String version = "1.0.7";
     @Inject
     private AutoFishingConfig config;
