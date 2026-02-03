@@ -350,7 +350,7 @@ public class Rs2Walker {
                     if (Microbot.getClient().getTopLevelWorldView().isInstance()) {
                         if (Rs2Walker.walkMiniMap(currentWorldPoint)) {
                             final WorldPoint b = currentWorldPoint;
-                            sleepUntil(() -> b.distanceTo2D(Rs2Player.getWorldLocation()) < nextWalkingDistance, 2000);
+                            sleepUntil(() -> b.distanceTo2D(Rs2Player.getWorldLocation()) < nextWalkingDistance, 1800);
                         }
                     } else {
                         if (currentWorldPoint.distanceTo2D(Rs2Player.getWorldLocation()) > nextWalkingDistance) {
@@ -1125,7 +1125,9 @@ public class Rs2Walker {
                 if (found) {
                     if (!handleDoorException(object, action)) {
                         Rs2GameObject.interact(object, action);
+                        System.out.println("diddy");
                         Rs2Player.waitForWalking();
+                        System.out.println("blud");
                     }
                     return true;
                 }
