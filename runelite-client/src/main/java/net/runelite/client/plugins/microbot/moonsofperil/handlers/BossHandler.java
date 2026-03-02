@@ -41,6 +41,7 @@ public final class BossHandler {
             equipInventorySetup(inventorySetup);
         }
         if (debugLogging) {Microbot.log("Walking to " + bossName + " lobby");}
+        Rs2Player.toggleRunEnergy(true);
         Rs2Walker.walkWithState(bossWorldPoint, 0);
         sleep(600);
         if (!Rs2Player.getWorldLocation().equals(bossWorldPoint)) {
@@ -156,6 +157,8 @@ public final class BossHandler {
 
         while (sigilMoves <= 3 && isNormalAttackSequence(sigilNpcID))
         {
+            eatIfNeeded();
+            drinkIfNeeded();
             /* 1 ─ detect a new sigil square */
             Rs2NpcModel sigil = Rs2Npc.getNpc(sigilNpcID);
             if (sigil == null) {

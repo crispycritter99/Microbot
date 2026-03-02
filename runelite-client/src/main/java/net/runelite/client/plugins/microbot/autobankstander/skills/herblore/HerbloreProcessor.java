@@ -215,7 +215,8 @@ public class HerbloreProcessor implements BankStandingProcessor {
         }
         
         log.info("Withdrawing 28 grimy {}", currentHerb.name());
-        Rs2Bank.withdrawX(currentHerb.grimy, 28);
+//        Rs2Bank.withdrawX(currentHerb.grimy, 28);
+        Rs2Bank.withdrawAll(currentHerb.grimy);
         boolean withdrawn = sleepUntil(() -> Rs2Inventory.hasItem(currentHerb.grimy), 3000);
         if (!withdrawn) {
             log.info("Failed to withdraw grimy herbs");
@@ -234,8 +235,8 @@ public class HerbloreProcessor implements BankStandingProcessor {
         
         int herbCount = Rs2Bank.count(currentHerbForUnfinished.clean);
         int vialCount = Rs2Bank.count(ItemID.VIAL_WATER);
-        withdrawnAmount = Math.min(Math.min(herbCount, vialCount), 14);
-        
+//        withdrawnAmount = Math.min(Math.min(herbCount, vialCount), 14);
+        withdrawnAmount = 14;
         log.info("Withdrawing {} clean herbs and vials", withdrawnAmount);
         Rs2Bank.withdrawX(currentHerbForUnfinished.clean, withdrawnAmount);
         Rs2Bank.withdrawX(ItemID.VIAL_WATER, withdrawnAmount);

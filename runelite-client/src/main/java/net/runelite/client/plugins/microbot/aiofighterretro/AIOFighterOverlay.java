@@ -10,8 +10,9 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.aiofighterretro.combat.AttackNpcScript;
 import net.runelite.client.plugins.microbot.aiofighterretro.model.Monster;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
-import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
+//import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.ui.overlay.OverlayLayer;
+import net.runelite.client.plugins.microbot.api.npc.models.Rs2NpcModel;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayPriority;
@@ -87,7 +88,8 @@ public class AIOFighterOverlay extends OverlayPanel {
             if (npc != null && npc.getCanvasTilePoly() != null) {
                 try {
                     graphics.setColor(Color.CYAN);
-                    modelOutlineRenderer.drawOutline(npc, 2, Color.RED, 4);
+//                    npc.getNpc()
+                    modelOutlineRenderer.drawOutline(npc.getNpc(), 2, Color.RED, 4);
                     graphics.draw(npc.getCanvasTilePoly());
                 } catch (Exception ex) {
                     Microbot.logStackTrace(this.getClass().getSimpleName(), ex);

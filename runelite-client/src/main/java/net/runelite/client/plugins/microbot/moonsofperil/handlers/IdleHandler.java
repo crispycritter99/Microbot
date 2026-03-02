@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.moonsofperil.handlers;
 
 import net.runelite.client.plugins.microbot.moonsofperil.MoonsOfPerilConfig;
 import net.runelite.client.plugins.microbot.moonsofperil.enums.State;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 
 public class IdleHandler implements BaseHandler {
@@ -15,6 +16,7 @@ public class IdleHandler implements BaseHandler {
     @Override
     public boolean validate() {
         Rs2Prayer.disableAllPrayers();
+        Rs2Player.toggleRunEnergy(true);
         boss.eatIfNeeded();
         boss.drinkIfNeeded();
         return false;

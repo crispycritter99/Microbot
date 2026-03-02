@@ -9,6 +9,7 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.api.IEntity;
 import net.runelite.client.plugins.microbot.api.boat.Rs2BoatCache;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
@@ -317,4 +318,23 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return true;
     }
 
+    public boolean hover(){
+        try {
+            if (!Rs2AntibanSettings.naturalMouse) {
+                if (Rs2AntibanSettings.devDebug)
+                    Microbot.log("Natural mouse is not enabled, can't hover");
+                return false;
+            }
+            Point point = Rs2UiHelper.getClickingPoint(Rs2UiHelper.getObjectClickbox(tileObject), true);
+            // if the point is 1,1 then the object is not on screen and we should return false
+            if (point.getX() == 1 && point.getY() == 1) {
+                return false;
+            }
+            Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
+        } catch (Exception ex) {
+            log.error("Failed to hover over object: ", ex);
+        }
+
+        return true;
+    }
 }

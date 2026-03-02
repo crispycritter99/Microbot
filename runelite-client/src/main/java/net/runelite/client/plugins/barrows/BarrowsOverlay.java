@@ -41,11 +41,11 @@ import net.runelite.client.ui.overlay.OverlayPosition;
 class BarrowsOverlay extends Overlay
 {
 	private final Client client;
-	private final BarrowsPlugin plugin;
+	private final BarrowsRLPlugin plugin;
 	private final BarrowsConfig config;
 
 	@Inject
-	private BarrowsOverlay(Client client, BarrowsPlugin plugin, BarrowsConfig config)
+	private BarrowsOverlay(Client client, BarrowsRLPlugin plugin, BarrowsConfig config)
 	{
 		setPosition(OverlayPosition.DYNAMIC);
 		setLayer(OverlayLayer.ABOVE_WIDGETS);

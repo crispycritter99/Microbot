@@ -2,9 +2,13 @@ package net.runelite.client.plugins.microbot.HunterRumours;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.NPC;
+import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.plugins.microbot.falconry.FalconryConfig;
 import net.runelite.client.plugins.microbot.falconry.FalconryScript;
@@ -12,7 +16,7 @@ import net.runelite.client.plugins.microbot.microhunter.AutoHunterConfig;
 import net.runelite.client.plugins.microbot.microhunter.scripts.AutoChinScript;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalConfig;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalScript;
-
+import net.runelite.client.plugins.microbot.HunterRumours.enums.Rumour;
 import javax.inject.Inject;
 import java.awt.*;
 
@@ -72,7 +76,7 @@ public class HunterRumoursPlugin extends Plugin
     private SalamanderLocalScript salamanderScript;
 
     private HunterRumoursScript hunterRumoursScript;
-
+    static public NPC falcon = null;
     @Override
     protected void startUp() throws AWTException
     {
@@ -104,5 +108,14 @@ public class HunterRumoursPlugin extends Plugin
             hunterRumoursScript.shutdown();
             hunterRumoursScript = null;
         }
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick tick)
+    {
+        //System.out.println(getName().chars().mapToObj(i -> (char)(i + 3)).map(String::valueOf).collect(Collectors.joining()));
+        falcon = Microbot.getClient().getHintArrowNpc();
+
+
     }
 }

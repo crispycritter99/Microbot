@@ -66,7 +66,7 @@ import org.apache.commons.lang3.ArrayUtils;
 	description = "Show helpful information for the Barrows minigame",
 	tags = {"combat", "minigame", "bosses", "pve", "pvm"}
 )
-public class BarrowsPlugin extends Plugin
+public class BarrowsRLPlugin extends Plugin
 {
 	private static final ImmutableList<Integer> POSSIBLE_SOLUTIONS = ImmutableList.of(
 		InterfaceID.BarrowsPuzzle.PIC_A,

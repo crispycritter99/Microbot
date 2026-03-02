@@ -42,6 +42,7 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -63,16 +64,61 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
+//                if (Rs2Player.isAnimating()||Rs2Player.isMoving()){
+//                    return;
+//                }
+                WorldPoint FIGHTING_TILE_A = new WorldPoint(2452, 9168, 1);
+                WorldPoint FIGHTING_TILE_B = new WorldPoint(2453, 9167, 1);
+                WorldPoint targetTile = test ? FIGHTING_TILE_A : FIGHTING_TILE_B;
+
+                int runEnergy = Rs2Player.getRunEnergy();
+                if (runEnergy <= 0) {
+                    return;
+                }
+
+                if (!Objects.equals(Rs2Player.getWorldLocation(), targetTile)) {
+                    Rs2Walker.walkFastCanvas(targetTile, true);
+
+                    Rs2Player.waitForWalking();
+                    if (Objects.equals(Rs2Player.getWorldLocation(), FIGHTING_TILE_A)){
+                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2453, 9167));
+
+                    }
+                    else {
+                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2452, 9168));
+                    }
+                    sleepGaussian(400,100);
+
+                }
+                test= !test;
 //                sleep(2500,7800);
 //                Rs2GameObject.interact(39095);
 //                sleep(1200);
-                if (Rs2Player.isInteracting())return;
-//                Rs2Npc.interact("kalphite worker","attack");
-                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("terrorbird").findFirst().orElse(null);
-                if (npc == null) return;
-                Rs2Npc.interact(npc);
-                sleep(1200);
+//                if (Rs2Player.isInteracting())return;
+//                Microbot.status="ready to go";
+////                Rs2Npc.interact("s   unlight moth","catch");
+//                if (Rs2Inventory.isFull()){
+//                    Microbot.status="grinding crabs";
+//                    Rs2Inventory.combine("pestle and mortar","blue crab");
+//                    sleep(23000);
+//
+//                }
+//                if (Rs2GameObject.interact("Crab trap (empty)","bait")) {
+//                    Microbot.status="baiting trap";
+////                    Rs2Inventory.waitForInventoryChanges(1800);
+//                    return;
+//                }
+//                if (Rs2GameObject.interact("Crab trap (full)","empty")) {
+//                    Microbot.status="resetting trap";
+//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
+////                    Microbot.status="waiting for inventory change";
+////                    Rs2Inventory.waitForInventoryChanges(1800);
+//                    return;
+//                }
+//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("hill giant").findFirst().orElse(null);
+//                if (npc == null) return;
+//                Rs2Npc.interact(npc);
+//                sleep(1200);
 
 
 //                Rs2Inventory.slotInteract(27,"use");

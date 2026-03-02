@@ -5,6 +5,7 @@ import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigInformation;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
+import net.runelite.client.plugins.microbot.util.misc.SpecialAttackWeaponEnum;
 
 @ConfigGroup("pestcontrol")
 @ConfigInformation("Start near a boat of your combat level")
@@ -68,20 +69,32 @@ public interface PestControlConfig extends Config {
     }
 
     @ConfigItem(
-            keyName = "Special Attack",
-            name = "Use Special Attack on %",
-            description = "What percentage to use Special Attack",
+            keyName = "Use special attack",
+            name = "Use special attack",
+            description = "Use special attack",
             position = 8
+
     )
-    default int specialAttackPercentage() {
-        return 100;
+    default boolean useSpecialAttack() {
+        return false;
+    }
+
+    @ConfigItem(
+            keyName = "Spec weapon",
+            name = "Spec weapon",
+            description = "Special attack weapon to use",
+            position = 10
+
+    )
+    default SpecialAttackWeaponEnum specWeapon() {
+        return null;
     }
 
     @ConfigItem(
             keyName = "inventorySetup",
             name = "Inventory Setup",
             description = "Inventory setup to use",
-            position = 9
+            position = 11
     )
     default InventorySetup inventorySetup() {
         return null;
@@ -90,7 +103,7 @@ public interface PestControlConfig extends Config {
             keyName = "World",
             name = "World",
             description = "Pest Control world",
-            position = 10
+            position = 12
     )
 
     default int world() {
