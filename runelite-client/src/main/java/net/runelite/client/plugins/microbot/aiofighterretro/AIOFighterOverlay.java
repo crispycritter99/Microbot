@@ -84,19 +84,51 @@ public class AIOFighterOverlay extends OverlayPanel {
             }
         }
 
-        for (Rs2NpcModel npc : filteredAttackableNpcs.get()) {
+//        for (Rs2NpcModel npc : filteredAttackableNpcs.get()) {
+//            if (npc != null && npc.getCanvasTilePoly() != null) {
+//                try {
+//                    graphics.setColor(Color.CYAN);
+////                    npc.getNpc()
+//                    modelOutlineRenderer.drawOutline(npc.getNpc(), 2, Color.RED, 4);
+//                    graphics.draw(npc.getCanvasTilePoly());
+//                } catch (Exception ex) {
+//                    Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
+//                }
+//            }
+//        }
+
+        int size = filteredAttackableNpcs.get().size();
+
+        for (int i = 0; i < size; i++) {
+            Rs2NpcModel npc = filteredAttackableNpcs.get().get(i);
+
             if (npc != null && npc.getCanvasTilePoly() != null) {
                 try {
-                    graphics.setColor(Color.CYAN);
-//                    npc.getNpc()
-                    modelOutlineRenderer.drawOutline(npc.getNpc(), 2, Color.RED, 4);
+                    float ratio = size <= 1 ? 0f : (float) i / (size - 1);
+
+                    // Hue from 0 (red) to 0.66 (blue)
+                    Color gradientColor = Color.getHSBColor(
+                            0.66f * ratio,   // hue
+                            1.0f,            // saturation
+                            1.0f             // brightness
+                    );
+
+                    graphics.setColor(gradientColor);
+
+                    modelOutlineRenderer.drawOutline(
+                            npc.getNpc(),
+                            2,
+                            gradientColor,
+                            4
+                    );
+
                     graphics.draw(npc.getCanvasTilePoly());
+
                 } catch (Exception ex) {
                     Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
                 }
             }
         }
-
         for (Monster currentMonster : currentMonstersAttackingUsRef.get()) {
             if (currentMonster != null && currentMonster.npc != null && currentMonster.npc.getCanvasTilePoly() != null) {
                 try {

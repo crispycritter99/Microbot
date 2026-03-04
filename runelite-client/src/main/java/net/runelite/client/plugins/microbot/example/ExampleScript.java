@@ -64,37 +64,37 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//                if (Rs2Player.isAnimating()||Rs2Player.isMoving()){
-//                    return;
-//                }
-                WorldPoint FIGHTING_TILE_A = new WorldPoint(2452, 9168, 1);
-                WorldPoint FIGHTING_TILE_B = new WorldPoint(2453, 9167, 1);
-                WorldPoint targetTile = test ? FIGHTING_TILE_A : FIGHTING_TILE_B;
-
-                int runEnergy = Rs2Player.getRunEnergy();
-                if (runEnergy <= 0) {
+                if (Rs2Player.isAnimating()||Rs2Player.isMoving()){
                     return;
                 }
-
-                if (!Objects.equals(Rs2Player.getWorldLocation(), targetTile)) {
-                    Rs2Walker.walkFastCanvas(targetTile, true);
-
-                    Rs2Player.waitForWalking();
-                    if (Objects.equals(Rs2Player.getWorldLocation(), FIGHTING_TILE_A)){
-                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2453, 9167));
-
-                    }
-                    else {
-                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2452, 9168));
-                    }
-                    sleepGaussian(400,100);
-
-                }
-                test= !test;
+//                WorldPoint FIGHTING_TILE_A = new WorldPoint(2452, 9168, 1);
+//                WorldPoint FIGHTING_TILE_B = new WorldPoint(2453, 9167, 1);
+//                WorldPoint targetTile = test ? FIGHTING_TILE_A : FIGHTING_TILE_B;
+//
+//                int runEnergy = Rs2Player.getRunEnergy();
+//                if (runEnergy <= 0) {
+//                    return;
+//                }
+//
+//                if (!Objects.equals(Rs2Player.getWorldLocation(), targetTile)) {
+//                    Rs2Walker.walkFastCanvas(targetTile, true);
+//
+//                    Rs2Player.waitForWalking();
+//                    if (Objects.equals(Rs2Player.getWorldLocation(), FIGHTING_TILE_A)){
+//                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2453, 9167));
+//
+//                    }
+//                    else {
+//                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2452, 9168));
+//                    }
+//                    sleepGaussian(400,100);
+//
+//                }
+//                test= !test;
 //                sleep(2500,7800);
 //                Rs2GameObject.interact(39095);
 //                sleep(1200);
-//                if (Rs2Player.isInteracting())return;
+                if (Rs2Player.isInteracting())return;
 //                Microbot.status="ready to go";
 ////                Rs2Npc.interact("s   unlight moth","catch");
 //                if (Rs2Inventory.isFull()){
@@ -115,10 +115,10 @@ public class ExampleScript extends Script {
 ////                    Rs2Inventory.waitForInventoryChanges(1800);
 //                    return;
 //                }
-//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("hill giant").findFirst().orElse(null);
-//                if (npc == null) return;
-//                Rs2Npc.interact(npc);
-//                sleep(1200);
+                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("lizardman").findFirst().orElse(null);
+                if (npc == null) return;
+                Rs2Npc.interact(npc);
+                sleep(1200);
 
 
 //                Rs2Inventory.slotInteract(27,"use");

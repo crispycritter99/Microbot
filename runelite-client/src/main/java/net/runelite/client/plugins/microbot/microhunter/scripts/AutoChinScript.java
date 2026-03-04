@@ -283,7 +283,10 @@ public class AutoChinScript extends Script {
 
                 sleep(1200);
                 Rs2Player.waitForAnimation();
-
+                // Your fitted parameters
+                 double LOG_MEAN = 0.25; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*1000);
                 // Hover next valid trap
                 sortedTraps.stream()
                         .skip(1)
@@ -306,8 +309,10 @@ public class AutoChinScript extends Script {
                 sleepUntil(() -> {
                     HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
                     return trap != null && trap.getObjectId() == 9380;
-                }, 2000);
-
+                }, 3000);
+                LOG_MEAN = 0.06;LOG_STD = 0.6;r = new Random();gaussian = r.nextGaussian();
+                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
                 System.out.println("Handled trap " + foundTrap.getWorldLocation());
             }
 

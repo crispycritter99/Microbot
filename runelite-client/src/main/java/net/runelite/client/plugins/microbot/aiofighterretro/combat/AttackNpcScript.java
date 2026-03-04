@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.aiofighterretro.combat;
 
 import lombok.SneakyThrows;
 import net.runelite.api.Actor;
+import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -142,18 +143,27 @@ public class AttackNpcScript extends Script {
 //                    }
 //                }
 //                filteredAttackableNpcs.set(attackableNpcs);
+                final Set<String> targetNames = npcsToAttack.stream()
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toSet());
 
                 final List<Rs2NpcModel> attackableNpcs =
                         cache
                                 .query()
                                 .where(npc -> npc.getHealthPercentage() > 0)
                                 .where(npc -> !npc.isDead())
-                                .where(npc ->  !npc.isInteracting()|| Objects.equals(npc.getInteracting(), Microbot.getClient().getLocalPlayer()))
+//                                .where(npc ->  !npc.isInteracting()|| Objects.equals(npc.getInteracting(), Microbot.getClient().getLocalPlayer()))
+                                .where(npc -> {
+                                    Actor interacting = npc.getInteracting();
+                                    return interacting == null
+                                            || Objects.equals(npc.getInteracting(), Microbot.getClient().getLocalPlayer())
+                                            || interacting instanceof NPC;
+                                })
                                 .where(npc -> npc.getWorldLocation()
                                         .distanceTo(config.centerLocation()) <= config.attackRadius())
                                 .where(npc -> npc.getName() != null
                                         && !npcsToAttack.isEmpty()
-                                        &&npcsToAttack.stream().anyMatch(npc.getName()::equalsIgnoreCase))
+                                        &&targetNames.contains(npc.getName().toLowerCase()))
                                 .where(npc -> !config.attackReachableNpcs()
                                         //|| new Rs2WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation()).distanceToPath(npc.getWorldLocation()) < Integer.MAX_VALUE//
                                 )
@@ -162,7 +172,9 @@ public class AttackNpcScript extends Script {
                 attackableNpcs.sort(
                         Comparator
                                 .comparingInt((Rs2NpcModel npc) ->
-                                        npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1)
+                                        npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 1+(npc.getInteracting() instanceof NPC ? 2 : 3))
+//                                .thenComparingInt((Rs2NpcModel npc) ->
+//                                        npc.getInteracting() instanceof NPC ? 0 : 1)
                                 .thenComparingInt(value ->
                                         value.getLocalLocation().distanceTo(
                                                 Microbot.getClient().getLocalPlayer().getLocalLocation()))
