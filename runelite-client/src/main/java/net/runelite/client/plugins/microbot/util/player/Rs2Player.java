@@ -233,6 +233,13 @@ public class Rs2Player {
     }
 
     /**
+     * Wait for walking
+     */
+    public static void waitForOnTile(WorldPoint worldPoint) {
+        sleepUntil(()->Rs2Player.getWorldLocation().equals(worldPoint),5000);
+    }
+
+    /**
      * Waits for the player to start walking within the specified time limit.
      * If the player starts walking, it then waits until the player stops walking.
      *
