@@ -398,7 +398,7 @@ public class Rs2ActorModel implements Actor
 
     @Override
     public int getFootprintSize() {
-        return 0;
+        return actor.getFootprintSize();
     }
 
     @Override
