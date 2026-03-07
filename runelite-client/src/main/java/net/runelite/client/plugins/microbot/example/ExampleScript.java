@@ -23,6 +23,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
@@ -64,33 +65,35 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-                if (Rs2Player.isAnimating()||Rs2Player.isMoving()){
-                    return;
-                }
-                WorldPoint FIGHTING_TILE_A = new WorldPoint(2452, 9168, 1);
-                WorldPoint FIGHTING_TILE_B = new WorldPoint(2453, 9167, 1);
-                WorldPoint targetTile = test ? FIGHTING_TILE_A : FIGHTING_TILE_B;
-
-                int runEnergy = Rs2Player.getRunEnergy();
-                if (runEnergy <= 0) {
+                if (Rs2Player.isAnimating(3000) || Rs2Player.isMoving()) {
                     return;
                 }
 
-                if (!Objects.equals(Rs2Player.getWorldLocation(), targetTile)) {
-                    Rs2Walker.walkFastCanvas(targetTile, true);
-
-                    Rs2Player.waitForWalking();
-                    if (Objects.equals(Rs2Player.getWorldLocation(), FIGHTING_TILE_A)){
-                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2453, 9167));
-
+                if (!Rs2Inventory.contains(29354)) {
+                    if (!Rs2Inventory.contains(28899)) {
+                        Rs2Inventory.interact(28900);
+                        Rs2Inventory.useItemOnNpc(28900, 13346);
+                        sleep(2000);
+                        Rs2Player.waitForWalking(5000);
+                        Widget widget = Rs2Widget.findWidget("Exchanging:");
+                        if (widget != null) {
+                            Rs2Keyboard.keyPress(String.valueOf(3).charAt(0));
+                        }
+                        Rs2Inventory.waitForInventoryChanges(1800);
+                        return;
                     }
-                    else {
-                        Rs2Tile.hoverOverTile(Rs2Tile.getTile(2452, 9168));
+                    if (Rs2Inventory.contains(28899)) {
+                        Rs2GameObject.interact(52799, "Bless");
+                        Rs2Player.waitForWalking(5000);
+                        return;
                     }
-                    sleepGaussian(400,100);
-
                 }
-                test= !test;
+                if (Rs2Inventory.contains(29354)){
+                    Rs2Inventory.interact(29354,"Break-down");
+                    sleep(2000);
+                    return;
+                }
+
 //                sleep(2500,7800);
 //                Rs2GameObject.interact(39095);
 //                sleep(1200);
