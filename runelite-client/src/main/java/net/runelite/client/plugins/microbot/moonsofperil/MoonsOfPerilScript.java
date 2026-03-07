@@ -60,12 +60,12 @@ public class MoonsOfPerilScript extends Script {
                 int currentHitpoints = Microbot.getClient().getBoostedSkillLevel(Skill.HITPOINTS);
                 if (currentTime - lastEatTime > EAT_COOLDOWN_MS && currentHitpoints <= 40) {
                     Rs2Player.useFood();
-                    if (Rs2Npc.getNpc(13011)!=null&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
-                        Rs2Inventory.wear(4151);
-                        Rs2Inventory.wear(12954  );
-                        //Rs2Npc.interact(npcToAttack, "attack");
-                        attackBoss("Blood moon");
-                    }
+//                    if (Rs2Npc.getNpc(13011)!=null&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
+//                        Rs2Inventory.wear(4151);
+//                        Rs2Inventory.wear(12954  );
+//                        //Rs2Npc.interact(npcToAttack, "attack");
+//                        attackBoss("Blood moon");
+//                    }
                     lastEatTime = currentTime;
                     Microbot.log("Eating food at " + 40 + "% health.");
                 }
@@ -74,12 +74,12 @@ public class MoonsOfPerilScript extends Script {
 //                        if (currentTime - lastPrayerTime > PRAYER_COOLDOWN_MS && currentPrayerPoints <= maxPrayer&&Rs2Npc.getNpcs("blood jaguar").count()==0) {
                 if (Rs2Npc.getNpcs("blood jaguar").count()==0) {
                     if (Rs2Player.drinkPrayerPotion()) {
-                        if (Rs2Npc.getNpc(13011) != null) {
-                            Rs2Inventory.wear(4151);
-                            Rs2Inventory.wear(12954);
-                            //Rs2Npc.interact(npcToAttack, "attack");
-//                                        attackBoss("Blood moon");
-                        }
+//                        if (Rs2Npc.getNpc(13011) != null) {
+//                            Rs2Inventory.wear(4151);
+//                            Rs2Inventory.wear(12954);
+//                            //Rs2Npc.interact(npcToAttack, "attack");
+////                                        attackBoss("Blood moon");
+//                        }
                     }
 //                            lastPrayerTime = currentTime;
 //                            Microbot.log("Drinking prayer potion at " + maxPrayer + "% prayer points.");

@@ -1,8 +1,8 @@
 package net.runelite.client.plugins.microbot.hallowedhelper;
 
 import com.google.inject.Provides;
-//import com.theplug.kotori.kotoriutils.KotoriUtils;
-//import com.theplug.kotori.kotoriutils.methods.NPCInteractions;
+//import net.runelite.client.plugins.microbot.kotoriutils.KotoriUtils;
+//import net.runelite.client.plugins.microbot.kotoriutils.methods.NPCInteractions;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;

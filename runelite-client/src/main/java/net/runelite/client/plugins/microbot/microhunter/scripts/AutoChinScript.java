@@ -14,18 +14,20 @@ import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.microhunter.AutoHunterConfig;
+import net.runelite.client.plugins.microbot.microhunter.AutoHunterLocalPlugin;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.hunter.HunterPlugin.*;
-
+import java.util.stream.Collectors;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 enum State {
@@ -69,7 +71,7 @@ public class AutoChinScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>10){
+                if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>30){
                     Rs2Walker.walkTo(new WorldPoint(3259,2377,0));
                      int x=3258;
                      int y=2377;
@@ -90,10 +92,10 @@ public class AutoChinScript extends Script {
                     sleep(2400);
                     Rs2Inventory.interact("box trap","lay");
                     sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y-1,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y-1,0));
+//                    sleep(2400);
+//                    Rs2Inventory.interact("box trap","lay");
+//                    sleepUntilTick(9);
                 };
                 switch (currentState) {
                     case IDLE:
@@ -140,68 +142,182 @@ public class AutoChinScript extends Script {
                     return;
                 }
             }
-            // If there are box traps on the floor, interact with them first
-            for (Map.Entry<WorldPoint, HunterTrap> entry : HunterPlugin.traplist.entrySet()) {
-                HunterTrap.State state=entry.getValue().getState();
-                System.out.println(state+" "+entry.getKey());
-                if (state.equals(HunterTrap.State.FULL)||state.equals(HunterTrap.State.EMPTY)) {
-//                    foundPoint = entry.getKey();
-                    HunterTrap foundTrap = entry.getValue();
-                    rs2TileObjectCache.query().fromWorldView().
-                    where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
-                    &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread()
-                    .click("Reset");
-                    sleep(1200);
-                    Rs2Player.waitForAnimation();
-                    Rs2GameObject.hoverOverObject(Rs2GameObject.getGameObject(new Integer[]{9383, 9385}));
-                    sleepUntil(() -> {
-                        HunterTrap trap = HunterPlugin.traplist.get(entry.getKey());
-                        if (trap!=null) {
-                            return trap.getObjectId()==9380;
-                        }
-                        return false;
-                    },2000);
-//                    sleep(0,200);
-                    System.out.println("Found trap " + foundTrap.getWorldLocation());
-//                    sleepUntilTick(8);
-                    break;
-                }
+            int activeTrapCount = HunterPlugin.getTraps().size();
+            if (activeTrapCount==0&&Rs2Inventory.contains("tuft",false)){
+                Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
+                Rs2Npc.interact("Guild Hunter Aco (Expert)","Rumour");
+                Rs2Dialogue.sleepUntilHasDialogueOption("Yes.");
+                Rs2Dialogue.keyPressForDialogueOption("Yes.");
+                sleep(600);
+                shutdown();
+//                        sleep(6000);
+                return;
             }
 
-//            // If our inventory is full of ferrets
-//            if (Rs2Inventory.emptySlotCount() <= 1 && Rs2Inventory.contains(ItemID.FERRET)) {
-//                // ferrets have the option release and not drop
-//                while (Rs2Inventory.contains(ItemID.FERRET)) {
-//                    Rs2Inventory.interact(ItemID.FERRET, "Release");
-//                    sleep(0, 750);
-//                    if (!Rs2Inventory.contains(ItemID.FERRET)) {
+            // If there are box traps on the floor, interact with them first
+//            for (Map.Entry<WorldPoint, HunterTrap> entry : HunterPlugin.traplist.entrySet()) {
+//                HunterTrap.State state=entry.getValue().getState();
+//                System.out.println(state+" "+entry.getKey());
+//                if (Rs2Inventory.contains("tuft",false)){
+//                    if (state.equals(HunterTrap.State.FULL)) {
+////                    foundPoint = entry.getKey();
+//                        HunterTrap foundTrap = entry.getValue();
+//                        rs2TileObjectCache.query().fromWorldView().
+//                                where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
+//                                        &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread()
+//                                .click("Check");
+//                        sleep(1200);
+//                        Rs2Player.waitForAnimation();
+//                        Rs2GameObject.hoverOverObject(Rs2GameObject.getGameObject(new Integer[]{9383, 9385}));
+//                        sleepUntil(() -> {
+//                            HunterTrap trap = HunterPlugin.traplist.get(entry.getKey());
+//                            if (trap!=null) {
+//                                return trap.getObjectId()==9380;
+//                            }
+//                            return false;
+//                        },2000);
+////                    sleep(0,200);
+//                        System.out.println("Found trap " + foundTrap.getWorldLocation());
+////                    sleepUntilTick(8);
 //                        break;
 //                    }
+//                    if (state.equals(HunterTrap.State.OPEN)||state.equals(HunterTrap.State.EMPTY)) {
+////                    foundPoint = entry.getKey();
+//                        HunterTrap foundTrap = entry.getValue();
+//                        rs2TileObjectCache.query().fromWorldView().
+//                                where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
+//                                        &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread()
+//                                .click("Dismantle");
+//                        sleep(1200);
+//                        Rs2Player.waitForAnimation();
+//                        Rs2GameObject.hoverOverObject(Rs2GameObject.getGameObject(new Integer[]{9383, 9385}));
+//                        sleepUntil(() -> {
+//                            HunterTrap trap = HunterPlugin.traplist.get(entry.getKey());
+//                            if (trap!=null) {
+//                                return trap.getObjectId()==9380;
+//                            }
+//                            return false;
+//                        },2000);
+////                    sleep(0,200);
+//                        System.out.println("Found trap " + foundTrap.getWorldLocation());
+////                    sleepUntilTick(8);
+//                        break;
+//                    }
+//
 //                }
-//                currentState = State.DROPPING;
-//                return;
+//                if (state.equals(HunterTrap.State.FULL)||state.equals(HunterTrap.State.EMPTY)) {
+////                    foundPoint = entry.getKey();
+//                    HunterTrap foundTrap = entry.getValue();
+//                    rs2TileObjectCache.query().fromWorldView().
+//                    where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
+//                    &&x.getName() != null && x.getName().toLowerCase().contains("box")).nearestOnClientThread()
+//                    .click("Reset");
+//                    sleep(1200);
+//                    Rs2Player.waitForAnimation();
+//                    Rs2GameObject.hoverOverObject(Rs2GameObject.getGameObject(new Integer[]{9383, 9385}));
+//                    sleepUntil(() -> {
+//                        HunterTrap trap = HunterPlugin.traplist.get(entry.getKey());
+//                        if (trap!=null) {
+//                            return trap.getObjectId()==9380;
+//                        }
+//                        return false;
+//                    },2000);
+////                    sleep(0,200);
+//                    System.out.println("Found trap " + foundTrap.getWorldLocation());
+////                    sleepUntilTick(8);
+//                    break;
+//                }
 //            }
-//
-//            // If there are shaking boxes, interact with them. ferrets
-//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9384, "reset", 4)) {
-//                currentState = State.CATCHING;
-//                return;
-//            }
-//            // If there are shaking boxes, interact with them
-//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9383, "reset", 4)) {
-//                currentState = State.CATCHING;
-//                return;
-//            }
-//            // If there are shaking boxes, interact with them
-//            if (Rs2GameObject.interact(ObjectID.SHAKING_BOX_9382, "reset", 4)) {
-//                currentState = State.CATCHING;
-//                retu rn;
-//            }
-//
-//            // Interact with traps that have not caught anything
-//            if (Rs2GameObject.interact(ObjectID.BOX_TRAP_9385, "reset", 4)) {
-//                currentState = State.CATCHING;
-//            }
+
+            List<Map.Entry<WorldPoint, HunterTrap>> sortedTraps =
+                    HunterPlugin.traplist.entrySet().stream()
+
+                            .filter(entry -> {
+                                HunterTrap.State state = entry.getValue().getState();
+
+                                if (state == HunterTrap.State.FULL || state == HunterTrap.State.EMPTY)
+                                    return true;
+
+                                // Only allow OPEN if we have tuft
+                                return state == HunterTrap.State.OPEN
+                                        && Rs2Inventory.contains("tuft", false);
+                            })
+
+                            .sorted(Comparator.comparingDouble(
+                                    (Map.Entry<WorldPoint, HunterTrap> e) ->
+                                            e.getValue().getTrapTimeRelative()
+                            ).reversed())
+
+                            .collect(Collectors.toList());
+
+            if (!sortedTraps.isEmpty()){
+                Map.Entry<WorldPoint, HunterTrap> currentTrapEntry = sortedTraps.get(0);
+                HunterTrap foundTrap = currentTrapEntry.getValue();
+                HunterTrap.State state = foundTrap.getState();
+
+                String action;
+
+                if (Rs2Inventory.contains("tuft", false)) {
+                    if (state == HunterTrap.State.FULL) {
+                        action = "Check";
+                    } else if (state == HunterTrap.State.OPEN || state == HunterTrap.State.EMPTY) {
+                        action = "Dismantle";
+                    } else {
+                        return;
+                    }
+                } else {
+                    if (state == HunterTrap.State.FULL || state == HunterTrap.State.EMPTY) {
+                        action = "Reset";
+                    } else {
+                        return;
+                    }
+                }
+
+                rs2TileObjectCache.query()
+                        .fromWorldView()
+                        .where(x -> x.getWorldLocation().equals(foundTrap.getWorldLocation())
+                                && x.getName() != null
+                                && x.getName().toLowerCase().contains("box"))
+                        .nearestOnClientThread()
+                        .click(action);
+
+                sleep(1200);
+                Rs2Player.waitForAnimation();
+                // Your fitted parameters
+                 double LOG_MEAN = 0.25; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*1000);
+                // Hover next valid trap
+                sortedTraps.stream()
+                        .skip(1)
+                        .map(Map.Entry::getValue)
+                        .filter(trap ->
+                                trap.getState() == HunterTrap.State.FULL
+                                        || trap.getState() == HunterTrap.State.EMPTY
+                                        || (trap.getState() == HunterTrap.State.OPEN
+                                        && Rs2Inventory.contains("tuft", false)))
+                        .findFirst()
+                        .ifPresent(nextTrap ->
+                                rs2TileObjectCache.query()
+                                        .fromWorldView()
+                                        .where(x -> x.getWorldLocation().equals(nextTrap.getWorldLocation())
+                                                && x.getName() != null
+                                                && x.getName().toLowerCase().contains("box"))
+                                        .nearestOnClientThread()
+                                        .hover()
+                        );
+                sleepUntil(() -> {
+                    HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
+                    return trap != null && trap.getObjectId() == 9380;
+                }, 3000);
+                LOG_MEAN = 0.06;LOG_STD = 0.6;r = new Random();gaussian = r.nextGaussian();
+                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
+                System.out.println("Handled trap " + foundTrap.getWorldLocation());
+            }
+
+
+
         } catch (Exception ex) {
             Microbot.log(ex.getMessage());
             ex.printStackTrace();

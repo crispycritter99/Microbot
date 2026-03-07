@@ -23,6 +23,7 @@ import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
@@ -42,6 +43,7 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -63,16 +65,63 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
-//                if (Rs2Player.isAnimating()||Rs2Player.isMoving())return;
+                if (Rs2Player.isAnimating(3000) || Rs2Player.isMoving()) {
+                    return;
+                }
+
+                if (!Rs2Inventory.contains(29354)) {
+                    if (!Rs2Inventory.contains(28899)) {
+                        Rs2Inventory.interact(28900);
+                        Rs2Inventory.useItemOnNpc(28900, 13346);
+                        sleep(2000);
+                        Rs2Player.waitForWalking(5000);
+                        Widget widget = Rs2Widget.findWidget("Exchanging:");
+                        if (widget != null) {
+                            Rs2Keyboard.keyPress(String.valueOf(3).charAt(0));
+                        }
+                        Rs2Inventory.waitForInventoryChanges(1800);
+                        return;
+                    }
+                    if (Rs2Inventory.contains(28899)) {
+                        Rs2GameObject.interact(52799, "Bless");
+                        Rs2Player.waitForWalking(5000);
+                        return;
+                    }
+                }
+                if (Rs2Inventory.contains(29354)){
+                    Rs2Inventory.interact(29354,"Break-down");
+                    sleep(2000);
+                    return;
+                }
+
 //                sleep(2500,7800);
 //                Rs2GameObject.interact(39095);
 //                sleep(1200);
-                if (Rs2Player.isInteracting())return;
-//                Rs2Npc.interact("kalphite worker","attack");
-                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("terrorbird").findFirst().orElse(null);
-                if (npc == null) return;
-                Rs2Npc.interact(npc);
-                sleep(1200);
+//                if (Rs2Player.isInteracting())return;
+//                Microbot.status="ready to go";
+////                Rs2Npc.interact("s   unlight moth","catch");
+//                if (Rs2Inventory.isFull()){
+//                    Microbot.status="grinding crabs";
+//                    Rs2Inventory.combine("pestle and mortar","blue crab");
+//                    sleep(23000);
+//
+//                }
+//                if (Rs2GameObject.interact("Crab trap (empty)","bait")) {
+//                    Microbot.status="baiting trap";
+////                    Rs2Inventory.waitForInventoryChanges(1800);
+//                    return;
+//                }
+//                if (Rs2GameObject.interact("Crab trap (full)","empty")) {
+//                    Microbot.status="resetting trap";
+//                    Rs2Player.waitForXpDrop(Skill.HUNTER);
+////                    Microbot.status="waiting for inventory change";
+////                    Rs2Inventory.waitForInventoryChanges(1800);
+//                    return;
+//                }
+//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("lizardman").findFirst().orElse(null);
+//                if (npc == null) return;
+//                Rs2Npc.interact(npc);
+//                sleep(1200);
 
 
 //                Rs2Inventory.slotInteract(27,"use");

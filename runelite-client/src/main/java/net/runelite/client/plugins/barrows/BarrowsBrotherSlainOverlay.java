@@ -47,7 +47,7 @@ class BarrowsBrotherSlainOverlay extends OverlayPanel
 	private final Client client;
 
 	@Inject
-	private BarrowsBrotherSlainOverlay(BarrowsPlugin plugin, Client client)
+	private BarrowsBrotherSlainOverlay(BarrowsRLPlugin plugin, Client client)
 	{
 		super(plugin);
 		setPosition(OverlayPosition.TOP_LEFT);

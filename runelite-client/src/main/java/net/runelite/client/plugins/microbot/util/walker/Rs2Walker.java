@@ -565,7 +565,8 @@ public class Rs2Walker {
 
         int canvasX = canv != null ? canv.getX() : -1;
         int canvasY = canv != null ? canv.getY() : -1;
-
+        canvasX+=Rs2Random.nextInt(-10,10,1,true);
+        canvasY+=Rs2Random.nextInt(-10,10,1,true);
         //if the tile is not on screen, use minimap
         if (!Rs2Camera.isTileOnScreen(localPoint) || canvasX < 0 || canvasY < 0) {
             return Rs2Walker.walkMiniMap(worldPoint);
@@ -1878,7 +1879,12 @@ public class Rs2Walker {
     private static boolean handleInventoryTeleports(Transport transport, int itemId) {
         Rs2ItemModel rs2Item = Rs2Inventory.get(itemId);
         if (rs2Item == null) return false;
-
+        if (rs2Item.getName().toLowerCase().contains("whistle")){
+            log.debug("using quetzal whislte");
+            Rs2Inventory.interact(rs2Item, "Signal");
+            handleQuetzalfromItem(transport);
+            return true;
+        }
         // A list of generic teleports that can be used if no parsable destination action is found
         List<String> genericKeyWords = Arrays.asList(
                 "invoke", "empty", "consume", "open", "teleport", "rub", "break", "reminisce", "signal", "play", "commune", "squash"
@@ -2353,6 +2359,36 @@ public class Rs2Walker {
                 return sleepUntilTrue(() -> Rs2Player.getWorldLocation().distanceTo2D(transport.getDestination()) < OFFSET, 100, 5000);
             }
         }
+        return false;
+    }
+
+    private static boolean handleQuetzalfromItem(Transport transport) {
+        @Component
+        int VARLAMORE_QUETZAL_MAP = InterfaceID.QuetzalMenu.CONTENTS;
+        @Component
+        int VARLAMORE_QUETZAL_OPTIONS = InterfaceID.QuetzalMenu.ICONS;
+        String displayInfo = transport.getDisplayInfo();
+//        if (displayInfo == null || displayInfo.isEmpty()) return false;
+
+            boolean isVarlamoreMapVisible = sleepUntilTrue(() -> Rs2Widget.isWidgetVisible(VARLAMORE_QUETZAL_MAP), 100, 10000);
+
+            if (!isVarlamoreMapVisible) {
+                log.error("Varlamore Map Widget not visable within timeout");
+                return false;
+            }
+
+            Widget quetzalMapWidget = Rs2Widget.getWidget(VARLAMORE_QUETZAL_OPTIONS);
+            List<Widget> quetzalMapChildren = Arrays.stream(quetzalMapWidget.getDynamicChildren())
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+
+            Widget actionWidget = Rs2Widget.findWidget(displayInfo, quetzalMapChildren, false);
+            if (actionWidget != null) {
+                Rs2Widget.clickWidget(actionWidget);
+                log.info("Traveling to {} - ({})", transport.getDisplayInfo(), transport.getDestination());
+                return sleepUntilTrue(() -> Rs2Player.getWorldLocation().distanceTo2D(transport.getDestination()) < OFFSET, 100, 5000);
+            }
+
         return false;
     }
 

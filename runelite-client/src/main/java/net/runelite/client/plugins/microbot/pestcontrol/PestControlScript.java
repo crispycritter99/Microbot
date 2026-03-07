@@ -128,8 +128,9 @@ public class PestControlScript extends Script {
                             walkToCenter = true;
                         }
                     }
-
-                    Rs2Combat.setSpecState(true, config.specialAttackPercentage() * 10);
+                   if (config.useSpecialAttack()&&Rs2Player.isInteracting()){
+                       Microbot.getSpecialAttackConfigs().useSpecWeapon();
+                   }
                     Widget activity = Rs2Widget.getWidget(26738700); //145 = 100%
                     if (activity != null && activity.getChild(0).getWidth() <= 20 && !Rs2Combat.inCombat()) {
                         Optional<Rs2NpcModel> attackableNpc = Rs2Npc.getAttackableNpcs().findFirst();

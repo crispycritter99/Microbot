@@ -1,25 +1,32 @@
 package net.runelite.client.plugins.microbot.falconry;
 
 import net.runelite.api.NPC;
+import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.aiofighterretro.AIOFighterConfig;
 import net.runelite.client.plugins.microbot.salamanderslocal.SalamanderLocalConfig;
 import net.runelite.client.plugins.microbot.falconry.SalamanderLocalHunting;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-
+import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
 
 public class FalconryScript extends Script {
     public static boolean tentacle = false;
     NPC vorkath;
+private boolean init = true;
+    @Inject
+    private ConfigManager configManager;
     public static boolean lootnet = false;
      boolean test = false;
+//    SalamanderLocalHunting salamanderType = null;
     public boolean run(FalconryConfig config) {
         Microbot.enableAutoRunOn = false;
 
@@ -33,15 +40,43 @@ public class FalconryScript extends Script {
                         return;
 
                 }
+//                    if (init) {
+//
+//                        init = false;
+//                    }
+//                SalamanderLocalHunting salamanderType = getSalamander(config);
                     if (Rs2Inventory.contains("kebbity tuft",false)){
                         Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
                         Rs2Inventory.dropAll(false,  "fur");
                         Rs2Inventory.dropAll(true,  "bones");
                         Rs2Inventory.dropAll(false,  "raw");
-                        shutdown();
+                        Rs2Npc.interact("Guild Hunter Aco (Expert)","Rumour");
+                        Rs2Dialogue.sleepUntilHasDialogueOption("yes",false);
+                        Rs2Dialogue.keyPressForDialogueOption("yes",false);
+                        sleep(1200);
+                        if (Rs2Dialogue.hasDialogueText("dashing",false)){
+                            Microbot.getConfigManager().setConfiguration(
+                                    "falconry",
+                                    "salamanderHunting",
+                                    SalamanderLocalHunting.DASHING.name()
+                            );
+//                            salamanderType = SalamanderLocalHunting.DASHING;
+                        }
+                        else if (Rs2Dialogue.hasDialogueText("dark",false)){
+//                            salamanderType = SalamanderLocalHunting.DARK;
+                            Microbot.getConfigManager().setConfiguration(
+                                    "falconry",
+                                    "salamanderHunting",
+                                    SalamanderLocalHunting.DARK.name()
+                            );
+                        }
+                        else {
+                            shutdown();
+                        }
 //                        sleep(6000);
                         return;
                     }
+                SalamanderLocalHunting salamanderType = getSalamander(config);
                     if (Rs2Player.distanceTo(new WorldPoint(2376,3597,0))>30){
                         Rs2Walker.walkTo(new WorldPoint(2376,3597,0));
                     };
@@ -51,7 +86,7 @@ public class FalconryScript extends Script {
                         if (Rs2Equipment.isWearing("Falconer's glove"))
                         {Rs2Walker.walkTo(new WorldPoint(2368,3580,0));}
                     }
-                SalamanderLocalHunting salamanderType = getSalamander(config);
+
 
                 if (Rs2Player.getPoseAnimation()==5160) {
                     Rs2Inventory.dropAll(false,  "fur");

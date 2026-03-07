@@ -69,7 +69,7 @@ public class MoonsOfPerilPluginLocal extends Plugin {
     @Subscribe
     public void onGraphicsObjectCreated(GraphicsObjectCreated event) {
         final GraphicsObject graphicEvent = event.getGraphicsObject();
-        if (graphicEvent.getId() == SpotanimID.VFX_DJINN_ICE_FLOOR_SPAWN_01) {
+        if (graphicEvent.getId() == 2771) {
             Rs2Tile.addDangerousGraphicsObjectTile(graphicEvent, 600 * 3);
         }
     }

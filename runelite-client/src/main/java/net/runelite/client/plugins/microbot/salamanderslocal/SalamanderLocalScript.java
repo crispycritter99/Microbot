@@ -10,10 +10,12 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
@@ -74,9 +76,19 @@ public class SalamanderLocalScript extends Script {
                 if (handledTrap) return;
                 if (activeTrapCount==0&&Rs2Inventory.contains("claw",false)){
                     Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
+                    sleep(1200);
                     Rs2Inventory.dropAll(true,  config.salamanderHunting().getName());
-
-                    shutdown();
+                    Rs2Npc.interact("Guild Hunter Aco (Expert)","Rumour");
+                    Rs2Dialogue.sleepUntilHasDialogueOption("yes",false);
+                    Rs2Dialogue.keyPressForDialogueOption("yes",false);
+                    sleep(1200);
+                    if (Rs2Dialogue.hasDialogueText("orange",false)){
+                        return;
+//                            salamanderType = SalamanderLocalHunting.DASHING;
+                    }
+                    else {
+                        shutdown();
+                    }
 //                        sleep(6000);
                     return;
                 }
@@ -166,20 +178,42 @@ public class SalamanderLocalScript extends Script {
 
     private boolean handleExistingTraps(SalamanderLocalPlugin plugin, SalamanderLocalConfig config) {
         // Filter for FULL traps and sort by time (traps about to collapse first) and then pick the first one
-        var trapToHandle = plugin.getTraps().entrySet().stream()
-                .filter(entry -> entry.getValue().getState() == HunterTrap.State.FULL)
-                .sorted((a, b) -> Double.compare(b.getValue().getTrapTimeRelative(), a.getValue().getTrapTimeRelative())).collect(Collectors.toList()).stream().findFirst().orElse(null);
-        if (trapToHandle == null) return false;
-        WorldPoint location = trapToHandle.getKey();
-        if (!Rs2Player.isAnimating() && !Rs2Player.isMoving()) {
-            var gameObject = Rs2GameObject.getGameObject(location);
-            if (gameObject != null) {
-                Rs2GameObject.interact(gameObject, Rs2Inventory.contains(false,"claw")?"Check":"Reset");
-                SalamandersCaught++;
-                sleep(config.minSleepAfterCatch(), config.maxSleepAfterCatch());
-                return true;
+        if (Rs2Inventory.contains("claw",false)){
+            var trapToHandle = plugin.getTraps().entrySet().stream()
+                    .filter(entry -> (entry.getValue().getState() == HunterTrap.State.OPEN)||((entry.getValue().getState() == HunterTrap.State.FULL)))
+                    .sorted((a, b) -> Double.compare(b.getValue().getTrapTimeRelative(), a.getValue().getTrapTimeRelative())).collect(Collectors.toList()).stream().findFirst().orElse(null);
+            if (trapToHandle == null) return false;
+            WorldPoint location = trapToHandle.getKey();
+            if (!Rs2Player.isAnimating() && !Rs2Player.isMoving()) {
+                var gameObject = Rs2GameObject.getGameObject(location);
+                if (gameObject != null) {
+                    if (trapToHandle.getValue().getState()==HunterTrap.State.OPEN) {
+                        Rs2GameObject.interact(gameObject, "Dismantle");
+                    }
+                    else if (trapToHandle.getValue().getState()==HunterTrap.State.FULL) {
+                        Rs2GameObject.interact(gameObject, "Check");
+                    }
+                    sleep(2400);
+                    return true;
+                }
             }
         }
+//        else {
+            var trapToHandle = plugin.getTraps().entrySet().stream()
+                    .filter(entry -> entry.getValue().getState() == HunterTrap.State.FULL)
+                    .sorted((a, b) -> Double.compare(b.getValue().getTrapTimeRelative(), a.getValue().getTrapTimeRelative())).collect(Collectors.toList()).stream().findFirst().orElse(null);
+            if (trapToHandle == null) return false;
+            WorldPoint location = trapToHandle.getKey();
+            if (!Rs2Player.isAnimating() && !Rs2Player.isMoving()) {
+                var gameObject = Rs2GameObject.getGameObject(location);
+                if (gameObject != null) {
+                    Rs2GameObject.interact(gameObject, Rs2Inventory.contains(false, "claw") ? "Check" : "Reset");
+                    SalamandersCaught++;
+                    sleep(config.minSleepAfterCatch(), config.maxSleepAfterCatch());
+                    return true;
+                }
+            }
+//        }
         return false;
     }
 

@@ -3,19 +3,26 @@ package net.runelite.client.plugins.microbot.pestcontrol;
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.ChatMessageType;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
+import net.runelite.client.plugins.microbot.aiofighterretro.AIOFighterConfig;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.pestcontrol.Portal;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,6 +71,15 @@ public class PestControlLocalPlugin extends Plugin {
         }
         pestControlScript.initialise = true;
         pestControlScript.run(config);
+        if (config.useSpecialAttack() && config.specWeapon() != null) {
+            Microbot.getSpecialAttackConfigs()
+                    .setSpecialAttack(true)
+                    .setSpecialAttackWeapon(config.specWeapon())
+                    .setMinimumSpecEnergy(config.specWeapon().getEnergyRequired());
+        } else {
+            Microbot.getSpecialAttackConfigs()
+                    .setSpecialAttack(config.useSpecialAttack());
+        }
     }
 
     protected void shutDown() {
@@ -102,4 +118,22 @@ public class PestControlLocalPlugin extends Plugin {
     }
 
     }
+
+    // on setting change
+    @Subscribe
+    public void onConfigChanged(ConfigChanged event) {
+
+        // Handle special attack weapon config changes
+        if (event.getKey().equals("Use special attack") || event.getKey().equals("Spec weapon")) {
+            if (config.useSpecialAttack() && config.specWeapon() != null) {
+                Microbot.getSpecialAttackConfigs()
+                        .setSpecialAttack(true)
+                        .setSpecialAttackWeapon(config.specWeapon())
+                        .setMinimumSpecEnergy(config.specWeapon().getEnergyRequired());
+            } else {
+                Microbot.getSpecialAttackConfigs().reset();
+            }
+        }
+    }
+
 }

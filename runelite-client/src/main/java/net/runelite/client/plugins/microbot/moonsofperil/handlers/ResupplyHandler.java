@@ -129,6 +129,7 @@ public class ResupplyHandler implements BaseHandler {
                 Rs2Dialogue.clickOption("Take fishing supplies.");
                 Rs2Inventory.waitForInventoryChanges(4_000);
             }
+        }
             Rs2Walker.walkFastCanvas(new WorldPoint(1520,9689,0));
             while (!Rs2Inventory.isFull() && Rs2Inventory.contains(ItemID.BIG_NET)) {
                 if (!Rs2Player.isAnimating()) {
@@ -140,7 +141,7 @@ public class ResupplyHandler implements BaseHandler {
             if (debugLogging) {Microbot.log("Inventory should now be full of fish");}
             sleep(600, 900);
             Rs2Inventory.drop(ItemID.BIG_NET);
-        }
+
 
     }
 
