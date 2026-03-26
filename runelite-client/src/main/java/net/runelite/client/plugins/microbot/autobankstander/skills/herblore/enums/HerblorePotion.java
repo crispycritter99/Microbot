@@ -45,6 +45,7 @@ public enum HerblorePotion {
     SUPER_COMBAT("Super combat potion", 90, ItemID.TORSTOL, ItemID._4DOSE2ATTACK),
     SUPER_DEFENCE("Super defence potion", 66, ItemID.CADANTINEVIAL, ItemID.WHITE_BERRIES),
     SUPER_ENERGY("Super energy potion", 52, ItemID.AVANTOEVIAL, ItemID.MORTMYREMUSHROOM),
+    SUPER_HUNTER("Super hunter potion", 67, ItemID.PILLARVIAL, ItemID.CRAB_PASTE),
     SUPER_RESTORE("Super restore potion", 63, ItemID.SNAPDRAGONVIAL, ItemID.RED_SPIDERS_EGGS),
     SUPER_STRENGTH("Super strength potion", 55, ItemID.KWUARMVIAL, ItemID.LIMPWURT_ROOT),
     WEAPON_POISON("Weapon poison", 60, ItemID.KWUARMVIAL, ItemID.DRAGON_SCALE_DUST),

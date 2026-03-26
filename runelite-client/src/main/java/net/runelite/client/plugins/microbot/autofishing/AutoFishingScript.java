@@ -46,7 +46,7 @@ public class AutoFishingScript extends Script {
     private AutoFishingState currentState = AutoFishingState.IDLE;
     private WorldPoint fishingLocation;
     private String fishAction = "";
-
+    private boolean doneCutting = true;
     public boolean run(AutoFishingConfig config) {
         this.config = config;
         this.selectedFish = config.fishToCatch();
@@ -75,6 +75,7 @@ public class AutoFishingScript extends Script {
                 case FISHING: handleFishing(); break;
                 case PROCESSING_FISH: handleProcessingFish(); break;
                 case COOKING: handleCooking(); break;
+                case CUTTING: handleCutting(); break;
                 case DEPOSITING: handleDepositing(); break;
                 case DROPPING: handleDropping(); break;
                 case ERROR_RECOVERY: handleErrorRecovery(); break;
@@ -87,10 +88,11 @@ public class AutoFishingScript extends Script {
 
     private AutoFishingState determineState() {
         System.out.println("diddy 2");
-        if (Rs2Inventory.isFull()&&selectedFish != Fish.KARAMBWANJI) {
+        if (Rs2Inventory.isFull()&&selectedFish != Fish.KARAMBWANJI|| !doneCutting) {
             if (isSpecialFish(selectedFish)) return AutoFishingState.PROCESSING_FISH;
             if (config.cookFish() && !getRawFishInInventory().isEmpty()) return AutoFishingState.COOKING;
             if (config.useBank()) return AutoFishingState.DEPOSITING;
+            if (config.cutFish()) return AutoFishingState.CUTTING;
             return AutoFishingState.DROPPING;
         }
 
@@ -170,6 +172,23 @@ public class AutoFishingScript extends Script {
                 Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
                 sleepUntil(() -> Rs2Player.getAnimation() != -1, 3_000);
             }
+        }
+    }
+
+    private void handleCutting() {
+
+
+        String fishToCook = getRawFishInInventory().stream().findFirst().orElse(null);
+
+        if (fishToCook != null) {
+            doneCutting = false;
+            Rs2Inventory.combine("knife",fishToCook);
+
+                sleepUntil(() -> !Rs2Inventory.contains(fishToCook), 60000);
+
+        }
+        else{
+            doneCutting = true;
         }
     }
 

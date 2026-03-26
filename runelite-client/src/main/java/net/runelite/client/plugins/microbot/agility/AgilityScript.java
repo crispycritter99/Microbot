@@ -115,7 +115,7 @@ public class AgilityScript extends Script
 					return;
 				}
 
-				final WorldPoint playerWorldLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+				final WorldPoint playerWorldLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 				final int currentAgilityXp = Microbot.getClient().getSkillExperience(Skill.AGILITY);
 
 				if (handleFood())
@@ -379,7 +379,7 @@ public class AgilityScript extends Script
 
 	private boolean performEfficientAlch(TileObject gameObject, String alchItem, int agilityExp)
 	{
-		WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+		WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 		
 		if (gameObject.getWorldLocation().distanceTo(playerLocation) >= 5)
 		{

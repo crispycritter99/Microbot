@@ -770,7 +770,7 @@ public class TemporossScript extends Script {
         isFightingFire = true;
         
         // Get player location for distance calculations
-        WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+        WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
         
         // Sort fires by distance to player
         List<Rs2NpcModel> prioritizedFires = new ArrayList<>(sortedFires);
@@ -907,7 +907,7 @@ public class TemporossScript extends Script {
             // Force stop current activity
             if (Rs2Player.isInteracting()) {
                 // Move one tile away to break interaction
-                WorldPoint playerPos = Microbot.getClient().getLocalPlayer().getWorldLocation();
+                WorldPoint playerPos = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 WorldPoint breakPoint = playerPos.dx(1); // Move one tile east
                 Rs2Walker.walkTo(breakPoint);
                 sleepUntil(() -> !Rs2Player.isInteracting(), 2000);
@@ -952,7 +952,7 @@ public class TemporossScript extends Script {
             // Force stop current activity
             if (Rs2Player.isInteracting()) {
                 // Move one tile away to break interaction
-                WorldPoint playerPos = Microbot.getClient().getLocalPlayer().getWorldLocation();
+                WorldPoint playerPos = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 WorldPoint breakPoint = playerPos.dx(1); // Move one tile east
                 Rs2Walker.walkTo(breakPoint);
                 sleepUntil(() -> !Rs2Player.isInteracting(), 2000);
@@ -1105,7 +1105,7 @@ public class TemporossScript extends Script {
         }
         if (TemporossSoloPlugin.incomingWave != TemporossSoloPlugin.isTethered) {
             if (Rs2Player.isInteracting()) {
-                WorldPoint playerPos = Microbot.getClient().getLocalPlayer().getWorldLocation();
+                WorldPoint playerPos = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 List<WorldPoint> adjacentTiles = Arrays.asList(
                         playerPos.dx(1), playerPos.dx(-1),
                         playerPos.dy(1), playerPos.dy(-1)
@@ -1313,7 +1313,7 @@ public class TemporossScript extends Script {
                         if (inCloud(Microbot.getClient().getLocalPlayer().getWorldLocation(), 1)) {
                             log("Current spot is clouded, looking for a better fishing spot...");
 
-                            var playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+                            var playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 
                             var safeFishSpot = fishSpots.stream()
                                     .filter(spot -> !inCloud(spot.getWorldLocation(), 1))
@@ -1472,7 +1472,7 @@ public class TemporossScript extends Script {
                                 .orElse(null);
                         
                         if (closestCloud != null) {
-                            WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+                            WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                             int distanceToCloud = playerLocation.distanceTo(closestCloud.getWorldLocation());
                             
                             // Move next to the cloud if not already close

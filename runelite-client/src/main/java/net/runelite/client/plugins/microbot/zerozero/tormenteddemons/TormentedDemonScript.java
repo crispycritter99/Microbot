@@ -99,7 +99,7 @@ public class TormentedDemonScript extends Script {
     private void handleTravel(TormentedDemonConfig config) {
         WorldPoint targetLocationOne = new WorldPoint(4062, 4558, 0);
         WorldPoint targetFinalLocation = new WorldPoint(4073, 4432, 0);
-        WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+        WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 
         switch (travelStep) {
             case LOCATION_ONE:

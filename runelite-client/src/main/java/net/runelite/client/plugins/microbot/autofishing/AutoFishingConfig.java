@@ -50,6 +50,16 @@ public interface AutoFishingConfig extends Config {
     default boolean cookFish() {
         return false;
     }
+    @ConfigItem(
+            keyName = "cutFish",
+            name = "Cut fish",
+            description = "Cut fish for offcuts",
+            position = 2,
+            section = GENERAL_SECTION
+    )
+    default boolean cutFish() {
+        return false;
+    }
 
     @ConfigItem(
             keyName = "harpoonSpec",

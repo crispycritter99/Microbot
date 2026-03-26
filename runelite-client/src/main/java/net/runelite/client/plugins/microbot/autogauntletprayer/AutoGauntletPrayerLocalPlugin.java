@@ -82,35 +82,36 @@ public class AutoGauntletPrayerLocalPlugin extends Plugin {
     public void onGameTick(GameTick event) {
         System.out.println("Next prayer: " + nextPrayer);
 
-        if (nextPrayer != null && !Rs2Prayer.isPrayerActive(nextPrayer)) {
-            Rs2Prayer.toggle(nextPrayer, true);
-        }
+//        if (nextPrayer != null && !Rs2Prayer.isPrayerActive(nextPrayer)) {
+//            Rs2Prayer.toggle(nextPrayer, true);
+//        }
 
         Rs2NpcModel hunllef = Rs2Npc.getNpcs()
                 .filter(npc -> HUNLLEF_IDS.contains(npc.getId()))
                 .findFirst()
                 .orElse(null);
 
-        if (hunllef == null) {
-            nextPrayer = null;
-            return;
-        }
+//        if (hunllef == null) {
+//            nextPrayer = null;
+//            return;
+//        }
 
-        HeadIcon headIcon = hunllef.getHeadIcon();
+//    HeadIcon headIcon = hunllef.getHeadIcon();
+//
+//    switch (headIcon) {
+//        case RANGED:
+//            handleRangedHeadIcon();
+//            break;
+//        case MAGIC:
+//            handleMagicHeadIcon();
+//            break;
+//        case MELEE:
+//            handleMeleeHeadIcon();
+//            break;
+//        default:
+//            break;
+//    }
 
-        switch (headIcon) {
-            case RANGED:
-                handleRangedHeadIcon();
-                break;
-            case MAGIC:
-                handleMagicHeadIcon();
-                break;
-            case MELEE:
-                handleMeleeHeadIcon();
-                break;
-            default:
-                break;
-        }
     }
 
     @Subscribe
@@ -121,12 +122,12 @@ public class AutoGauntletPrayerLocalPlugin extends Plugin {
             case MAGE_PROJECTILE:
             case CG_MAGE_PROJECTILE:
             case MAGE_PROJECTILE_MINIBOSS:
-                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
+//                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_MAGIC, true);
                 break;
             case RANGE_PROJECTILE:
             case CG_RANGE_PROJECTILE:
             case RANGE_PROJECTILE_MINIBOSS:
-                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
+//                Rs2Prayer.toggle(Rs2PrayerEnum.PROTECT_RANGE, true);
                 break;
             default:
                 break;
@@ -146,11 +147,11 @@ public class AutoGauntletPrayerLocalPlugin extends Plugin {
         switch (animationID) {
             case MAGE_ANIMATION:
                 nextPrayer = Rs2PrayerEnum.PROTECT_MAGIC;
-                Rs2Prayer.toggle(nextPrayer, true);
+//                Rs2Prayer.toggle(nextPrayer, true);
                 break;
             case RANGE_ANIMATION:
                 nextPrayer = Rs2PrayerEnum.PROTECT_RANGE;
-                Rs2Prayer.toggle(nextPrayer, true);
+//                Rs2Prayer.toggle(nextPrayer, true);
                 break;
             default:
                 break;

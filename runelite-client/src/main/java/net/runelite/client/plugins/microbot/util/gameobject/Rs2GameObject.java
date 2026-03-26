@@ -556,7 +556,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getTileObject(id, player.getWorldLocation(), distance);
+        return getTileObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
     public static TileObject getTileObject(int id, WorldPoint anchor) {
@@ -630,7 +630,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getTileObject(predicate, player.getWorldLocation());
+        return getTileObject(predicate, Rs2Player.getWorldLocation());
     }
 
     public static TileObject getTileObject(WorldPoint anchor) {
@@ -654,7 +654,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getTileObject(predicate, player.getWorldLocation(), distance);
+        return getTileObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static TileObject getTileObject(Predicate<TileObject> predicate, WorldPoint anchor) {
@@ -690,7 +690,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getTileObjects(predicate, player.getWorldLocation(), distance);
+        return getTileObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static List<TileObject> getTileObjects(WorldPoint anchor) {
@@ -706,7 +706,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getTileObjects(predicate, player.getWorldLocation());
+        return getTileObjects(predicate, Rs2Player.getWorldLocation());
     }
 
     public static List<TileObject> getTileObjects(Predicate<TileObject> predicate, WorldPoint anchor) {
@@ -738,7 +738,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGameObject(id, player.getWorldLocation(), distance);
+        return getGameObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
     public static GameObject getGameObject(int id, WorldPoint anchor) {
@@ -818,7 +818,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGameObject(predicate, player.getWorldLocation());
+        return getGameObject(predicate, Rs2Player.getWorldLocation());
     }
 
     public static GameObject getGameObject(WorldPoint anchor) {
@@ -842,7 +842,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGameObject(predicate, player.getWorldLocation(), distance);
+        return getGameObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static GameObject getGameObject(Predicate<GameObject> predicate, WorldPoint anchor) {
@@ -878,7 +878,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getGameObjects(predicate, player.getWorldLocation(), distance);
+        return getGameObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static List<GameObject> getGameObjects(WorldPoint anchor) {
@@ -894,7 +894,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getGameObjects(predicate, player.getWorldLocation());
+        return getGameObjects(predicate, Rs2Player.getWorldLocation());
     }
 
     public static List<GameObject> getGameObjects(Predicate<GameObject> predicate, WorldPoint anchor) {
@@ -926,7 +926,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGroundObject(id, player.getWorldLocation(), distance);
+        return getGroundObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
     public static GroundObject getGroundObject(int id, WorldPoint anchor) {
@@ -1000,7 +1000,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGroundObject(predicate, player.getWorldLocation());
+        return getGroundObject(predicate, Rs2Player.getWorldLocation());
     }
 
     public static GroundObject getGroundObject(WorldPoint anchor) {
@@ -1024,7 +1024,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getGroundObject(predicate, player.getWorldLocation(), distance);
+        return getGroundObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static GroundObject getGroundObject(Predicate<GroundObject> predicate, WorldPoint anchor) {
@@ -1060,7 +1060,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getGroundObjects(predicate, player.getWorldLocation(), distance);
+        return getGroundObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static List<GroundObject> getGroundObjects(WorldPoint anchor) {
@@ -1076,7 +1076,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getGroundObjects(predicate, player.getWorldLocation());
+        return getGroundObjects(predicate, Rs2Player.getWorldLocation());
     }
 
     public static List<GroundObject> getGroundObjects(Predicate<GroundObject> predicate, WorldPoint anchor) {
@@ -1108,7 +1108,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getWallObject(id, player.getWorldLocation(), distance);
+        return getWallObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
     public static WallObject getWallObject(int id, WorldPoint anchor) {
@@ -1182,7 +1182,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getWallObject(predicate, player.getWorldLocation());
+        return getWallObject(predicate, Rs2Player.getWorldLocation());
     }
 
     public static WallObject getWallObject(WorldPoint anchor) {
@@ -1206,7 +1206,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getWallObject(predicate, player.getWorldLocation(), distance);
+        return getWallObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static WallObject getWallObject(Predicate<WallObject> predicate, WorldPoint anchor) {
@@ -1242,7 +1242,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getWallObjects(predicate, player.getWorldLocation(), distance);
+        return getWallObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static List<WallObject> getWallObjects(WorldPoint anchor) {
@@ -1258,7 +1258,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getWallObjects(predicate, player.getWorldLocation());
+        return getWallObjects(predicate, Rs2Player.getWorldLocation());
     }
 
     public static List<WallObject> getWallObjects(Predicate<WallObject> predicate, WorldPoint anchor) {
@@ -1290,7 +1290,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getDecorativeObject(id, player.getWorldLocation(), distance);
+        return getDecorativeObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
     public static DecorativeObject getDecorativeObject(int id, WorldPoint anchor) {
@@ -1364,7 +1364,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getDecorativeObject(predicate, player.getWorldLocation());
+        return getDecorativeObject(predicate, Rs2Player.getWorldLocation());
     }
 
     public static DecorativeObject getDecorativeObject(WorldPoint anchor) {
@@ -1388,7 +1388,7 @@ public class Rs2GameObject {
         if (player == null) {
             return null;
         }
-        return getDecorativeObject(predicate, player.getWorldLocation(), distance);
+        return getDecorativeObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static DecorativeObject getDecorativeObject(Predicate<DecorativeObject> predicate, WorldPoint anchor) {
@@ -1424,7 +1424,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getDecorativeObjects(predicate, player.getWorldLocation(), distance);
+        return getDecorativeObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     public static List<DecorativeObject> getDecorativeObjects(WorldPoint anchor) {
@@ -1440,7 +1440,7 @@ public class Rs2GameObject {
         if (player == null) {
             return Collections.emptyList();
         }
-        return getDecorativeObjects(predicate, player.getWorldLocation());
+        return getDecorativeObjects(predicate, Rs2Player.getWorldLocation());
     }
 
     public static List<DecorativeObject> getDecorativeObjects(Predicate<DecorativeObject> predicate, WorldPoint anchor) {
@@ -1697,7 +1697,7 @@ public class Rs2GameObject {
 		if (player == null) {
 			return Collections.emptyList();
 		}
-        return fetchTileObjects(predicate, player.getWorldLocation(), distance);
+        return fetchTileObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     @SuppressWarnings("unchecked")
@@ -1706,7 +1706,7 @@ public class Rs2GameObject {
 		if (player == null) {
 			return Collections.emptyList();
 		}
-        return fetchGameObjects(predicate, player.getWorldLocation(), distance);
+        return fetchGameObjects(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
     @SuppressWarnings("unchecked")

@@ -53,7 +53,7 @@ public class AutoChinScript extends Script {
             ObjectID.SHAKING_BOX_9383,
             ObjectID.SHAKING_BOX_9382
     );
-
+    private long lastTrapDeployTime = 0; // ADD THIS
     State currentState = State.IDLE;
     @Inject
     Rs2TileObjectCache rs2TileObjectCache;
@@ -206,42 +206,42 @@ public class AutoChinScript extends Script {
 //                // Your fitted parameters
                  double LOG_MEAN = 0.25; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
                 double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-//                sleep((int) value*1000);
-                // Hover next valid trap
-//                sortedTraps.stream()
-//                        .skip(1)
-//                        .map(Map.Entry::getValue)
-//                        .filter(trap ->
-//                                trap.getState() == HunterTrap.State.FULL
-//                                        || trap.getState() == HunterTrap.State.EMPTY
-//                                        || (trap.getState() == HunterTrap.State.OPEN
-//                                        && Rs2Inventory.contains("tuft", false)))
-//                        .findFirst()
-//                        .ifPresent(nextTrap ->
-//                                rs2TileObjectCache.query()
-//                                        .fromWorldView()
-//                                        .where(x -> x.getWorldLocation().equals(nextTrap.getWorldLocation())
-//                                                && x.getName() != null
-//                                                && x.getName().toLowerCase().contains("box"))
-//                                        .nearestOnClientThread()
-//                                        .hover()
-//                        );
-                LOG_MEAN = 0.06;LOG_STD = 0.6;r = new Random();gaussian = r.nextGaussian();
-                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                Rs2Inventory.interact("teak logs","use");
-                Rs2Inventory.hover(Rs2Inventory.get("knife"));
-                sleepUntil(() -> {
-                    HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
-                    return trap == null;
-                }, 3000);
-                LOG_MEAN = 0.06;LOG_STD = 0.6;r = new Random();gaussian = r.nextGaussian();
-                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                Rs2Inventory.interact("knife");
-                sleep(400);
-//                Rs2Walker.walkFastCanvas(foundTrap.getWorldLocation());
-                Rs2Inventory.interact("box trap","lay");
+
+                 long lastTrapDeployTime = 0;
+
+// In your reset block, replace the recentlyDeployed check with:
+                boolean chainAlive = (System.currentTimeMillis() - lastTrapDeployTime) < 2400;
+
+                if (chainAlive) {
+                    // 4t - skip knife+logs
+                    if (2>1) {
+                        sleepUntil(() -> {
+                            HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
+                            return trap == null;
+                        }, 3000);
+                    }
+                    Rs2Inventory.interact("box trap", "lay");
+                } else {
+                    // 6t - start/restart chain with knife+logs
+                    LOG_MEAN = 0.06; LOG_STD = 0.6; r = new Random(); gaussian = r.nextGaussian();
+                    value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                    sleep((int) value * 200);
+                    Rs2Inventory.interact("teak logs", "use");
+                    Rs2Inventory.hover(Rs2Inventory.get("knife"));
+                    sleepUntil(() -> {
+                        HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
+                        return trap == null;
+                    }, 3000);
+                    LOG_MEAN = 0.06; LOG_STD = 0.6; r = new Random(); gaussian = r.nextGaussian();
+                    value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                    sleep((int) value * 200);
+                    Rs2Inventory.interact("knife");
+                    sleep(400,600);
+                    Rs2Inventory.interact("box trap", "lay");
+                }
+
+// Update timestamp after every lay
+                lastTrapDeployTime = System.currentTimeMillis();
                 sortedTraps.stream()
                         .skip(1)
                         .map(Map.Entry::getValue)
@@ -257,16 +257,18 @@ public class AutoChinScript extends Script {
                                         .where(x -> x.getWorldLocation().equals(nextTrap.getWorldLocation())
                                                 && x.getName() != null
                                                 && x.getName().toLowerCase().contains("box"))
-                                        .nearestOnClientThread()
+                                            .nearestOnClientThread()
                                         .hover()
                         );
-                sleepUntil(() -> {
-                    HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
-                    return trap != null && trap.getObjectId() == 9380;
-                }, 50,3000);
+                if (2>1) {
+                    sleepUntil(() -> {
+                        HunterTrap trap = HunterPlugin.traplist.get(currentTrapEntry.getKey());
+                        return trap != null && trap.getObjectId() == 9380;
+                    }, 50, 3000);
 //                Rs2Walker.walkFastCanvas(sortedTraps.get(1).getValue().getWorldLocation());
-//                sleep(300);
-                LOG_MEAN = 0.06;LOG_STD = 0.6;r = new Random();gaussian = r.nextGaussian();
+//                sleep(100);
+                }
+                LOG_MEAN = 0.05;LOG_STD = 0.5;r = new Random();gaussian = r.nextGaussian();
                 value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
                 sleep((int) value*200);
                 System.out.println("Handled trap " + foundTrap.getWorldLocation());

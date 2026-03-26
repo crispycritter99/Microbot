@@ -44,7 +44,7 @@ public class ExampleOverlay extends OverlayPanel {
                     .left("" + Microbot.status)
                     .build());
             panelComponent.getChildren().add(LineComponent.builder().build());
-//            WorldPoint worldPoint =  Microbot.getClient().getLocalPlayer().getWorldLocation();
+//            WorldPoint worldPoint =  Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 int deayaltFragments=Rs2Inventory.itemQuantity("Daeyalt shard");
                 long shardsGained=deayaltFragments-ExamplePlugin.startingDaeyaltShard;
                 long timeElapsed=ExamplePlugin.initialTime-System.currentTimeMillis();

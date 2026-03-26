@@ -93,7 +93,7 @@ public class PrifddinasCourse implements AgilityCourseHandler
 		if (currentHealth < lastKnownHealth)
 		{
 			log.info("Health dropped from {}% to {}% - fall detected", lastKnownHealth, currentHealth);
-			WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+			WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 			log.info("Player location when fall detected: {}", playerLocation);
 
 			// walk to exact fall recovery point
@@ -114,7 +114,7 @@ public class PrifddinasCourse implements AgilityCourseHandler
 	@Override
 	public TileObject getCurrentObstacle()
 	{
-		WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+		WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 
 		// if we're near the start point, just find the first obstacle by ID within 5 tiles
 		if (playerLocation.distanceTo(getStartPoint()) < 5)

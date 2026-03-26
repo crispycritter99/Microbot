@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.lunarplankmake;
 
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
@@ -69,8 +70,9 @@ public class LunarPlankMakeScript extends Script {
             int initialPlankCount = Rs2Inventory.count(config.ITEM().getFinished());
             Rs2Magic.cast(MagicAction.PLANK_MAKE);
             addDelay();
-            Rs2Inventory.interact(config.ITEM().getName());
-
+           ;
+            Rs2Inventory.interact( Rs2Inventory.getLast(ItemID.MAHOGANY_LOGS));
+//            Rs2Inventory.interact(config.ITEM().getName());
             // Wait for the inventory count to change indicating Planks have been made
             if (waitForInventoryChange(config.ITEM().getFinished(), initialPlankCount)) {
                 int plankMadeThisAction = Rs2Inventory.count(config.ITEM().getFinished()) - initialPlankCount;

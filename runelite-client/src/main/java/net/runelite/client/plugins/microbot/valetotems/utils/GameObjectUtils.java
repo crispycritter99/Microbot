@@ -367,7 +367,7 @@ public class GameObjectUtils {
         if (gameObject == null) {
             return false;
         }
-        WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+        WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
         return gameObject.getWorldLocation().distanceTo(playerLocation) <= maxDistance;
     }
 

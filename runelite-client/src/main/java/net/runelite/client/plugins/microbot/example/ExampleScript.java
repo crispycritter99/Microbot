@@ -5,6 +5,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.ComponentID;
+import net.runelite.api.widgets.InterfaceID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
@@ -29,6 +30,7 @@ import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
+import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -43,10 +45,8 @@ import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
 import javax.inject.Inject;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -69,53 +69,42 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                Microbot.status="waiting to do something";
-
-                if (Rs2Inventory.isFull()){
-                    Microbot.status="grinding crabs";
-                    Rs2Inventory.combine("pestle and mortar","blue crab");
-                    sleep(23000);
-                    sleepUntil(()->!Rs2Inventory.contains("Blue crab"),60000);
-
-                }
-                    if (!Rs2Inventory.contains("fish offcuts")) return;
-//                GameObject trap = Rs2GameObject.getGameObject("Crab trap (empty)");
-////                GameObject fulltrap = Rs2GameObject.getGameObject("Crab trap (full)");
-                var fulltrap = rs2TileObjectCache.query()
-//                        .fromWorldView()
-                        .where(x -> x.getName() != null &&x.getName().equalsIgnoreCase("crab trap (full)"))
-
-                        .nearestOnClientThread();
-                var emptytrap = rs2TileObjectCache.query()
-//                        .fromWorldView()
-                        .where(x -> x.getName() != null &&x.getName().equalsIgnoreCase("crab trap (empty)"))
-//                        .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
-                        .nearestOnClientThread();
-                System.out.println(emptytrap+" "+fulltrap.getId());
-                if (emptytrap!=null) {
-                    emptytrap.click();
-                    Microbot.status="baiting trap";
-                    //sleep until -1 fish offcut
-                    Rs2Inventory.waitForInventoryChanges(3000);
-                    Microbot.status="idle";
-//                    Rs2Inventory.waitForInventoryChanges(1800);
-//                    return;
-                }
-                if (fulltrap!=null) {
-                    fulltrap.click();
-                    Microbot.status="resetting trap";
-                    Rs2Player.waitForXpDrop(Skill.HUNTER);
-                    Rs2Inventory.waitForInventoryChanges(3000);
-                    Microbot.status="idle";
-                    //sleep until -1 fish offcut
-//                    Microbot.status="waiting for inventory change";
-//                    Rs2Inventory.waitForInventoryChanges(1800);
-//                    return;
-                }
-//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("lizardman").findFirst().orElse(null);
-//                if (npc == null) return;
-//                Rs2Npc.interact(npc);
-//                sleep(1200);
+//                System.out.println(""+Rs2Widget.isWidgetVisible(InterfaceID.DIALOG_OPTION, 1));
+//                System.out.println(""+startTime);
+//                Rs2Dialogue.keyPressForCombinationOption("Teak");
+//                shutdown();
+//                if (!Rs2Dialogue.hasCombinationDialogue()) return ;
+//                System.out.println(""+"hi");
+//
+//                Widget dialogueOption = Rs2Dialogue.getCombinationOption("Mahogany", false);
+////                System.out.println(""+dialogueOption.getOnKeyListener()[7].toString().charAt(0));
+//                Object[] keys = dialogueOption.getOnKeyListener();
+//                if (keys != null) {
+//                    for (int i = 0; i < keys.length; i++) {
+//                        Microbot.log("index " + i + " = " + keys[i]);
+//                    }
+//                }
+//                if (dialogueOption == null) return ;
+//                NewMenuEntry menuEntry = new NewMenuEntry(
+//                        -1,
+//                        Rs2PrayerEnum.PROTECT_MELEE.getIndex(),
+//                        MenuAction.CC_OP.getId(),
+//                        1,
+//                        -1,
+//                        !Rs2Prayer.isPrayerActive(Rs2PrayerEnum.PROTECT_MELEE) ? "Activate": "Deactivate"
+//                );
+//
+//                Rectangle prayerBounds = new Rectangle(1, 1);
+//
+//                Microbot.doInvoke(menuEntry, prayerBounds);
+//                Microbot.doInvoke(new NewMenuEntry("Eat", Rs2Inventory.slot(385), 9764864, MenuAction.CC_OP.getId(), 2, 385, "Shark"), new Rectangle(1, 1));
+//shutdown();
+//                Microbot.status=""+dialogueOption.getText();
+                if (Rs2Player.isInteracting()) return;
+                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
+                if (npc == null) return;
+                Rs2Npc.interact(npc);
+                sleep(1200);
 
 
 //                Rs2Inventory.slotInteract(27,"use");

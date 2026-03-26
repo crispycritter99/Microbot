@@ -77,7 +77,7 @@ public class MmCavesLocalPlugin extends Plugin {
     @Subscribe
     public void onGameTick(GameTick gameTick) {
         if (Microbot.isLoggedIn()) {
-            myWorldPoint = Microbot.getClient().getLocalPlayer().getWorldLocation();
+            myWorldPoint = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
         }
     }
 

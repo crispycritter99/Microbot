@@ -28,7 +28,10 @@ import net.runelite.client.plugins.microbot.aiofighterretro.loot.LootScript;
 import net.runelite.client.plugins.microbot.aiofighterretro.safety.SafetyScript;
 import net.runelite.client.plugins.microbot.aiofighterretro.shop.ShopScript;
 import net.runelite.client.plugins.microbot.aiofighterretro.skill.AttackStyleScript;
+import net.runelite.client.plugins.microbot.api.actor.Rs2ActorModel;
+import net.runelite.client.plugins.microbot.api.npc.models.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.skills.slayer.Rs2Slayer;
@@ -47,6 +50,9 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static net.runelite.client.plugins.microbot.aiofighterretro.combat.AttackNpcScript.cache;
+import static net.runelite.client.plugins.microbot.aiofighterretro.combat.AttackNpcScript.filteredAttackableNpcs;
 
 @PluginDescriptor(
         name = PluginDescriptor.Mocrosoft + "AIO Fighter Local",
@@ -547,6 +553,95 @@ public class AIOFighterPluginLocal extends Plugin {
             //execute flicker script
             if(config.togglePrayer())
                 flickerScript.onGameTick();
+            cache = Microbot.getRs2NpcCache();
+            AttackNpcScript.attackableArea = new Rs2WorldArea(config.centerLocation().toWorldArea());
+            AttackNpcScript.attackableArea = AttackNpcScript.attackableArea.offset(config.attackRadius());
+            List<String> npcsToAttack = Arrays.stream(config.attackableNpcs().split(","))
+                    .map(x -> x.trim().toLowerCase())
+                    .collect(Collectors.toList());
+
+            final Set<String> targetNames = npcsToAttack.stream()
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toSet());
+
+            AttackNpcScript.attackableNpcs =
+                    cache
+                            .query()
+                            .where(npc -> npc.getHealthPercentage() > 0)
+                            .where(npc -> !npc.isDead())
+//                                .where(npc ->  !npc.isInteracting()|| Objects.equals(npc.getInteracting(), Microbot.getClient().getLocalPlayer()))
+                            .where(npc -> {
+                                Actor interacting = npc.getInteracting();
+                                return interacting == null
+                                        || Objects.equals(npc.getInteracting(), Microbot.getClient().getLocalPlayer())
+                                        || interacting instanceof NPC;
+                            })
+                            .where(npc -> npc.getWorldLocation()
+                                    .distanceTo(config.centerLocation()) <= config.attackRadius())
+                            .where(npc -> npc.getName() != null
+                                    && !npcsToAttack.isEmpty()
+                                    &&targetNames.contains(npc.getName().toLowerCase()))
+                            .where(npc -> !config.attackReachableNpcs()
+                                    //|| new Rs2WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation()).distanceToPath(npc.getWorldLocation()) < Integer.MAX_VALUE//
+                            )
+                            .toList();
+//            System.out.println("diddy 3.1");
+            AttackNpcScript.attackableNpcs.sort(
+                    Comparator
+                            .comparingInt((Rs2NpcModel npc) ->
+                                    npc.getInteracting() == Microbot.getClient().getLocalPlayer() ? 0 : 2+(npc.getInteracting() instanceof NPC ? 2 : 3))
+//                                .thenComparingInt(Rs2ActorModel::getCombatLevel)
+                            .thenComparingInt(value ->
+                                    value.getLocalLocation().distanceTo(
+                                            Microbot.getClient().getLocalPlayer().getLocalLocation()))
+            );
+//            System.out.println("diddy 3.2");
+            filteredAttackableNpcs.set(AttackNpcScript.attackableNpcs);
+            // Check if we should pause while looting is happening
+            if (Microbot.pauseAllScripts.get()) {
+                return; // Don't attack while looting
+            }
+//            System.out.println("diddy 4");
+            // Check if we need to update our cached target (but not while waiting for loot)
+            if (!AIOFighterPluginLocal.isWaitingForLoot()) {
+                Actor currentInteracting = Rs2Player.getInteracting();
+                if (currentInteracting instanceof Rs2NpcModel) {
+                    Rs2NpcModel npc = (Rs2NpcModel) currentInteracting;
+                    // Update our cached target to who we're fighting
+                    if (npc.getHealthRatio() > 0 && !npc.isDead()) {
+                        AttackNpcScript.cachedTargetNpcIndex = npc.getIndex();
+                    }
+                }
+            }
+            if (config.toggleWaitForLoot() && !AIOFighterPluginLocal.isWaitingForLoot() && AttackNpcScript.cachedTargetNpcIndex != -1) {
+                // Find the NPC by index using Rs2 API
+//                    Rs2NpcModel cachedNpcModel = Rs2Npc.getNpcByIndex(cachedTargetNpcIndex);
+                Rs2NpcModel cachedNpcModel=cache.query().where(npc -> npc.getIndex()==AttackNpcScript.cachedTargetNpcIndex).nearest();;
+                if (cachedNpcModel != null && (cachedNpcModel.isDead() || (cachedNpcModel.getHealthRatio() == 0 && cachedNpcModel.getHealthScale() > 0))) {
+                    AIOFighterPluginLocal.setWaitingForLoot(true);
+                    AIOFighterPluginLocal.setLastNpcKilledTime(System.currentTimeMillis());
+                    Microbot.status = "Waiting for loot...";
+                    Microbot.log("NPC died, waiting for loot...");
+                    AttackNpcScript.cachedTargetNpcIndex = -1;
+                    return;
+                }
+            }
+//                System.out.println("diddy 6");
+            // Check if we're waiting for loot
+            if (config.toggleWaitForLoot() && AIOFighterPluginLocal.isWaitingForLoot()) {
+                long timeSinceKill = System.currentTimeMillis() - AIOFighterPluginLocal.getLastNpcKilledTime();
+                int timeoutMs = config.lootWaitTimeout() * 1000;
+                if (timeSinceKill >= timeoutMs) {
+                    // Timeout reached, resume combat
+                    AIOFighterPluginLocal.clearWaitForLoot("Loot wait timeout reached, resuming combat");
+                    AttackNpcScript.cachedTargetNpcIndex = -1; // Clear cached NPC on timeout
+                } else {
+                    // Still waiting for loot, don't attack
+                    int secondsLeft = (int) Math.max(1, TimeUnit.MILLISECONDS.toSeconds(timeoutMs - timeSinceKill));
+                    Microbot.status = "Waiting for loot... " + secondsLeft + "s";
+                    return;
+                }
+            }
         } catch (Exception e) {
             log.info("AIO Fighter Plugin onGameTick Error: " + e.getMessage());
         }

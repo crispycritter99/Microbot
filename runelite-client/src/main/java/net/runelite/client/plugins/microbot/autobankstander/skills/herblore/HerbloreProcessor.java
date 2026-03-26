@@ -267,13 +267,13 @@ public class HerbloreProcessor implements BankStandingProcessor {
         
         if (isSuperCombat(currentPotion)) {
             return bankForSuperCombat();
-        } else if (usesStackableSecondary(currentPotion)) {
+        } else if (usesStackableSecondary(currentPotion)||currentPotion.secondary == ItemID.CRAB_PASTE) {
             return bankForStackableSecondary();
         } else {
             return bankForRegularPotion();
         }
     }
-    
+
     private boolean bankForSuperCombat() {
         int torstolCount = Rs2Bank.count(ItemID.TORSTOL);
         int superAttackCount = Rs2Bank.count(ItemID._4DOSE2ATTACK);
@@ -416,6 +416,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
         if (potion.secondary == ItemID.LAVA_SHARD) return 4;
         if (potion.secondary == ItemID.AMYLASE) return 4;
         if (potion.secondary == ItemID.ARAXYTE_VENOM_SACK) return 1;
+
         return 1;
     }
     
@@ -557,6 +558,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
             case LANTADYME_POTION_UNF: return Herb.LANTADYME;
             case DWARF_WEED_POTION_UNF: return Herb.DWARF;
             case TORSTOL_POTION_UNF: return Herb.TORSTOL;
+            case PILLAR_POTION_UNF: return Herb.PILLAR;
             default: return null;
         }
     }

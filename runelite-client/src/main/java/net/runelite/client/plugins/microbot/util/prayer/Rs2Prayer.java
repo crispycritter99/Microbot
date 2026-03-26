@@ -91,8 +91,8 @@ public class Rs2Prayer {
                 !isPrayerActive(prayer) ? "Activate": "Deactivate"
 		);
 
-		Rectangle prayerBounds = withMouse ? getPrayerBounds(prayer) : Rs2UiHelper.getDefaultRectangle();
-
+//		Rectangle prayerBounds = withMouse ? getPrayerBounds(prayer) : Rs2UiHelper.getDefaultRectangle();
+		Rectangle prayerBounds = new Rectangle(1, 1);
         Microbot.doInvoke(menuEntry, prayerBounds);
         // Microbot.getClient().menuAction(-1, prayer.getIndex(), MenuAction.CC_OP, 1, -1, "Activate", "Activate");
 	}

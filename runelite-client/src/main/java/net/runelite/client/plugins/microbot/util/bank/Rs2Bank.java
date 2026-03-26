@@ -1646,7 +1646,7 @@ public class Rs2Bank {
 
             final Player player = Microbot.getClient().getLocalPlayer();
             if (player == null) return false;
-            WorldPoint anchor = player.getWorldLocation();
+            WorldPoint anchor = Rs2Player.getWorldLocation();
 
             List<TileObject> candidates = Stream.of(
                             Rs2GameObject.findBank(),
@@ -1693,7 +1693,7 @@ public class Rs2Bank {
 
             Player player = Microbot.getClient().getLocalPlayer();
             if (player == null) return false;
-            WorldPoint anchor = player.getWorldLocation();
+            WorldPoint anchor = Rs2Player.getWorldLocation();
 
             List<TileObject> candidates = Stream.of(
                             Rs2GameObject.findBank(),

@@ -62,7 +62,7 @@ public class WerewolfCourse implements AgilityCourseHandler {
 
     @Override
     public TileObject getCurrentObstacle() {
-        WorldPoint playerLocation = Microbot.getClient().getLocalPlayer().getWorldLocation();
+        WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 
         List<AgilityObstacleModel> matchingObstacles = getObstacles().stream()
                 .filter(o -> o.getOperationX().check(playerLocation.getX(), o.getRequiredX()) && o.getOperationY().check(playerLocation.getY(), o.getRequiredY()))

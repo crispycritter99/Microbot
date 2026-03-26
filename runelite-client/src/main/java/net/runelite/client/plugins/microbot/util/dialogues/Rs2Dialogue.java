@@ -646,10 +646,42 @@ public class Rs2Dialogue {
     }
 
     /**
+     * Simulates a key press to select a dialogue option that matches the specified text.
+     *
+     * @param text  the text to match with the dialogue option.
+     * @param exact whether to match the text exactly or allow partial matches.
+     */
+    public static boolean keyPressForCombinationOption(String text, boolean exact) {
+        if (!hasCombinationDialogue()) return false;
+
+        Widget dialogueOption = getCombinationOption(text, exact);
+        if (dialogueOption == null) return false;
+//        System.out.println("hi");
+        Rs2Keyboard.keyPress(dialogueOption.getOnKeyListener()[5].toString().charAt(0));
+//        System.out.println("hey");
+        return true;
+    }
+
+    /**
+     * Simulates a key press to select a dialogue option that matches the specified text, allowing partial matches.
+     *
+     * @param text the text to match with the dialogue option.
+     */
+    public static boolean keyPressForCombinationOption(String text) {
+        return keyPressForCombinationOption(text, false);
+    }
+
+
+
+
+    /**
+     *
+     *
      * Pauses the current thread until the combination dialogue becomes visible.
      *
      * @return true if the combination dialogue appears within the timeout period, otherwise false.
      */
+
     public static boolean sleepUntilHasCombinationDialogue() {
         return sleepUntilTrue(Rs2Dialogue::hasCombinationDialogue);
     }

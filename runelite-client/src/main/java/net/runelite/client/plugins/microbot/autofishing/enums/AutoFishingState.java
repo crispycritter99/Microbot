@@ -8,6 +8,7 @@ public enum AutoFishingState {
     FISHING,
     PROCESSING_FISH,
     COOKING,
+    CUTTING,
     DEPOSITING,
     DROPPING,
     ERROR_RECOVERY

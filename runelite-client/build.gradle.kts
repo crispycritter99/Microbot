@@ -165,6 +165,7 @@ dependencies {
     api(variantOf(libs.guice.core) { classifier("no_aop") }) {
         exclude("com.google.guava", "guava")
     }
+    api("com.google.inject.extensions:guice-multibindings:4.1.0")
     api(libs.gson)
     implementation(libs.jackson.databind)
     api(libs.flatlaf.core)

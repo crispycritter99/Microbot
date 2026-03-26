@@ -13,6 +13,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Potion;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -61,7 +62,7 @@ public class PlankRunnerScript extends Script {
                     case BANKING:
 //                        boolean isNearBank = Rs2Bank.isNearBank(plugin.getSawmillLocation().getBankLocation(), 15) ? Rs2Bank.openBank() : Rs2Bank.walkToBankAndUseBank(plugin.getSawmillLocation().getBankLocation());
 
-                        Rs2Walker.walkFastCanvas(new WorldPoint(1408+ Rs2Random.between(-2,2),3358+Rs2Random.between(-2,2),0));
+                        Rs2Walker.walkFastCanvas(new WorldPoint(1408+ Rs2Random.between(-3,3),3358+Rs2Random.between(-3,3),0));
                         sleep(3000,4000);
                         Rs2Bank.openBank();
                         sleepUntil(Rs2Bank::isOpen,5000);
@@ -69,10 +70,14 @@ public class PlankRunnerScript extends Script {
                         if (Rs2Inventory.contains(plugin.getPlank().getPlankItemId())) {
                             Rs2Bank.depositAll(plugin.getPlank().getPlankItemId());
                             Rs2Inventory.waitForInventoryChanges(1800);
+                            Rs2Inventory.interact("Plank sack","Empty");
+                            sleep(400,600);
+                            Rs2Bank.depositAll(plugin.getPlank().getPlankItemId());
+                            Rs2Inventory.waitForInventoryChanges(1800);
                         }
 
-                        if (Rs2Inventory.emptySlotCount() < 26) {
-                            Rs2Bank.depositAll();
+                        if (Rs2Inventory.emptySlotCount() < 24) {
+                            Rs2Bank.depositAllExcept(false,"coins","log basket","plank sack");
                             Rs2Inventory.waitForInventoryChanges(1800);
                         }
 
@@ -125,17 +130,23 @@ public class PlankRunnerScript extends Script {
                             shutdown();
                             return;
                         }
-                        Rs2Bank.withdrawX(plugin.getPlank().getLogItemId(), logsToWithdraw);
+                        Rs2Bank.withdrawAll(plugin.getPlank().getLogItemId());
 
                         Rs2Bank.closeBank();
-                        sleepUntil(() -> !Rs2Bank.isOpen());
+                        Rs2Inventory.interact("Log Basket","fill");
+                        Rs2Bank.openBank();
+                        Rs2Bank.withdrawAll(plugin.getPlank().getLogItemId());
+                        Rs2Bank.closeBank();
+                        if (2<1) {
+                            sleepUntil(() -> !Rs2Bank.isOpen());
+                        }
                         break;
                     case RUNNING_TO_SAWMILL:
                         boolean isNearSawmill = Rs2Walker.getTotalTiles(plugin.getSawmillLocation().getWorldPoint()) < 15;
                         if (!isNearSawmill) {
                             Microbot.status = "Running to Sawmill";
 //                            Rs2Walker.walkTo(plugin.getSawmillLocation().getWorldPoint());
-                            Rs2Walker.walkFastCanvas(new WorldPoint(1396+ Rs2Random.between(-2,2),3366+Rs2Random.between(-2,2),0));
+                            Rs2Walker.walkFastCanvas(new WorldPoint(1396+ Rs2Random.between(-3,3),3366+Rs2Random.between(-3,3),0));
                             sleep(3000,4000);
 
                             sleepUntil(()->Rs2Npc.getNpc(NpcID.AUBURN_SAWMILL_OPERATOR)!=null,5000);
@@ -156,8 +167,20 @@ public class PlankRunnerScript extends Script {
                         Rs2Npc.interact(sawmillOperator, "Buy-plank");
                         Microbot.status = "Buying Planks";
                         Rs2Dialogue.sleepUntilHasCombinationDialogue();
-                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
-                        sleepUntil(() -> Rs2Inventory.hasItem(plugin.getPlank().getPlankItemId()));
+
+//                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
+                        Rs2Dialogue.keyPressForCombinationOption(plugin.getPlank().getDialogueOption());
+
+                        sleepUntil(() -> !Rs2Inventory.hasItem(plugin.getPlank().getLogItemId()));
+                        Rs2Inventory.interact("Log Basket","Empty");
+                        Rs2Inventory.waitForInventoryChanges(1800);
+                        Rs2Npc.interact(sawmillOperator, "Buy-plank");
+                        Microbot.status = "Buying Planks";
+                        Rs2Dialogue.sleepUntilHasCombinationDialogue();
+//                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
+                        Rs2Dialogue.keyPressForCombinationOption(plugin.getPlank().getDialogueOption());
+//                        Rs2Keyboard.keyPress(String.valueOf(plugin.getPlank().getDialogueOption()).charAt(0));
+                        sleepUntil(() -> !Rs2Inventory.hasItem(plugin.getPlank().getLogItemId()));
                         plugin.calculateProfit();
                         break;
                 }
