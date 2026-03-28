@@ -120,7 +120,7 @@ public class Rs2GameObject {
         return clickObject(gameObject, action);
     }
 
-    public static boolean   interact(int id) {
+    public static boolean interact(int id) {
         TileObject object = findObjectById(id);
         return clickObject(object);
     }
@@ -230,10 +230,6 @@ public class Rs2GameObject {
 	@Deprecated
     public static TileObject findObjectById(int id) {
         var list = getAll(o -> o.getId() == id);
-//                        for (TileObject i : list) {
-                    ;
-//                            System.out.println(i.getWorldLocation());
-//                }
         return list.stream().filter(x -> x.getId() == id).findFirst().orElse(null);
     }
 
@@ -838,10 +834,6 @@ public class Rs2GameObject {
     }
 
     public static GameObject getGameObject(Predicate<GameObject> predicate, int distance) {
-        Player player = Microbot.getClient().getLocalPlayer();
-        if (player == null) {
-            return null;
-        }
         return getGameObject(predicate, Rs2Player.getWorldLocation(), distance);
     }
 
@@ -922,10 +914,6 @@ public class Rs2GameObject {
     }
 
     public static GroundObject getGroundObject(int id, int distance) {
-        Player player = Microbot.getClient().getLocalPlayer();
-        if (player == null) {
-            return null;
-        }
         return getGroundObject(id, Rs2Player.getWorldLocation(), distance);
     }
 
@@ -996,10 +984,6 @@ public class Rs2GameObject {
     }
 
     public static GroundObject getGroundObject(Predicate<GroundObject> predicate) {
-        Player player = Microbot.getClient().getLocalPlayer();
-        if (player == null) {
-            return null;
-        }
         return getGroundObject(predicate, Rs2Player.getWorldLocation());
     }
 
