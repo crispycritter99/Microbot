@@ -201,6 +201,10 @@ public class GemCrabKillerScript extends Script {
             return;
         }
         if (!Rs2Player.isInCombat()) {
+            double LOG_MEAN = 1; double LOG_STD = 0.8;
+            Random r = new Random();double gaussian = r.nextGaussian();
+            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+            sleep((int) value * 1000);
             Rs2Npc.attack(npc);
         } else {
             waitingTimeStart = null;

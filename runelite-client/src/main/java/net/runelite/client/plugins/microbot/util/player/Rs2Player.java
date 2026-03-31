@@ -247,6 +247,13 @@ public class Rs2Player {
     }
 
     /**
+     * Wait for walking
+     */
+    public static void waitForOnTile(WorldPoint worldPoint) {
+        sleepUntil(()->getWorldLocation().equals(worldPoint),5000);
+    }
+
+    /**
      * Waits for an XP drop in the specified skill within a default timeout of 5000 milliseconds.
      *
      * @param skill The skill to monitor for an XP drop.
@@ -1129,7 +1136,7 @@ public class Rs2Player {
      * @return The {@link LocalPoint} representing the player's current position.
      */
     public static LocalPoint getLocalLocation() {
-        return Microbot.getClient().getLocalPlayer().getLocalLocation();
+        return Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getLocalLocation());
     }
 
     /**

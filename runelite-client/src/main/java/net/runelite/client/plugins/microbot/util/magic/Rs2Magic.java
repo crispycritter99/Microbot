@@ -307,7 +307,10 @@ public class Rs2Magic {
         sleep(sleepMin, sleepMax);
         if (!cast(magicSpell)) return;
         sleepUntil(() -> Microbot.getClientThread().runOnClientThreadOptional(() -> Rs2Tab.getCurrentTab() == InterfaceTab.INVENTORY).orElse(false), 5000);
-        sleep(sleepMin, sleepMax);
+        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+        sleep((int) value*350);
+//        sleep(sleepMin, sleepMax);
         interact(item, point, "Alching");
     }
 

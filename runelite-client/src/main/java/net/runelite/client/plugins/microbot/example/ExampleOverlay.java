@@ -50,7 +50,7 @@ public class ExampleOverlay extends OverlayPanel {
                 long timeElapsed=ExamplePlugin.initialTime-System.currentTimeMillis();
                 int shardsPerHour = Math.toIntExact( shardsGained / timeElapsed);
                 panelComponent.getChildren().add(LineComponent.builder()
-                        .left("" + deayaltFragments)
+                        .left("" + Rs2Inventory.slotBounds(1))
                         .build());
 
 

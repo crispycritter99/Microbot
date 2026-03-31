@@ -115,7 +115,7 @@ public class AgilityScript extends Script
 					return;
 				}
 
-				final WorldPoint playerWorldLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
+				final WorldPoint playerWorldLocation = Microbot.getClientThread().invoke(() -> Rs2Player.getWorldLocation());
 				final int currentAgilityXp = Microbot.getClient().getSkillExperience(Skill.AGILITY);
 
 				if (handleFood())

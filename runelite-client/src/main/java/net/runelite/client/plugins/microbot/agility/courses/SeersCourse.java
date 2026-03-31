@@ -8,6 +8,7 @@ import net.runelite.client.plugins.microbot.agility.models.AgilityObstacleModel;
 import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class SeersCourse implements AgilityCourseHandler
 		{
 			Rs2Magic.cast(Rs2Spells.CAMELOT_TELEPORT, "Seers'", 2);
 			return Global.sleepUntil(() -> {
-				WorldPoint currentLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
+				WorldPoint currentLocation = Microbot.getClientThread().invoke(() -> Rs2Player.getWorldLocation());
 				return currentLocation.distanceTo(getStartPoint()) <= 12;
 			}, 5000);
 		}

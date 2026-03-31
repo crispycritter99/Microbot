@@ -77,7 +77,7 @@ public class ThievingLocalScript extends Script {
             } catch (Exception ex) {
                 Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 400, TimeUnit.MILLISECONDS);
         return true;
     }
 
@@ -191,6 +191,9 @@ public class ThievingLocalScript extends Script {
         } else if (config.THIEVING_NPC() == ThievingNpc.ELVES) {
             handleElves();
         } else {
+            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+            sleep((int) value*200);
 //            Map<NPC, HighlightedNpc> highlightedNpcs =  net.runelite.client.plugins.npchighlight.NpcIndicatorsPlugin.getHighlightedNpcs();
             if (highlightedNpcs.isEmpty()) {
                 if (Rs2Npc.getNpc(config.THIEVING_NPC().getName()) == null) {

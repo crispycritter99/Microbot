@@ -1434,6 +1434,22 @@ public class Rs2Inventory {
     }
 
     /**
+     * Gets the bounding rectangle for the slot of the specified item in the inventory.
+     *
+     * @param index The item to get the bounds for.
+     *
+     * @return The bounding rectangle for the item's slot, or null if the item is not found.
+     */
+    public static Rectangle slotBounds(int index) {
+        Widget inventory = getInventory();
+        if (inventory == null) return null;
+
+        return Arrays.stream(inventory.getDynamicChildren())
+                .filter(widget -> widget.getIndex() == index)
+                .findFirst().map(Widget::getBounds).orElse(null);
+    }
+
+    /**
      * Checks if your inventory only contains items that match the specified filter.
      *
      * @param predicate The filter to apply.
@@ -2329,6 +2345,23 @@ public class Rs2Inventory {
             return false;
         }
         Point point = Rs2UiHelper.getClickingPoint(itemBounds(item), true);
+        // if the point is 1,1 then the object is not on screen and we should return false
+        if (point.getX() == 1 && point.getY() == 1) {
+            return false;
+        }
+        Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
+        return true;
+    }
+
+    // hover over slot in inventory
+    public static boolean hover(int index) {
+
+        if (!Rs2AntibanSettings.naturalMouse) {
+            if(Rs2AntibanSettings.devDebug)
+                Microbot.log("Natural mouse is not enabled, can't hover");
+            return false;
+        }
+        Point point = Rs2UiHelper.getClickingPoint(slotBounds(index), true);
         // if the point is 1,1 then the object is not on screen and we should return false
         if (point.getX() == 1 && point.getY() == 1) {
             return false;

@@ -21,6 +21,8 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.util.grounditem.InteractModel;
+import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
@@ -31,12 +33,14 @@ import net.runelite.client.plugins.microbot.util.magic.Rs2Spells;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
+import net.runelite.client.plugins.microbot.util.models.RS2Item;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.player.Rs2PlayerModel;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
+import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
@@ -76,6 +80,20 @@ public class ExampleScript extends Script {
 //                if (!Rs2Dialogue.hasCombinationDialogue()) return ;
 //                System.out.println(""+"hi");
 //
+                double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
+                    Rs2GameObject.interact("iron rocks");
+                r = new Random();gaussian = r.nextGaussian();
+                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
+                    Rs2Inventory.hover(0);
+                    Rs2Player.waitForXpDrop(Skill.MINING,5000);
+                Rs2Player.waitForXpDrop(Skill.MINING,5000);
+                r = new Random();gaussian = r.nextGaussian();
+                 value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
+                    Rs2Inventory.dropAll("iron ore");
 //                Widget dialogueOption = Rs2Dialogue.getCombinationOption("Mahogany", false);
 ////                System.out.println(""+dialogueOption.getOnKeyListener()[7].toString().charAt(0));
 //                Object[] keys = dialogueOption.getOnKeyListener();
@@ -100,11 +118,17 @@ public class ExampleScript extends Script {
 //                Microbot.doInvoke(new NewMenuEntry("Eat", Rs2Inventory.slot(385), 9764864, MenuAction.CC_OP.getId(), 2, 385, "Shark"), new Rectangle(1, 1));
 //shutdown();
 //                Microbot.status=""+dialogueOption.getText();
-                if (Rs2Player.isInteracting()) return;
-                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
-                if (npc == null) return;
-                Rs2Npc.interact(npc);
-                sleep(1200);
+//                if (Rs2Player.isInteracting()||Rs2Player.isAnimating()||Rs2Player.isMoving()) return;
+//                double LOG_MEAN = 1; double LOG_STD = 0.8;
+//                Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value * 1000+2000);
+//                Rs2GameObject.interact(39095);
+//                sleep(600);
+//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
+//                if (npc == null) return;
+//                Rs2Npc.interact(npc);
+//                sleep(1200);
 
 
 //                Rs2Inventory.slotInteract(27,"use");
@@ -125,7 +149,7 @@ public class ExampleScript extends Script {
 
 
 //                Rs2Player.waitForAnimation(1000);
-//                shutdown();
+
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
                 System.out.println("Total time for loop " + totalTime);
@@ -133,7 +157,7 @@ public class ExampleScript extends Script {
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        }, 0, 600, TimeUnit.MILLISECONDS);
+        }, 0, 100, TimeUnit.MILLISECONDS);
         return true;
     }
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {

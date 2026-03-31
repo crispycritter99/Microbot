@@ -401,7 +401,7 @@ public class ShortestPathPlugin extends Plugin implements KeyListener {
 				if (client.getLocalPlayer() == null) {
 					return;
 				}
-				start = client.getLocalPlayer().getWorldLocation();
+				start = Rs2Player.getWorldLocation();
 			}
 
 			Set<WorldPoint> targets = new HashSet<>();

@@ -74,6 +74,7 @@ public class Rs2Walker {
     static WorldPoint lastPosition;
     static volatile WorldPoint currentTarget;
     static int nextWalkingDistance = 10;
+    static List<String> doorActions = List.of("pay-toll", "pick-lock", "walk-through", "go-through", "open");
 
     static final int OFFSET = 10; // max offset of the exact area we teleport to
 
@@ -244,7 +245,7 @@ public class Rs2Walker {
 
             lastPosition = Rs2Player.getWorldLocation();
 
-            if (Rs2Player.getWorldLocation().distanceTo(target) == 0 || path.size() <= 1) {
+            if (lastPosition.distanceTo(target) == 0 || path.size() <= 1) {
                 setTarget(null);
                 return WalkerState.ARRIVED;
             }
@@ -287,6 +288,7 @@ public class Rs2Walker {
 
             boolean doorOrTransportResult = false;
             for (int i = indexOfStartPoint; i < path.size(); i++) {
+                long n1= System.nanoTime();
                 WorldPoint currentWorldPoint = path.get(i);
                 WorldPoint nextWorldPoint = i + 1 < path.size() ? path.get(i + 1) : null;
                 if (config.drawDebugPanel()) {
@@ -310,19 +312,20 @@ public class Rs2Walker {
                     }
                     break;
                 }
-
+                long n3= System.nanoTime();
                 doorOrTransportResult = handleDoors(path, i);
+                System.out.println("out "+i);
                 if (doorOrTransportResult) {
                     log.debug("Break out of path loop: door handled");
                     break;
                 }
-
+                long n4= System.nanoTime();
                 doorOrTransportResult = handleRockfall(path, i);
                 if (doorOrTransportResult) {
                     log.debug("Break out of path loop: rockfall handled");
                     break;
                 }
-
+                long n5= System.nanoTime();
                 //Again, would be nice to have access to current node, since we're going to have to handle transports in instance (PoH)
                 boolean inInstance = Microbot.getClient().getTopLevelWorldView().isInstance();
                 if (PohTeleports.isInHouse() || !inInstance) {
@@ -333,28 +336,42 @@ public class Rs2Walker {
                     log.debug("Break out of path loop: transport handled");
                     break;
                 }
-
+                long n6= System.nanoTime();
                 boolean tileReachable = Rs2Tile.isTileReachable(currentWorldPoint);
                 if (!tileReachable && !inInstance) {
                     continue;
                 }
+                long n7= System.nanoTime();
                 nextWalkingDistance = Rs2Random.between(7, 11);
-                int dist2d = currentWorldPoint.distanceTo2D(Rs2Player.getWorldLocation());
+                int dist2d = currentWorldPoint.distanceTo2D(lastPosition);
+//                System.out.println("dist2d: " + dist2d);
                 if (dist2d > nextWalkingDistance) {
                     if (Microbot.getClient().getTopLevelWorldView().isInstance()) {
                         if (Rs2Walker.walkMiniMap(currentWorldPoint)) {
                             final WorldPoint b = currentWorldPoint;
-                            sleepUntil(() -> b.distanceTo2D(Rs2Player.getWorldLocation()) < nextWalkingDistance, 1800);
+                            sleepUntil(() -> b.distanceTo2D(lastPosition) < nextWalkingDistance, 1800);
                         }
                     } else {
-                        if (currentWorldPoint.distanceTo2D(Rs2Player.getWorldLocation()) > nextWalkingDistance) {
+                        if (currentWorldPoint.distanceTo2D(lastPosition) > nextWalkingDistance) {
                             if (Rs2Walker.walkMiniMap(getPointWithWallDistance(currentWorldPoint))) {
                                 final WorldPoint b = currentWorldPoint;
-                                sleepUntil(() -> b.distanceTo2D(Rs2Player.getWorldLocation()) < nextWalkingDistance, 2000);
+                                sleepUntil(() -> b.distanceTo2D(lastPosition) < nextWalkingDistance, 2000);
                             }
                         }
                     }
                 }
+                long n2 = System.nanoTime();
+                long starter=(n3-n1)/1000000;
+                long doortime=(n4-n3)/1000000;
+                long rockfalltime=(n5-n4)/1000000;
+                long transporttime=(n6-n5)/1000000;
+                long reachabletime=(n7-n6)/1000000;
+                long clickingtime=(n2-n7)/1000000;
+                long totaltime=(n2-n1)/1000000;
+                System.out.printf(
+                        "[Walker] total=%dms | starter=%dms | doors=%dms | rockfall=%dms | transport=%dms | reachable=%dms | clicking=%dms%n",
+                        totaltime, starter, doortime, rockfalltime, transporttime, reachabletime, clickingtime
+                );
             }
 
 
@@ -365,13 +382,14 @@ public class Rs2Walker {
 
                     if (Rs2Tile.isTileReachable(finalTile)) {
                         if (Rs2Walker.walkFastCanvas(finalTile)) {
-                            sleepUntil(() -> Rs2Player.getWorldLocation().distanceTo(finalTile) < 2, 3000);
+                            sleepUntil(() -> lastPosition.distanceTo(finalTile) < 2, 3000);
                         }
                     }
 
                 }
             }
-            int finalDist = Rs2Player.getWorldLocation().distanceTo(target);
+
+            int finalDist = lastPosition.distanceTo(target);
             if (finalDist < distance) {
                 setTarget(null);
                 return WalkerState.ARRIVED;
@@ -1035,9 +1053,9 @@ public class Rs2Walker {
     }
 
     private static boolean handleDoors(List<WorldPoint> path, int index) {
+        long t0 = System.nanoTime();
         if (ShortestPathPlugin.getPathfinder() == null || index >= path.size() - 1) return false;
-
-        List<String> doorActions = List.of("pay-toll", "pick-lock", "walk-through", "go-through", "open");
+        long t1 = System.nanoTime();
         boolean isInstance = Microbot.getClient()
                 .getTopLevelWorldView()
                 .getScene()
@@ -1062,6 +1080,7 @@ public class Rs2Walker {
         boolean diagonal = Math.abs(fromWp.getX() - toWp.getX()) > 0
                 && Math.abs(fromWp.getY() - toWp.getY()) > 0;
 
+
         for (int offset = 0; offset <= 1; offset++) {
             int doorIdx = index + offset;
             if (doorIdx >= path.size()) continue;
@@ -1077,29 +1096,56 @@ public class Rs2Walker {
                 probes.add(new WorldPoint(toWp.getX(), fromWp.getY(), doorWp.getPlane()));
                 probes.add(new WorldPoint(fromWp.getX(), toWp.getY(), doorWp.getPlane()));
             }
-
+//            WorldPoint playerLoc = Rs2Player.getWorldLocation();
+            WorldPoint playerLoc = lastPosition;
+            long t2 = System.nanoTime();
             for (WorldPoint probe : probes) {
-                boolean adjacentToPath = probe.distanceTo(fromWp) <= 1 || probe.distanceTo(toWp) <= 1;
-                WorldPoint playerLoc = Rs2Player.getWorldLocation();
-                if (!adjacentToPath || playerLoc == null || !Objects.equals(probe.getPlane(), playerLoc.getPlane())) continue;
 
+                boolean adjacentToPath = probe.distanceTo(fromWp) <= 1 || probe.distanceTo(toWp) <= 1;
+
+                if (!adjacentToPath || playerLoc == null || !Objects.equals(probe.getPlane(), playerLoc.getPlane())) continue;
+// Direction of travel is always fromWp -> toWp, regardless of which probe we're on
+
+                LocalPoint lp = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), probe);
+                if (lp == null) continue;
+
+                int[][] flags = Microbot.getClient().getTopLevelWorldView()
+                        .getCollisionMaps()[probe.getPlane()].getFlags();
+                int flag = flags[lp.getSceneX()][lp.getSceneY()];
+
+                boolean hasWallFlag = (flag & (
+                        CollisionDataFlag.BLOCK_MOVEMENT_NORTH |
+                                CollisionDataFlag.BLOCK_MOVEMENT_SOUTH |
+                                CollisionDataFlag.BLOCK_MOVEMENT_EAST  |
+                                CollisionDataFlag.BLOCK_MOVEMENT_WEST)) != 0;
+
+                if (!hasWallFlag) continue; //
+                long tWall = System.nanoTime();
                 WallObject wall = Rs2GameObject.getWallObject(o -> o.getWorldLocation().equals(probe), probe, 3);
 
                 TileObject object = (wall != null)
                         ? wall
                         : Rs2GameObject.getGameObject(o -> o.getWorldLocation().equals(probe), probe, 3);
-                if (object == null) continue;
-
+                long tWallEnd = System.nanoTime();
+                if (object == null) {
+//                    System.out.printf("handleDoors probe= | wallLookup=%dms | initialTime=%dms",
+//
+//                            (tWallEnd - tWall) /1000000,
+//                            (t2-t0)/1000000
+//
+//                    );
+                    continue;}
+                long tComp = System.nanoTime();
                 ObjectComposition comp = Rs2GameObject.convertToObjectComposition(object);
                 // Ignore imposter objects
+                long tCompEnd = System.nanoTime();
                 if (comp == null || comp.getImpostorIds() != null || comp.getName().equals("null")) continue;
-
+                long tAction = System.nanoTime();
                 String action = Arrays.stream(comp.getActions())
                         .filter(Objects::nonNull)
                         .filter(act -> doorActions.stream().anyMatch(dact -> act.toLowerCase().startsWith(dact.toLowerCase())))
                         .min(Comparator.comparing(act -> doorActions.indexOf(doorActions.stream().filter(dact -> act.toLowerCase().startsWith(dact)).findFirst().orElse(""))))
                         .orElse(null);
-
                 if (action == null) continue;
 
                 boolean found = false;
@@ -1119,7 +1165,13 @@ public class Rs2Walker {
                         found = true;
                     }
                 }
-
+                long tActionEnd = System.nanoTime();
+//                System.out.printf("handleDoors probe={} | wallLookup={}µs | compConvert={}µs | actionMatch={}µs",
+//                        probe,
+//                        (tWallEnd - tWall) / 1000,
+//                        (tCompEnd - tComp) / 1000,
+//                        (tActionEnd - tAction) / 1000
+//                );
                 if (found) {
                     if (!handleDoorException(object, action)) {
                         Rs2GameObject.interact(object, action);
@@ -1131,7 +1183,7 @@ public class Rs2Walker {
                 }
             }
         }
-
+        log.debug("handleDoors total={}µs", (System.nanoTime() - t0) / 1000000);
         return false;
     }
 
