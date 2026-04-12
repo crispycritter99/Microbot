@@ -7,6 +7,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.devtools.MovementFlag;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.shortestpath.WorldPointUtil;
 import net.runelite.client.plugins.microbot.shortestpath.pathfinder.CollisionMap;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
@@ -41,6 +42,11 @@ public abstract class Rs2Tile implements Tile {
     private static ScheduledExecutorService tileExecutor;
 
     private static final int FLAG_DATA_SIZE = 104;
+
+    private static final ThreadLocal<int[][]> DIRECTIONS_TL = ThreadLocal.withInitial(() -> new int[128][128]);
+    private static final ThreadLocal<int[][]> DISTANCES_TL = ThreadLocal.withInitial(() -> new int[128][128]);
+    private static final ThreadLocal<int[]> BUFFER_X_TL = ThreadLocal.withInitial(() -> new int[4096]);
+    private static final ThreadLocal<int[]> BUFFER_Y_TL = ThreadLocal.withInitial(() -> new int[4096]);
 
     /**
      * Initializes the tile executor
@@ -393,7 +399,7 @@ public abstract class Rs2Tile implements Tile {
         if (playerLoc == null) return false;
 
         if (targetPoint.getPlane() != playerLoc.getPlane()) return false;
-        if (CollisionMap.ignoreCollision.contains(targetPoint)) return true;
+        if (CollisionMap.ignoreCollisionPacked.contains(WorldPointUtil.packWorldPoint(targetPoint))) return true;
 
         final boolean[][] visited = new boolean[FLAG_DATA_SIZE][FLAG_DATA_SIZE];
         final int[][] flags = getFlags();
@@ -684,7 +690,7 @@ public abstract class Rs2Tile implements Tile {
 
         // Find the nearest walkable interact point to the player
         WorldPoint nearestPoint = walkablePoints.stream()
-                .min(Comparator.comparingInt(playerLocation::distanceToPath))
+                .min(Comparator.comparingInt(wp -> Rs2WorldPoint.quickDistance(playerLocation.getWorldPoint(), wp)))
                 .orElse(null);
 
         return new Rs2WorldPoint(nearestPoint);
@@ -1079,19 +1085,15 @@ public abstract class Rs2Tile implements Tile {
             return null;
         }
 
-        int[][] directions = new int[128][128];
-        int[][] distances = new int[128][128];
-        int[] bufferX = new int[4096];
-        int[] bufferY = new int[4096];
+        int[][] directions = DIRECTIONS_TL.get();
+        int[][] distances = DISTANCES_TL.get();
+        int[] bufferX = BUFFER_X_TL.get();
+        int[] bufferY = BUFFER_Y_TL.get();
 
-        // Initialise directions and distances
         for (int i = 0; i < 128; ++i)
         {
-            for (int j = 0; j < 128; ++j)
-            {
-                directions[i][j] = 0;
-                distances[i][j] = Integer.MAX_VALUE;
-            }
+            Arrays.fill(directions[i], 0);
+            Arrays.fill(distances[i], Integer.MAX_VALUE);
         }
 
         Point p1 = source.getSceneLocation();

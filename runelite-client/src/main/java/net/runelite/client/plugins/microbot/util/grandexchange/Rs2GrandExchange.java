@@ -34,11 +34,13 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.awt.*;
 import java.io.StringReader;
 import java.net.URI;
+import java.time.Duration;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -60,9 +62,10 @@ public class Rs2GrandExchange {
     private static final String WIKI_MAPPING_URL = "https://prices.runescape.wiki/api/v1/osrs/mapping";
 
     // Caches for different data types
-    private static final Map<Integer, WikiPrice> priceCache = new HashMap<>();
-    private static final Map<Integer, ItemMappingData> mappingCache = new HashMap<>();
+    private static final Map<Integer, WikiPrice> priceCache = new ConcurrentHashMap<>();
+    private static final Map<Integer, ItemMappingData> mappingCache = new ConcurrentHashMap<>();
     private static final long PRICE_CACHE_DURATION = 60000; // 1 minutes
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
     /**
      * close the grand exchange interface
@@ -336,8 +339,8 @@ public class Rs2GrandExchange {
             return false;
         }
 
-        Predicate<GrandExchangeRequest> DEFAULT_PREDICATE = gxr -> gxr.getItemName() != null && !gxr.getItemName().isBlank() && request.getQuantity() > 0;
-        Predicate<GrandExchangeRequest> PRICE_PREDICATE = gxr -> gxr.getPrice() > 0;
+        Predicate<GrandExchangeRequest> DEFAULT_PREDICATE = gxr -> gxr.getItemName() != null && !gxr.getItemName().isBlank() && gxr.getQuantity() > 0;
+        Predicate<GrandExchangeRequest> PRICE_PREDICATE = gxr -> gxr.getPrice() > 0 || gxr.getPercent() != 0;
 
         switch (request.getAction()) {
             case BUY:
@@ -589,6 +592,7 @@ public class Rs2GrandExchange {
         int tries = 0;
         while (quantity != getOfferQuantity()) {
             Widget quantityButtonX = GrandExchangeWidget.getQuantityButton_X();
+            if (quantityButtonX == null) { log.warn("Quantity button not found"); tries++; continue; }
             Microbot.getMouse().click(quantityButtonX.getBounds());
             sleepUntil(() -> Rs2Widget.getWidget(InterfaceID.Chatbox.MES_TEXT2) != null); //GE Enter Price/Quantity
             sleep(600, 1000);
@@ -618,6 +622,7 @@ public class Rs2GrandExchange {
     private static void setPrice(int price) {
         if (price != getOfferPrice()) {
             Widget pricePerItemButtonX = GrandExchangeWidget.getPricePerItemButton_X();
+            if (pricePerItemButtonX == null) return;
             Microbot.getMouse().click(pricePerItemButtonX.getBounds());
             sleepUntil(() -> Rs2Widget.getWidget(InterfaceID.Chatbox.MES_TEXT2) != null); //GE Enter Price
             sleep(600, 1000);
@@ -777,6 +782,7 @@ public class Rs2GrandExchange {
             GrandExchangeRequest request = GrandExchangeRequest.builder()
                     .action(GrandExchangeAction.SELL)
                     .itemName(item.getName())
+                    .quantity(item.getQuantity())
                     .percent(-5)
                     .build();
 
@@ -922,21 +928,33 @@ public class Rs2GrandExchange {
     /**
      * Checks if a specified Grand Exchange slot is available for a new offer.
      * <p>
-     * A slot is considered available if its corresponding widget exists and the child widget
-     * at index 2 is hidden (indicating the slot is free).
+     * Reads the client's live offer state via {@link net.runelite.api.Client#getGrandExchangeOffers()},
+     * so this is accurate regardless of whether the Grand Exchange interface is currently open.
+     * F2P slots beyond index 2 are always reported as unavailable.
      *
      * @param slot the {@link GrandExchangeSlots} slot to check
-     * @return {@code true} if the slot is available; {@code false} if the slot is occupied or the widget is missing
+     * @return {@code true} if the slot is empty and usable, or if the offers array is not yet
+     *         initialized; {@code false} if it holds an offer, is out of the player's accessible
+     *         slot range, or cannot be resolved
      */
     public static boolean isSlotAvailable(GrandExchangeSlots slot) {
-        Widget parent = GrandExchangeWidget.getSlot(slot);
-        return Optional.ofNullable(parent)
-                .map(p -> {
-                    Widget child = p.getChild(2);
-                    if (child == null) return false;
-                    return child.isSelfHidden();
-                })
-                .orElse(false);
+        if (slot == null) {
+            return false;
+        }
+        if (slot.ordinal() >= getMaxSlots()) {
+            return false;
+        }
+
+        GrandExchangeOffer[] offers = Microbot.getClient().getGrandExchangeOffers();
+        if (offers == null) {
+            return true;
+        }
+        if (slot.ordinal() >= offers.length) {
+            return false;
+        }
+
+        GrandExchangeOffer offer = offers[slot.ordinal()];
+        return offer == null || offer.getState() == GrandExchangeOfferState.EMPTY;
     }
 
     /**
@@ -1183,13 +1201,13 @@ public class Rs2GrandExchange {
 
 
     public static int getOfferPrice(int itemId) {
-        HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GE_TRACKER_API_URL + itemId))
+                .timeout(Duration.ofSeconds(10))
                 .build();
 
         try {
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 
@@ -1251,13 +1269,13 @@ public class Rs2GrandExchange {
      */
     private static WikiPrice getWikiPrices(int itemId) {
         try {
-            HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(WIKI_API_URL + itemId))
                     .header("User-Agent", "OSRS - Price Fetcher")
+                    .timeout(Duration.ofSeconds(10))
                     .build();
 
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 
@@ -1385,14 +1403,14 @@ public class Rs2GrandExchange {
                 urlBuilder.append("&timestamp=").append(fromTimestamp);
             }
 
-            HttpClient httpClient = HttpClient.newHttpClient();
             String finalUrl = urlBuilder.toString();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(finalUrl))
                     .header("User-Agent", "Time Series Price Analysis")
+                    .timeout(Duration.ofSeconds(10))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
                 JsonParser parser = new JsonParser();
@@ -1516,13 +1534,13 @@ public class Rs2GrandExchange {
      */
     private static ItemMappingData fetchItemMappingData(int itemId) {
         try {
-            HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(WIKI_MAPPING_URL))
                     .header("User-Agent", "OSRS Item Mapping Fetcher")
+                    .timeout(Duration.ofSeconds(10))
                     .build();
 
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() == 200) {
                 JsonParser parser = new JsonParser();
@@ -1574,13 +1592,13 @@ public class Rs2GrandExchange {
     }
 
     public static int getSellPrice(int itemId) {
-        HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GE_TRACKER_API_URL + itemId))
+                .timeout(Duration.ofSeconds(10))
                 .build();
 
         try {
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 
@@ -1596,13 +1614,13 @@ public class Rs2GrandExchange {
     }
 
     public static int getPrice(int itemId) {
-        HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GE_TRACKER_API_URL + itemId))
+                .timeout(Duration.ofSeconds(10))
                 .build();
 
         try {
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 
@@ -1625,13 +1643,13 @@ public class Rs2GrandExchange {
     }
 
     public static int getBuyingVolume(int itemId) {
-        HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GE_TRACKER_API_URL + itemId))
+                .timeout(Duration.ofSeconds(10))
                 .build();
 
         try {
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 
@@ -1647,13 +1665,13 @@ public class Rs2GrandExchange {
     }
 
     public static int getSellingVolume(int itemId) {
-        HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(GE_TRACKER_API_URL + itemId))
+                .timeout(Duration.ofSeconds(10))
                 .build();
 
         try {
-            String jsonResponse = httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            String jsonResponse = HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
                     .join();
 

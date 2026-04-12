@@ -1185,7 +1185,7 @@ public class Rs2Player {
 
         if (hasPotion("moonlight moth mix")) {
             restoreAmount = 22;
-        } else if (hasPotion("moonlight potion")) {
+        } else if (hasPotion("moonlight potion") || hasPotion("moonlight moth")) {
             int prayerRestore = (maxPrayer / 4) + 7;
             int herbloreRestore = (int) Math.floor((maxHerblore * 3.0 / 10.0)) + 7;
             restoreAmount = Math.max(prayerRestore, herbloreRestore);
@@ -1405,7 +1405,15 @@ public class Rs2Player {
 
         if (potion == null) return false;
 
-        return Rs2Inventory.interact(potion, "drink");
+        String action = Arrays.stream(potion.getInventoryActions())
+                .filter(a -> a != null && a.equalsIgnoreCase("drink"))
+                .findFirst()
+                .orElseGet(() -> Arrays.stream(potion.getInventoryActions())
+                        .filter(a -> a != null && a.equalsIgnoreCase("release"))
+                        .findFirst()
+                        .orElse("drink"));
+
+        return Rs2Inventory.interact(potion, action);
     }
     
     /**
@@ -1666,7 +1674,7 @@ public class Rs2Player {
      * @return The player's run energy as an integer percentage (0-100).
      */
     public static int getRunEnergy() {
-        return Microbot.getClient().getEnergy() / 100;
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getEnergy()).orElse(0) / 100;
     }
 
     /**

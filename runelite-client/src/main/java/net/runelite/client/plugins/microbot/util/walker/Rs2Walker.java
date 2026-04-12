@@ -72,6 +72,7 @@ public class Rs2Walker {
     public static ShortestPathConfig config;
     static int stuckCount = 0;
     static WorldPoint lastPosition;
+    static long lastMovedTimeMs = 0;
     static volatile WorldPoint currentTarget;
     static int nextWalkingDistance = 10;
     static List<String> doorActions = List.of("pay-toll", "pick-lock", "walk-through", "go-through", "open");
@@ -127,12 +128,17 @@ public class Rs2Walker {
      * @return
      */
     private static WalkerState walkWithStateInternal(WorldPoint target, int distance) {
-        boolean reachableTileCheck = Rs2Tile.getReachableTilesFromTile(Rs2Player.getWorldLocation(), distance).containsKey(target);
+        long walkStartMs = System.currentTimeMillis();
+
+        int distToTarget = Rs2Player.getWorldLocation().distanceTo(target);
         LocalPoint localTarget = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), target);
         boolean walkableCheck = Rs2Tile.isWalkable(localTarget);
-        int distToTarget = Rs2Player.getWorldLocation().distanceTo(target);
+        boolean reachableTileCheck = distToTarget <= distance && Rs2Tile.getReachableTilesFromTile(Rs2Player.getWorldLocation(), distance).containsKey(target);
+
+        long arrivalCheckMs = System.currentTimeMillis() - walkStartMs;
 
         if (reachableTileCheck || (!walkableCheck && distToTarget <= distance)) {
+            log.info("[Walker] ARRIVED early. arrivalCheck={}ms, distToTarget={}", arrivalCheckMs, distToTarget);
             return WalkerState.ARRIVED;
         }
 
@@ -146,6 +152,7 @@ public class Rs2Walker {
         setTarget(target);
         ShortestPathPlugin.setReachedDistance(distance);
         stuckCount = 0;
+        lastMovedTimeMs = System.currentTimeMillis();
 
         if (Microbot.getClient().isClientThread()) {
             log.warn("Please do not call the walker from the main thread");
@@ -153,6 +160,9 @@ public class Rs2Walker {
         }
 
 		closeWorldMap();
+        long preProcessWalkMs = System.currentTimeMillis() - walkStartMs;
+        log.info("[Walker] walkWithStateInternal: arrivalCheck={}ms, setupTotal={}ms, distToTarget={}, target={}",
+                arrivalCheckMs, preProcessWalkMs, distToTarget, target);
         return processWalk(target, distance);
     }
 
@@ -172,9 +182,14 @@ public class Rs2Walker {
      * @param distance
      */
     private static WalkerState processWalk(WorldPoint target, int distance) {
+        return processWalk(target, distance, 0);
+    }
+
+    private static WalkerState processWalk(WorldPoint target, int distance, int partialRetries) {
         if (debug) {
             return WalkerState.EXIT;
         }
+        long processWalkStartMs = System.currentTimeMillis();
         try {
             if (!Microbot.isLoggedIn()) {
                 setTarget(null);
@@ -191,6 +206,7 @@ public class Rs2Walker {
                     return WalkerState.EXIT;
                 }
             }
+            long waitForPathfinderCreateMs = System.currentTimeMillis() - processWalkStartMs;
 
             if (!pathfinder.isDone()) {
                 boolean isDone = sleepUntilTrue(pathfinder::isDone, 100, 10_000);
@@ -199,6 +215,9 @@ public class Rs2Walker {
                     return WalkerState.EXIT;
                 }
             }
+            long waitForPathfinderDoneMs = System.currentTimeMillis() - processWalkStartMs;
+            log.info("[Walker] processWalk: waitForCreate={}ms, waitForDone={}ms (pathfinder total), target={}",
+                    waitForPathfinderCreateMs, waitForPathfinderDoneMs, target);
 
             if (ShortestPathPlugin.getMarker() == null) {
                 setTarget(null);
@@ -213,9 +232,16 @@ public class Rs2Walker {
                 dst = path.get(path.size()-1);
             }
 
+            boolean partialPath = false;
             if (dst == null || dst.distanceTo(target) > distance) {
-                setTarget(null);
-                return WalkerState.UNREACHABLE;
+                if (path != null && path.size() > 1) {
+                    log.info("[Walker] Path endpoint {} is {} tiles from target {}, walking partial path ({} tiles)",
+                            dst, dst.distanceTo(target), target, path.size());
+                    partialPath = true;
+                } else {
+                    setTarget(null);
+                    return WalkerState.UNREACHABLE;
+                }
             }
 
             if (path == null || path.isEmpty()) {
@@ -228,6 +254,13 @@ public class Rs2Walker {
             }
 
             checkIfStuck();
+            if (isStuckTooLong()) {
+                log.info("[Walker] Player has not moved for 10+ seconds, recalculating path");
+                lastMovedTimeMs = System.currentTimeMillis();
+                stuckCount = 0;
+                setTarget(target);
+                return processWalk(target, distance, partialRetries);
+            }
             if (stuckCount > 10) {
                 var moveableTiles = Rs2Tile.getReachableTilesFromTile(Rs2Player.getWorldLocation(), 5).keySet().toArray(new WorldPoint[0]);
                 if (moveableTiles.length > 0) {
@@ -393,8 +426,18 @@ public class Rs2Walker {
             if (finalDist < distance) {
                 setTarget(null);
                 return WalkerState.ARRIVED;
+            } else if (partialPath) {
+                if (partialRetries < 3) {
+                    log.info("[Walker] Walked partial path ({} tiles remaining), retrying from current position (attempt {}/3)",
+                            finalDist, partialRetries + 1);
+                    recalculatePath();
+                    return processWalk(target, distance, partialRetries + 1);
+                }
+                log.info("[Walker] Walked partial path, exhausted retries. final distance to target: {}", finalDist);
+                setTarget(null);
+                return WalkerState.UNREACHABLE;
             } else {
-                return processWalk(target, distance);
+                return processWalk(target, distance, partialRetries);
             }
         } catch (Exception ex) {
             if (ex instanceof InterruptedException) {
@@ -881,9 +924,9 @@ public class Rs2Walker {
                         transport.getType() == TransportType.TELEPORTATION_SPELL)
                 {
                     // For teleportation, we assume origin is null and simply check if the destination exists in the path.
-                    if (path.contains(transport.getDestination())) {
+                    int destIndex = path.indexOf(transport.getDestination());
+                    if (destIndex != -1) {
                         transportList.add(transport);
-                        int destIndex = path.indexOf(transport.getDestination());
                         // Advance the current index to the destination tile (or at least one forward)
                         currentIndex = destIndex > currentIndex ? destIndex : currentIndex + 1;
                         foundTransport = true;
@@ -909,10 +952,10 @@ public class Rs2Walker {
 
                     // For non-teleportation transports, ensure both origin and destination exist in the path
                     // and that the destination comes after the origin.
+                    int indexOfDestination = path.indexOf(transport.getDestination());
                     if (transport.getType() != TransportType.TELEPORTATION_ITEM &&
                             transport.getType() != TransportType.TELEPORTATION_SPELL) {
                         int indexOfOrigin = path.indexOf(transport.getOrigin());
-                        int indexOfDestination = path.indexOf(transport.getDestination());
                         if (indexOfOrigin == -1 || indexOfDestination == -1 || indexOfDestination < indexOfOrigin) {
                             continue;
                         }
@@ -921,8 +964,7 @@ public class Rs2Walker {
                     // If the current path point equals the transport's origin then add it.
                     if (currentPoint.equals(origin)) {
                         transportList.add(transport);
-                        int destIndex = path.indexOf(transport.getDestination());
-                        currentIndex = destIndex > currentIndex ? destIndex : currentIndex + 1;
+                        currentIndex = indexOfDestination > currentIndex ? indexOfDestination : currentIndex + 1;
                         foundTransport = true;
                         break;
                     }
@@ -937,8 +979,7 @@ public class Rs2Walker {
             }
         }
 
-        log.info("\n\nFound " + transportList.size() + " transports for path from " +
-                path.get(0) + " to " + path.get(path.size() - 1));
+        log.info("\n\nFound {} transports for path from {} to {}", transportList.size(), path.get(0), path.get(path.size() - 1));
 
         // Apply filtering and requirement setup if requested
         if (applyFiltering) {
@@ -1309,14 +1350,11 @@ public class Rs2Walker {
                 .min(Comparator.comparingInt(a -> _tiles.getOrDefault(a, Integer.MAX_VALUE)))
                 .orElse(null);
 
-        boolean noMatchingTileFound = path.stream()
-                .allMatch(a -> _tiles.getOrDefault(a, Integer.MAX_VALUE) == Integer.MAX_VALUE);
-
         /**
          * Check if the startPoint is null or no matching tile is found
          * If either condition is true, proceed to find the closest index in the path list.
          */
-        if (startPoint == null || noMatchingTileFound) {
+        if (startPoint == null || _tiles.getOrDefault(startPoint, Integer.MAX_VALUE) == Integer.MAX_VALUE) {
             Optional<Integer> closestIndexOptional = IntStream.range(0, path.size())
                     .boxed()
                     .min(Comparator.comparingInt(i -> Rs2Player.getWorldLocation().distanceTo(path.get(i))));
@@ -2155,7 +2193,12 @@ public class Rs2Walker {
             stuckCount++;
         } else {
             stuckCount = 0;
+            lastMovedTimeMs = System.currentTimeMillis();
         }
+    }
+
+    private static boolean isStuckTooLong() {
+        return lastMovedTimeMs > 0 && System.currentTimeMillis() - lastMovedTimeMs > 10_000;
     }
 
     /**
@@ -2359,9 +2402,6 @@ public class Rs2Walker {
                     return Arrays.stream(composition.getActions()).filter(Objects::nonNull).noneMatch(currentAction::equals) && !Rs2Player.isAnimating();
                 }, 300, 10000);
             case "Paddle Canoe":
-                @Component final int DESTINATION_MAP_PARENT = 42401792; // 647.3
-                @Component final int DESTINATION_LIST = 42401795; // 647.13
-
                 if (!Rs2GameObject.interact(transport.getObjectId(), "Paddle Canoe")) {
                     log.error("Failed to interact with canoe station");
                     return false;
@@ -2373,15 +2413,24 @@ public class Rs2Walker {
                 sleepUntil(Rs2Player::isMoving, 2000);
                 sleepUntilTrue(() -> !Rs2Player.isMoving(), 100, 30000);
 
-                boolean isDestinationMapVisible = sleepUntilTrue(() -> Rs2Widget.isWidgetVisible(DESTINATION_MAP_PARENT), 100, 10000);
+                // OSRS update moved the canoe destination map from group 647 to
+                // CanoeMapLum (953) for the river Lum chain. CanoeMapDougne (952)
+                // is for a different chain not currently used by canoes.tsv.
+                boolean isDestinationMapVisible = sleepUntilTrue(
+                        () -> Rs2Widget.isWidgetVisible(InterfaceID.CanoeMapLum.MAIN_MAP),
+                        100, 10000);
                 if (!isDestinationMapVisible) {
-                    log.error("Destination map is not visible within timeout period");
+                    log.error("Canoe destination map (CanoeMapLum) not visible within timeout period");
                     return false;
                 }
 
-                Widget destinationListWidget = Rs2Widget.getWidget(DESTINATION_LIST);
+                Widget destinationListWidget = Rs2Widget.getWidget(InterfaceID.CanoeMapLum.DESTINATIONS);
                 if (destinationListWidget == null) return false;
                 Widget destination = Rs2Widget.findWidget("Travel to " + displayInfo, List.of(destinationListWidget), false);
+                if (destination == null) {
+                    log.error("Could not find canoe destination widget for: {}", displayInfo);
+                    return false;
+                }
                 Rs2Widget.clickWidget(destination);
 
                 Rs2Dialogue.waitForCutScene(100, 15000);
