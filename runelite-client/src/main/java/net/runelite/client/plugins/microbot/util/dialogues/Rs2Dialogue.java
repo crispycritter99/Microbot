@@ -628,7 +628,7 @@ public class Rs2Dialogue {
     }
 
     /**
-     * Simulates a key press to select a dialogue option that matches the specified text.
+     * Simulates a key press to select a combination option that matches the specified text.
      *
      * @param text  the text to match with the dialogue option.
      * @param exact whether to match the text exactly or allow partial matches.
@@ -638,14 +638,12 @@ public class Rs2Dialogue {
 
         Widget dialogueOption = getCombinationOption(text, exact);
         if (dialogueOption == null) return false;
-//        System.out.println("hi");
         Rs2Keyboard.keyPress(dialogueOption.getOnKeyListener()[5].toString().charAt(0));
-//        System.out.println("hey");
         return true;
     }
 
     /**
-     * Simulates a key press to select a dialogue option that matches the specified text, allowing partial matches.
+     * Simulates a key press to select a combination option that matches the specified text, allowing partial matches.
      *
      * @param text the text to match with the dialogue option.
      */

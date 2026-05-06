@@ -12,6 +12,7 @@ import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -308,7 +309,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
         
         log.info("Withdrawing {} unfinished and {} secondary", withdrawnAmount, secondaryNeeded);
         Rs2Bank.withdrawX(currentPotion.unfinished, withdrawnAmount);
-        Rs2Bank.withdrawX(currentPotion.secondary, secondaryNeeded);
+        Rs2Bank.withdrawAll(currentPotion.secondary);
         
         return sleepUntil(() -> Rs2Inventory.hasItem(currentPotion.unfinished) && 
                                Rs2Inventory.hasItem(currentPotion.secondary), 3000);
@@ -394,7 +395,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
             if (Rs2Inventory.combine(currentPotion.unfinished, currentPotion.secondary)) {
                 sleep(600, 800);
                 if (withdrawnAmount > 1) {
-                    sleepUntil(() -> Rs2Dialogue.hasQuestion("How many do you wish to make?"), 3000);
+                    sleepUntil(() -> Rs2Widget.hasWidgetText("How many do you wish to make?", 270, 5, false), 1800);
                     Rs2Keyboard.keyPress('1');
                 }
                 currentlyMakingPotions = true;

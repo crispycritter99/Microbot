@@ -119,10 +119,12 @@ public class AutoMiningScript extends Script {
                             return;
                         }
 
-                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), initialPlayerLocation);
+                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), Rs2Player.getWorldLocation());
+//                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), initialPlayerLocation);
 
                         if (rock != null) {
                             if (Rs2GameObject.interact(rock)) {
+                                sleepTicks(2);
                                 Rs2Player.waitForXpDrop(Skill.MINING, true);
                                 Rs2Antiban.actionCooldown();
                                 Rs2Antiban.takeMicroBreakByChance();

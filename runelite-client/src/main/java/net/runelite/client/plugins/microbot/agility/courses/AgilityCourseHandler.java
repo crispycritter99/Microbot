@@ -37,12 +37,12 @@ public interface AgilityCourseHandler
 		WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 
 		List<AgilityObstacleModel> matchingObstacles = getObstacles().stream()
-			.filter(o -> o.getOperationX().check(playerLocation.getX(), o.getRequiredX()) && o.getOperationY().check(playerLocation.getY(), o.getRequiredY()))
-			.collect(Collectors.toList());
+				.filter(o -> o.getOperationX().check(playerLocation.getX(), o.getRequiredX()) && o.getOperationY().check(playerLocation.getY(), o.getRequiredY()))
+				.collect(Collectors.toList());
 
 		List<Integer> objectIds = matchingObstacles.stream()
-			.map(AgilityObstacleModel::getObjectID)
-			.collect(Collectors.toList());
+				.map(AgilityObstacleModel::getObjectID)
+				.collect(Collectors.toList());
 
 		Predicate<TileObject> validObjectPredicate = obj -> {
 			if (!objectIds.contains(obj.getId()))
@@ -90,15 +90,15 @@ public interface AgilityCourseHandler
 		// Not animating, safe to click
 		return true;
 	}
-	
+
 	default boolean waitForCompletion(final int agilityExp, final int plane)
 	{
 		double initialHealth = Rs2Player.getHealthPercentage();
-		int timeoutMs = 20000;
+		int timeoutMs = 15000;
 		long startTime = System.currentTimeMillis();
 		long lastMovingTime = System.currentTimeMillis();
 		int waitDelay = 1000; // Default 1 second wait after movement stops
-		
+
 		// Check every 100ms for completion
 		while (System.currentTimeMillis() - startTime < timeoutMs)
 		{
@@ -107,27 +107,27 @@ public interface AgilityCourseHandler
 			{
 				lastMovingTime = System.currentTimeMillis();
 			}
-			
+
 			// Get current XP
 			int currentXp = Microbot.getClient().getSkillExperience(Skill.AGILITY);
-			
+
 			// Use the isObstacleComplete hook for course-specific completion logic
 			if (isObstacleComplete(currentXp, agilityExp, lastMovingTime, waitDelay))
 			{
 				return true;
 			}
-			
+
 			// Check other completion conditions (health loss, plane change)
-			if (Rs2Player.getHealthPercentage() < initialHealth || 
-				Microbot.getClient().getTopLevelWorldView().getPlane() != plane)
+			if (Rs2Player.getHealthPercentage() < initialHealth ||
+					Microbot.getClient().getTopLevelWorldView().getPlane() != plane)
 			{
 				return true;
 			}
-			
+
 			// Sleep before next check
 			Global.sleep(100);
 		}
-		
+
 		// Timeout reached
 		return false;
 	}
@@ -168,9 +168,9 @@ public interface AgilityCourseHandler
 			AgilityObstacleModel o = getObstacles().get(i);
 
 			TileObject nearestObstacle = Rs2GameObject.getAll(obj -> obj.getId() == o.getObjectID() && obj.getPlane() == playerPlane)
-				.stream()
-				.min(Comparator.comparing(obj -> obj.getWorldLocation().distanceTo(playerLoc)))
-				.orElse(null);
+					.stream()
+					.min(Comparator.comparing(obj -> obj.getWorldLocation().distanceTo(playerLoc)))
+					.orElse(null);
 
 			if (nearestObstacle != null)
 			{
@@ -216,12 +216,12 @@ public interface AgilityCourseHandler
 		if (currentXp > previousXp) {
 			return true;
 		}
-		
+
 		// Check if still moving/animating
 		if (Rs2Player.isMoving() || Rs2Player.isAnimating()) {
 			return false;
 		}
-		
+
 		// Check if we've waited long enough after movement stopped
 		return System.currentTimeMillis() - lastMovingTime >= waitDelay;
 	}

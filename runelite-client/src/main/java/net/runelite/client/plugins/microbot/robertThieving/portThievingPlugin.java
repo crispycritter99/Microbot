@@ -3,271 +3,266 @@ package net.runelite.client.plugins.microbot.robertThieving;
 import com.google.inject.Provides;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.events.GameTick;
-import net.runelite.client.config.ConfigManager;
-import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.plugins.Plugin;
-import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
-import net.runelite.client.ui.overlay.OverlayManager;
-import java.util.*;
-import javax.inject.Inject;
-import java.awt.*;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import com.google.inject.Provides;
-import javax.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.ClientTick;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.NpcDespawned;
 import net.runelite.api.events.NpcSpawned;
-import net.runelite.client.Notifier;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.api.*;
 import net.runelite.client.ui.overlay.OverlayManager;
+
+import javax.inject.Inject;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+
 @PluginDescriptor(
         name = PluginDescriptor.Mocrosoft + "Port Roberts Thieving",
-        description = "Microbot example plugin",
-        tags = {"example", "microbot"},
+        description = "Automates Port Roberts stall thieving with guard-awareness",
+        tags = {"thieving", "microbot", "port roberts"},
         enabledByDefault = false
 )
 @Slf4j
-public class portThievingPlugin extends Plugin {
-    @Inject
-    private portThievingConfig config;
-    @Provides
-    portThievingConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(portThievingConfig.class);
+public class portThievingPlugin extends Plugin
+{
+    // -------------------------------------------------------------------------
+    // Stall registry
+    // -------------------------------------------------------------------------
+    public enum StallTypes { FUR, SILK, GEM, CANNON, FISH, ORE, SPICE, VEG, SILVER }
+
+    /** Single source of truth for all stall state — no parallel maps */
+    public static class StallState
+    {
+        public final int objectId;
+        public final WorldPoint position;
+        public final List<WorldPoint> watchPoints;
+
+        // runtime
+        public boolean isWatched          = false;
+        public int watchedTicksRemaining  = 0;
+        public int safeTicksRemaining     = 0; // ticks the stall stays safe after guard leaves
+
+        public StallState(int objectId, WorldPoint position, List<WorldPoint> watchPoints)
+        {
+            this.objectId    = objectId;
+            this.position    = position;
+            this.watchPoints = watchPoints;
+        }
+
+        /** True when it is safe to steal right now */
+        public boolean isSafe()
+        {
+            if (!isWatched) return safeTicksRemaining > 0;
+            // Guard is leaving in ≤1 tick — safe to click
+            return watchedTicksRemaining <= 1;
+        }
+
+        public void reset()
+        {
+            isWatched = false;
+            watchedTicksRemaining = 0;
+            safeTicksRemaining = 0;
+        }
     }
-    @Getter
-    private String npcName;
-    @Getter
-    private static List<String> itemNames;
-    @Getter
-    private int minStock;
 
-    @Getter
-    private boolean useBank;
-    @Getter
-    private boolean useNextWorld;
-    @Getter
-    private boolean useLogout;
-    @Getter
-    private boolean useExactNaming;
-    @Inject
-    private OverlayManager overlayManager;
-    @Inject
-    private portThievingOverlay portThievingOverlay;
+    // Ordered priority: script will pick the first safe stall in this list
+    public static final StallTypes[] STALL_PRIORITY = {
+            StallTypes.GEM,
+            StallTypes.SILVER,
+            StallTypes.CANNON,
+            StallTypes.SPICE,
+            StallTypes.ORE,
+            StallTypes.FISH,
+            StallTypes.FUR,
+            StallTypes.SILK,
+            StallTypes.VEG
+    };
 
-    @Inject
-    portThievingScript portThievingScript;
-    public static Rs2NpcModel closestGuard=null;
-    public static Rs2NpcModel[] portGuards=null;
+    // Map from object ID → stall type for O(1) guard-zone → stall lookup
+    public final Map<StallTypes, StallState> stalls = new EnumMap<>(StallTypes.class);
+    private final Map<Integer, StallTypes> idToType = new HashMap<>();
+
+    // -------------------------------------------------------------------------
+    // Constants
+    // -------------------------------------------------------------------------
+    private static final String GUARD_NAME          = "Market Guard";
+    private static final Set<Integer> GUARD_IDS     = Set.of(14881, 14882, 14883);
+    private static final int GUARD_WATCH_DURATION   = 10; // ticks guard watches after arriving
+    private static final int SAFE_WINDOW_TICKS      = 5;  // ticks the stall is safe after guard leaves
+
+    // Centre of the market — script returns if player is outside this radius
+    public static final WorldPoint MARKET_CENTRE = new WorldPoint(1866, 3293, 0);
+    public static final int MARKET_RADIUS = 10;
+
+    // -------------------------------------------------------------------------
+    // Injected fields
+    // -------------------------------------------------------------------------
+    @Inject private Client client;
+    @Inject private portThievingConfig config;
+    @Inject private OverlayManager overlayManager;
+    @Inject private portThievingOverlay overlay;
+    @Inject private portThievingScript script;
+
+    // Instance-scoped — no static leaks across restarts
+    private final List<NPC> guards = new ArrayList<>();
+
+    // -------------------------------------------------------------------------
+    // Lifecycle
+    // -------------------------------------------------------------------------
+    @Override
+    protected void startUp() throws AWTException
+    {
+        buildRegistry();
+        overlayManager.add(overlay);
+        script.run(config);
+    }
 
     @Override
-    protected void startUp() throws AWTException {
-        if (overlayManager != null) {
-            overlayManager.add(portThievingOverlay);
-        }
-        for (StallTypes stall : StallTypes.values()) {
-            watching.put(stall, false);
-            notifiers.put(stall, false);
-            watchNotifiers.put(stall, false);
-        }
-        portThievingScript.run(config);
-    }
-
-    protected void shutDown() {
-        portThievingScript.shutdown();
-        overlayManager.remove(portThievingOverlay);
-        watching.clear();
+    protected void shutDown()
+    {
+        script.shutdown();
+        overlayManager.remove(overlay);
         guards.clear();
-    }
-    public enum StallTypes {
-        FUR, SILK, GEM, CANNON, FISH, ORE, SPICE, VEG, SILVER
+        stalls.values().forEach(StallState::reset);
     }
 
-    public static Map<StallTypes, Boolean> watching = new HashMap<>();
+    private void buildRegistry()
+    {
+        stalls.clear();
+        idToType.clear();
 
-    public final Map<StallTypes, WorldPoint> stallPositions = Map.of(
-            StallTypes.FUR, new WorldPoint(1870, 3292, 0),
-            StallTypes.SILK, new WorldPoint(1870, 3295, 0),
-            StallTypes.GEM, new WorldPoint(1869, 3289, 0),
-            StallTypes.CANNON, new WorldPoint(1867, 3296, 0),
-            StallTypes.FISH, new WorldPoint(1861, 3292, 0),
-            StallTypes.ORE, new WorldPoint(1861, 3295, 0),
-            StallTypes.SPICE, new WorldPoint(1863, 3289, 0),
-            StallTypes.VEG, new WorldPoint(1864, 3296, 0),
-            StallTypes.SILVER, new WorldPoint(1866, 3289, 0)
-    );
+        reg(StallTypes.FUR,    58102, wp(1870,3292), wp(1869,3292), wp(1869,3293), wp(1869,3294));
+        reg(StallTypes.SILK,   58101, wp(1870,3295), wp(1869,3295), wp(1868,3295));
+        reg(StallTypes.GEM,    58106, wp(1869,3289), wp(1869,3290), wp(1869,3291));
+        reg(StallTypes.CANNON, 58108, wp(1867,3296), wp(1867,3295), wp(1866,3295));
+        reg(StallTypes.FISH,   58103, wp(1861,3292), wp(1863,3292), wp(1863,3291));
+        reg(StallTypes.ORE,    58107, wp(1861,3295), wp(1863,3294), wp(1863,3293));
+        reg(StallTypes.SPICE,  58105, wp(1863,3289), wp(1864,3290), wp(1865,3290));
+        reg(StallTypes.VEG,    58100, wp(1864,3296), wp(1865,3295), wp(1864,3295));
+        reg(StallTypes.SILVER, 58104, wp(1866,3289), wp(1866,3290), wp(1867,3290), wp(1868,3290));
+    }
 
-    private static final List<WorldPoint> furWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1869, 3292, 0),
-                    new WorldPoint(1869, 3293, 0),
-                    new WorldPoint(1869, 3294, 0)
-            );
-    private static final List<WorldPoint> silkWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1869, 3295, 0),
-                    new WorldPoint(1868, 3295, 0)
-            );
-    private static final List<WorldPoint> gemWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1869, 3290, 0),
-                    new WorldPoint(1869, 3291, 0)
-            );
-    private static final List<WorldPoint> cannonWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1867, 3295, 0),
-                    new WorldPoint(1866, 3295, 0)
-            );
-    private static final List<WorldPoint> fishWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1863, 3292, 0),
-                    new WorldPoint(1863, 3291, 0)
-            );
-    private static final List<WorldPoint> oreWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1863, 3294, 0),
-                    new WorldPoint(1863, 3293, 0)
-            );
-    private static final List<WorldPoint> spiceWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1864, 3290, 0),
-                    new WorldPoint(1865, 3290, 0)
-            );
-    private static final List<WorldPoint> vegWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1865, 3295, 0),
-                    new WorldPoint(1864, 3295, 0)
-            );
-    private static final List<WorldPoint> silverWatchPoints =
-            Arrays.asList(
-                    new WorldPoint(1866, 3290, 0),
-                    new WorldPoint(1867, 3290, 0),
-                    new WorldPoint(1868, 3290, 0)
-            );
+    private void reg(StallTypes type, int objId, WorldPoint pos, WorldPoint... watches)
+    {
+        StallState s = new StallState(objId, pos, Arrays.asList(watches));
+        stalls.put(type, s);
+        idToType.put(objId, type);
+    }
 
-    private static final Map<StallTypes, List<WorldPoint>> stallWatchPositions = Map.of(
-            StallTypes.FUR, furWatchPoints,
-            StallTypes.SILK, silkWatchPoints,
-            StallTypes.GEM, gemWatchPoints,
-            StallTypes.CANNON, cannonWatchPoints,
-            StallTypes.FISH, fishWatchPoints,
-            StallTypes.ORE, oreWatchPoints,
-            StallTypes.SPICE, spiceWatchPoints,
-            StallTypes.VEG, vegWatchPoints,
-            StallTypes.SILVER, silverWatchPoints
-    );
+    private static WorldPoint wp(int x, int y) { return new WorldPoint(x, y, 0); }
 
-    private static final String GUARD_NAME = "Market Guard";
-    private static final Set<Integer> GUARD_IDS = Set.of(
-            14881, 14882, 14883
-    );
-    private static final int SOUND_ID_UNWATCHED = 8410;
-    private static final int SOUND_ID_WATCHED = 3814;
-
-    private static final Map<StallTypes, Boolean> notifiers = new HashMap<>();
-    private static final Map<StallTypes, Boolean> watchNotifiers = new HashMap<>();
-    private static final List<NPC> guards = new ArrayList<>();
-
-    @Inject
-    private Client client;
-
-
-
-    @Inject
-    private Notifier notifier;
-
-    private float flashAlpha = 0f;
-
-
-
+    // -------------------------------------------------------------------------
+    // NPC tracking
+    // -------------------------------------------------------------------------
     @Subscribe
     public void onNpcSpawned(NpcSpawned event)
     {
         NPC npc = event.getNpc();
-        if(!isValidGuard(npc))
-            return;
-
-        if(guards.contains(npc))
-            return;
-
-        guards.add(npc);
+        if (isMarketGuard(npc) && !guards.contains(npc))
+            guards.add(npc);
     }
 
     @Subscribe
     public void onNpcDespawned(NpcDespawned event)
     {
         NPC npc = event.getNpc();
-        if(!isValidGuard(npc))
-            return;
-
-        guards.remove(npc);
+        if (isMarketGuard(npc))
+            guards.remove(npc);
     }
 
-    @Subscribe
-    public void onClientTick(ClientTick event)
-    {
-
-    }
-
+    // -------------------------------------------------------------------------
+    // Game tick — update all stall states
+    // -------------------------------------------------------------------------
     @Subscribe
     public void onGameTick(GameTick event)
     {
-        //System.out.println(client.getSelectedSceneTile().getWorldLocation());
-
-        watching.put(StallTypes.FUR, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.FUR)));
-        watching.put(StallTypes.SILK, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.SILK)));
-        watching.put(StallTypes.GEM, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.GEM)));
-        watching.put(StallTypes.CANNON, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.CANNON)));
-        watching.put(StallTypes.FISH, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.FISH)));
-        watching.put(StallTypes.ORE, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.ORE)));
-        watching.put(StallTypes.SPICE, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.SPICE)));
-        watching.put(StallTypes.VEG, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.VEG)));
-        watching.put(StallTypes.SILVER, isAnyGuardAtPosition(stallWatchPositions.get(StallTypes.SILVER)));
-
-    }
-
-
-    private boolean isValidGuard(NPC npc)
-    {
-        String npcName = npc.getName();
-        if(npcName == null)
-            return false;
-
-        int npcId = npc.getId();
-        return npcName.equals(GUARD_NAME) && GUARD_IDS.contains(npcId);
-    }
-
-    private boolean isAnyGuardAtPosition(List<WorldPoint> wps)
-    {
-        for(NPC npc: guards)
+        for (StallTypes type : StallTypes.values())
         {
-            WorldPoint nwp = npc.getWorldLocation();
-            int x = nwp.getX();
-            int y = nwp.getY();
+            StallState s        = stalls.get(type);
+            boolean wasWatched  = s.isWatched;
+            boolean nowWatched  = isAnyGuardWatching(s.watchPoints);
+            s.isWatched         = nowWatched;
 
-            for(WorldPoint wp: wps)
+            if (nowWatched && !wasWatched)
             {
-                if(x == wp.getX() && y == wp.getY())
-                {
-                    return true;
-                }
+                // Guard just arrived
+                s.watchedTicksRemaining = GUARD_WATCH_DURATION;
+                s.safeTicksRemaining    = 0;
+            }
+            else if (nowWatched)
+            {
+                // Guard still here
+                if (s.watchedTicksRemaining > 0) s.watchedTicksRemaining--;
+                // Pre-arm the safe window 1 tick before guard leaves
+                if (s.watchedTicksRemaining == 1) s.safeTicksRemaining = SAFE_WINDOW_TICKS;
+            }
+            else
+            {
+                // No guard — count down safe window
+                s.watchedTicksRemaining = 0;
+                if (s.safeTicksRemaining > 0) s.safeTicksRemaining--;
             }
         }
+    }
 
+    // -------------------------------------------------------------------------
+    // Public API for script
+    // -------------------------------------------------------------------------
+
+    /**
+     * Returns the highest-priority stall that is currently safe to steal from,
+     * or null if none are safe.
+     */
+    public StallTypes getBestSafeStall()
+    {
+        for (StallTypes type : STALL_PRIORITY)
+        {
+            if (stalls.get(type).isSafe()) return type;
+        }
+        return null;
+    }
+
+    public boolean isStallSafe(StallTypes type)
+    {
+        return type != null && stalls.get(type).isSafe();
+    }
+
+    public int getObjectId(StallTypes type)
+    {
+        return stalls.get(type).objectId;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+    private boolean isMarketGuard(NPC npc)
+    {
+        return npc != null
+                && GUARD_NAME.equals(npc.getName())
+                && GUARD_IDS.contains(npc.getId());
+    }
+
+    private boolean isAnyGuardWatching(List<WorldPoint> points)
+    {
+        for (NPC guard : guards)
+        {
+            WorldPoint loc = guard.getWorldLocation();
+            for (WorldPoint wp : points)
+            {
+                if (loc.getX() == wp.getX() && loc.getY() == wp.getY())
+                    return true;
+            }
+        }
         return false;
     }
 
-
+    @Provides
+    portThievingConfig provideConfig(ConfigManager cm)
+    {
+        return cm.getConfig(portThievingConfig.class);
+    }
 }

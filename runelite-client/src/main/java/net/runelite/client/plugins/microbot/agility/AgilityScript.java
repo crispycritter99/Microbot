@@ -24,7 +24,6 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import javax.inject.Inject;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -57,7 +56,7 @@ public class AgilityScript extends Script
 			BrimhavenSpikeCourse course = (BrimhavenSpikeCourse) plugin.getCourseHandler();
 			course.reset();
 		}
-		
+
 		super.shutdown();
 	}
 
@@ -79,7 +78,7 @@ public class AgilityScript extends Script
 				{
 					return;
 				}
-				
+
 				// Debug log to see if main loop is running
 				Microbot.log("AgilityScript main loop running - Course: " + config.agilityCourse().getTooltip());
 				if (!plugin.hasRequiredLevel())
@@ -89,7 +88,7 @@ public class AgilityScript extends Script
 					shutdown();
 					return;
 				}
-				
+
 				// Check coin requirement for BrimhavenSpike course (only before payment)
 				if (plugin.getCourseHandler() instanceof BrimhavenSpikeCourse)
 				{
@@ -115,7 +114,7 @@ public class AgilityScript extends Script
 					return;
 				}
 
-				final WorldPoint playerWorldLocation = Microbot.getClientThread().invoke(() -> Rs2Player.getWorldLocation());
+				final WorldPoint playerWorldLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
 				final int currentAgilityXp = Microbot.getClient().getSkillExperience(Skill.AGILITY);
 
 				if (handleFood())
@@ -139,7 +138,7 @@ public class AgilityScript extends Script
 				{
 					return;
 				}
-				
+
 				// Debug log to see if script is running
 				if (plugin.getCourseHandler() instanceof BrimhavenSpikeCourse) {
 					Microbot.log("BrimhavenSpike course detected, but handleCourseSpecificActions returned false");
@@ -165,7 +164,7 @@ public class AgilityScript extends Script
 				{
 					return; // Not ready to click yet
 				}
-				
+
 				// Update XP if we got it while animating
 				if (currentAgilityXp > lastAgilityXp)
 				{
@@ -214,17 +213,13 @@ public class AgilityScript extends Script
 						}
 					}
 				}
-				long currentMillis = Instant.now().toEpochMilli();
-				long millisLeft = Math.max(plugin.getCooldownTimestamp(false) - currentMillis, 0);
-				long secondsLeft = (long)Math.ceil((double)millisLeft / 1000);
-				int obstacleSize= config.agilityCourse().getHandler().getObstacles().size();
-								if (secondsLeft > 0 && secondsLeft < 50&&obstacleSize-config.agilityCourse().getHandler().getCurrentObstacleIndex()==1&&config.waitForMark()) return;
+
 				// Normal obstacle interaction
 				if (Rs2GameObject.interact(gameObject)) {
 					// Wait for completion - this now returns quickly on XP drop
-					boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp, 
-						Microbot.getClient().getLocalPlayer().getWorldLocation().getPlane());
-					
+					boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp,
+							Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation()).getPlane());
+
 					if (!completed) {
 						// Timeout occurred - log warning (throttled to once per 30 seconds)
 						long now = System.currentTimeMillis();
@@ -234,10 +229,10 @@ public class AgilityScript extends Script
 						}
 						return;  // Bail early to avoid acting on stale state
 					}
-					
+
 					// XP tracking is already updated before clicking (line 137)
 					// Don't update here to avoid losing early action state
-					
+
 					// If we're still animating after XP, don't add delays - proceed immediately
 					if (!Rs2Player.isAnimating() && !Rs2Player.isMoving()) {
 						// Only add delays if we're not animating
@@ -264,10 +259,10 @@ public class AgilityScript extends Script
 		}
 
 		List<String> itemsToAlch = Arrays.stream(itemsInput.split(","))
-			.map(String::trim)
-			.map(String::toLowerCase)
-			.filter(s -> !s.isEmpty())
-			.collect(Collectors.toList());
+				.map(String::trim)
+				.map(String::toLowerCase)
+				.filter(s -> !s.isEmpty())
+				.collect(Collectors.toList());
 
 		if (itemsToAlch.isEmpty())
 		{
@@ -367,20 +362,20 @@ public class AgilityScript extends Script
 		{
 			return false;
 		}
-		
+
 		// Check if we should skip alching based on configured chance
 		if (Math.random() * 100 < config.alchSkipChance())
 		{
 			return false;
 		}
-		
+
 		return true;
 	}
 
 	private boolean performEfficientAlch(TileObject gameObject, String alchItem, int agilityExp)
 	{
 		WorldPoint playerLocation = Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
-		
+
 		if (gameObject.getWorldLocation().distanceTo(playerLocation) >= 5)
 		{
 			// Efficient alching: click, alch, click
@@ -390,8 +385,8 @@ public class AgilityScript extends Script
 				Rs2Magic.alch(alchItem, 50, 75);
 				Rs2GameObject.interact(gameObject);
 				boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp,
-					Microbot.getClient().getLocalPlayer().getWorldLocation().getPlane());
-				
+						Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation()).getPlane());
+
 				if (!completed) {
 					// Timeout during efficient alching - log warning
 					long now = System.currentTimeMillis();
@@ -401,7 +396,7 @@ public class AgilityScript extends Script
 					}
 					return false;  // Return false to indicate alch sequence failed
 				}
-				
+
 				Rs2Antiban.actionCooldown();
 				Rs2Antiban.takeMicroBreakByChance();
 				lastAgilityXp = Microbot.getClient().getSkillExperience(Skill.AGILITY);
@@ -420,7 +415,7 @@ public class AgilityScript extends Script
 	private boolean handleCourseSpecificActions(WorldPoint playerWorldLocation)
 	{
 		Microbot.log("handleCourseSpecificActions called for: " + plugin.getCourseHandler().getClass().getSimpleName());
-		
+
 		if (plugin.getCourseHandler() instanceof PrifddinasCourse)
 		{
 			PrifddinasCourse course = (PrifddinasCourse) plugin.getCourseHandler();
@@ -430,9 +425,9 @@ public class AgilityScript extends Script
 		{
 			WerewolfCourse course = (WerewolfCourse) plugin.getCourseHandler();
 			return course.handleFirstSteppingStone(playerWorldLocation)
-				|| course.handleStickPickup(playerWorldLocation)
-				|| course.handleSlide()
-				|| course.handleStickReturn(playerWorldLocation);
+					|| course.handleStickPickup(playerWorldLocation)
+					|| course.handleSlide()
+					|| course.handleStickReturn(playerWorldLocation);
 		}
 		else if (plugin.getCourseHandler() instanceof BrimhavenSpikeCourse)
 		{

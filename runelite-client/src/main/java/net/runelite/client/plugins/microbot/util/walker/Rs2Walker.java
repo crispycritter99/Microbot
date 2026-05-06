@@ -2770,11 +2770,32 @@ public class Rs2Walker {
 
         String lastDestinationAction = "last-destination (" + transport.getDisplayInfo() + ")";
         String treeLastDestinationAction = "Ring-last-destination (" + transport.getDisplayInfo() + ")";
+
         ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
         log.info("Interacting with Fairy Ring @ {}", fairyRingObject.getWorldLocation());
 
+        final var ops=composition.getOps();
+        int opIdx = 3;
+        int numSubOps = ops.getNumSubOps(3);
+        int identifiervalue = -1;
+        for (int subIdx = 0; subIdx < numSubOps; subIdx++)
+        {
+            String subOp = ops.getSubOp(opIdx, subIdx);
+            if (subOp == null) continue;
+//            assert subOp != null;
+            if (subOp.contains(transport.getDisplayInfo()))
+            {
+                int subID = ops.getSubID(opIdx, subIdx);
+                identifiervalue = 95031+65536*(subID-1);
+                System.out.println(95031+65536*(subID-1));
+
+            }
+        }
         // we can use the last-destination to handle fairy rings
-        if (Rs2GameObject.hasAction(composition, lastDestinationAction, true)) {
+        if (identifiervalue !=-1&&Rs2GameObject.hasAction(composition, "Favourites", true)){
+            Rs2GameObject.clickObject(fairyRingObject, "Favourites",transport.getDisplayInfo());
+        }
+        else if (Rs2GameObject.hasAction(composition, lastDestinationAction, true)) {
             Rs2GameObject.interact(fairyRingObject, lastDestinationAction);
         } else if (Rs2GameObject.hasAction(composition, treeLastDestinationAction, true)) {
             Rs2GameObject.interact(fairyRingObject, treeLastDestinationAction);

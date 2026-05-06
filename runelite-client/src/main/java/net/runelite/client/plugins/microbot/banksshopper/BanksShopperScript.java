@@ -9,6 +9,7 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -127,6 +128,7 @@ public class BanksShopperScript extends Script {
                                 }
                             }
                             Rs2Shop.closeShop();
+                            sleep(300,700);
                             if (successfullAction) {
                                 state = ShopperState.HOPPING;
                                 return;
@@ -232,11 +234,23 @@ public class BanksShopperScript extends Script {
             System.out.println("Avoid buying item - Inventory is full");
             return false;
         }
+        int buyCount = 1;
+        for (Rs2ItemModel item : Rs2Shop.shopItems) {
+            // Check if the item name matches the specified item name and quantity is >= minimumQuantity
+            if (item.getName().equalsIgnoreCase(itemName)) {
+                buyCount = (item.getQuantity() - plugin.getMinStock()) / Integer.parseInt(quantity);
 
-        boolean boughtItem = Rs2Shop.buyItem(itemName, quantity);
+            }
+        }
+        boolean boughtItem = false;
+        for (int count = 0; count < buyCount+1; count++) {
+            boughtItem = Rs2Shop.buyItem(itemName, quantity);
+            sleep(250, 350);
+        }
 
-        if (boughtItem){
-            Rs2Inventory.waitForInventoryChanges(3000);
+
+        if (boughtItem) {
+            Rs2Inventory.waitForInventoryChanges(1800);
         }
 
         System.out.println(boughtItem ? "Successfully bought " + quantity + " item: " + itemName : "Failed to buy " + quantity + " item ID: " + itemName);
@@ -259,7 +273,7 @@ public class BanksShopperScript extends Script {
         boolean boughtItem = Rs2Shop.buyItem(itemID, quantity);
 
         if (boughtItem){
-            Rs2Inventory.waitForInventoryChanges(3000);
+            Rs2Inventory.waitForInventoryChanges(1800);
         }
 
         System.out.println(boughtItem ? "Successfully bought " + quantity + " item ID: " + itemID : "Failed to buy " + quantity + " item ID: " + itemID);

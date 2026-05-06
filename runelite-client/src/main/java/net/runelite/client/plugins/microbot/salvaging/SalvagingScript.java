@@ -78,7 +78,9 @@ public class SalvagingScript extends Script {
                     sleepUntil(()-> !Harvestable);
                     if(Rs2Player.getAnimation()!=13584)return;
                     sleepGaussian(1400,600);
-                    rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId()==60508).nearestOnClientThread().click("Deploy");
+                    if (!Rs2Inventory.isFull()) {
+                        rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null && x.getId() == 60508).nearestOnClientThread().click("Deploy");
+                    }
                 }
                 if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
                     return;

@@ -91,7 +91,7 @@ public class ColossalWyrmAdvancedCourse implements AgilityCourseHandler
 	public boolean isObstacleComplete(int currentXp, int previousXp, long lastMovingTime, int waitDelay) {
 		// Colossal Wyrm courses have multi-XP drop obstacles
 		// We ignore XP checks and only rely on movement/animation
-		if (Rs2Player.isMoving() || Rs2Player.isAnimating()) {
+		if (Rs2Player.isMoving() || Rs2Player.isAnimating(2000)) {
 			return false;
 		}
 		

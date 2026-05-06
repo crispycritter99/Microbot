@@ -71,32 +71,32 @@ public class AutoChinScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>30){
-                    Rs2Walker.walkTo(new WorldPoint(3259,2377,0));
-                     int x=3258;
-                     int y=2377;
-                    sleep(2400);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(x,y,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y+1,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y+1,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
-                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y-1,0));
-                    sleep(2400);
-                    Rs2Inventory.interact("box trap","lay");
-                    sleepUntilTick(9);
-//                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y-1,0));
+//                if (Rs2Player.distanceTo(new WorldPoint(3259,2377,0))>30){
+//                    Rs2Walker.walkTo(new WorldPoint(3259,2377,0));
+//                     int x=3258;
+//                     int y=2377;
+//                    sleep(2400);
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(x,y,0));
 //                    sleep(2400);
 //                    Rs2Inventory.interact("box trap","lay");
 //                    sleepUntilTick(9);
-                };
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y+1,0));
+//                    sleep(2400);
+//                    Rs2Inventory.interact("box trap","lay");
+//                    sleepUntilTick(9);
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y+1,0));
+//                    sleep(2400);
+//                    Rs2Inventory.interact("box trap","lay");
+//                    sleepUntilTick(9);
+//                    Rs2Walker.walkFastCanvas(new WorldPoint(x-1,y-1,0));
+//                    sleep(2400);
+//                    Rs2Inventory.interact("box trap","lay");
+//                    sleepUntilTick(9);
+////                    Rs2Walker.walkFastCanvas(new WorldPoint(x+1,y-1,0));
+////                    sleep(2400);
+////                    Rs2Inventory.interact("box trap","lay");
+////                    sleepUntilTick(9);
+//                };
                 switch (currentState) {
                     case IDLE:
                         handleBreaks();

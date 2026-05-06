@@ -12,10 +12,10 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Mocrosoft + "Auto Mining",
+        name = PluginDescriptor.Mocrosoft + "Auto Mining Local",
         description = "Mines and banks ores",
         tags = {"mining", "microbot", "skilling"},
-        version = AutoMiningPlugin.version,
+        version = AutoMiningLocalPlugin.version,
         minClientVersion = "2.0.13",
         cardUrl = "",
         iconUrl = "",
@@ -23,7 +23,7 @@ import java.awt.*;
         isExternal = PluginConstants.IS_EXTERNAL
 )
 @Slf4j
-public class AutoMiningPlugin extends Plugin {
+public class AutoMiningLocalPlugin extends Plugin {
     public static final String version = "1.0.10";
     @Inject
     private AutoMiningConfig config;

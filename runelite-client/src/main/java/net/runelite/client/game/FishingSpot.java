@@ -99,7 +99,7 @@ public enum FishingSpot
 	INFERNAL_EEL("Infernal Eel", ItemID.INFERNAL_EEL,
 		NpcID.MORULREK_EELS_FISHINGSPOT
 	),
-	KARAMBWAN("Karambwan", ItemID.TBWT_RAW_KARAMBWAN,
+	KARAMBWAIN("Karambwain", "Karambwain",ItemID.TBWT_RAW_KARAMBWAN,
 		NpcID._0_45_48_KARAMBWAN, NpcID.GENERAL_KARAMBWAN
 	),
 	KARAMBWANJI("Karambwanji, Shrimp", "Karambwanji", ItemID.TBWT_RAW_KARAMBWANJI,

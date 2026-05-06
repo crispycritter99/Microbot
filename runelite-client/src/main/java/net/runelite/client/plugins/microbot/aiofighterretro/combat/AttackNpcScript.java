@@ -221,7 +221,7 @@ public class AttackNpcScript extends Script {
                 if (Rs2AntibanSettings.antibanEnabled && Rs2AntibanSettings.actionCooldownChance > 0) {
                     if (Rs2AntibanSettings.actionCooldownActive) {
                         AIOFighterPluginLocal.setState(State.COMBAT);
-                        System.out.println("diddy 8");
+//                        System.out.println("diddy 8");
                         handleItemOnNpcToKill(config);
                         return;
                     }

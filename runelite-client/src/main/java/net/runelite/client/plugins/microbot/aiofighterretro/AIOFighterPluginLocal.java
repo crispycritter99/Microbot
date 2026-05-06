@@ -32,6 +32,7 @@ import net.runelite.client.plugins.microbot.api.actor.Rs2ActorModel;
 import net.runelite.client.plugins.microbot.api.npc.models.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
+import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.skills.slayer.Rs2Slayer;
@@ -582,7 +583,7 @@ public class AIOFighterPluginLocal extends Plugin {
                                     && !npcsToAttack.isEmpty()
                                     &&targetNames.contains(npc.getName().toLowerCase()))
                             .where(npc -> !config.attackReachableNpcs()
-                                    //|| new Rs2WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation()).distanceToPath(npc.getWorldLocation()) < Integer.MAX_VALUE//
+                                    || new Rs2WorldPoint(Microbot.getClient().getLocalPlayer().getWorldLocation()).distanceToPath(npc.getWorldLocation()) < Integer.MAX_VALUE//
                             )
                             .toList();
 //            System.out.println("diddy 3.1");

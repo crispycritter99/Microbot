@@ -16,6 +16,7 @@ import net.runelite.client.plugins.microbot.autofishing.enums.Fish;
 import net.runelite.client.plugins.microbot.autofishing.enums.HarpoonType;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -87,7 +88,7 @@ public class AutoFishingScript extends Script {
     }
 
     private AutoFishingState determineState() {
-        System.out.println("diddy 2");
+//        System.out.println("diddy 2");
         if (Rs2Inventory.isFull()&&selectedFish != Fish.KARAMBWANJI|| !doneCutting) {
             if (isSpecialFish(selectedFish)) return AutoFishingState.PROCESSING_FISH;
             if (config.cookFish() && !getRawFishInInventory().isEmpty()) return AutoFishingState.COOKING;
@@ -101,7 +102,7 @@ public class AutoFishingScript extends Script {
         }
 
         if (!isAtFishingLocation()) {
-            System.out.println("diddy");
+//            System.out.println("diddy");
             return AutoFishingState.TRAVELING;
         }
 
@@ -116,7 +117,7 @@ public class AutoFishingScript extends Script {
             fishingLocation = selectedFish.getClosestLocation(Rs2Player.getWorldLocation());
         }
         if (fishingLocation != null) {
-            Rs2Walker.walkTo(fishingLocation);
+            Rs2Walker.walkTo(fishingLocation,20);
         }
     }
 
@@ -210,7 +211,10 @@ public class AutoFishingScript extends Script {
     }
 
     private void handleDepositing() {
-        if (Rs2Bank.walkToBankAndUseBank()) {
+        boolean isBarbFishing=(Rs2Bank.getNearestBank()== BankLocation.MOUNT_QUIDAMORTEM&&config.fishToCatch()==Fish.BARBARIAN_FISH);
+
+        if (isBarbFishing ? Rs2GameObject.interact(30087):Rs2Bank.walkToBankAndUseBank()) {
+            if (isBarbFishing) {sleepUntil(Rs2Bank::isOpen, 20_000);}
             if (Microbot.getVarbitValue(VarbitID.BANK_SIDE_SLOT_SHOWOP) != 1 ||
             Microbot.getVarbitValue(VarbitID.BANK_SIDE_SLOT_IGNOREINVLOCKS) != 0) {
                 Rs2Widget.clickWidget(InterfaceID.Bankmain.MENU_BUTTON);

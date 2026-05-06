@@ -80,7 +80,7 @@ public enum FishingSpotLocation
 		new WorldPoint(2878, 3339, 0), new WorldPoint(2875, 3342, 0)),
 	ETCETERIA_DOCK(FishingSpot.ETCETERIA_LOBSTER, new WorldPoint(2577, 3854, 0)),
 	FAIRY_RING_CKR(FishingSpot.KARAMBWANJI, new WorldPoint(2806, 3014, 0)),
-	FAIRY_RING_DKP(FishingSpot.KARAMBWAN,
+	FAIRY_RING_DKP(FishingSpot.KARAMBWAIN,
 		new WorldPoint(2898, 3119, 0), new WorldPoint(2911, 3119, 0)),
 	FARMING_GUILD_SOUTH_EAST(FishingSpot.SALMON, new WorldPoint(1269, 3707, 0)),
 	FARMING_GUILD_SOUTH_WEST1(FishingSpot.SHARK, new WorldPoint(1209, 3687, 0)),

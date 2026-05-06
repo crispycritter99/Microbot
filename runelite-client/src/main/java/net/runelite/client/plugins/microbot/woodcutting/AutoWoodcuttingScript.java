@@ -177,23 +177,23 @@ public class AutoWoodcuttingScript extends Script {
             Rs2Combat.setSpecState(true, 1000);
         boolean willBank = willBankItems(config);
         int currentLogCountBeforeFill = Rs2Inventory.count(treeType.getLogID());
-        if ( currentLogCountBeforeFill > 0 && currentLogBasketCount < Rs2LogBasket.LOG_BASKET_CAPACITY && Rs2LogBasket.hasLogBasket()  && willBank) {
-            if (currentLogBasketCount == -1) {
-                Rs2LogBasket.BasketContents content  = Rs2LogBasket.getCurrentBasketContents();
-                currentLogBasketCount = content == null ? 0 : content.quantity;
-                log.info("Initialized log basket count to {}", currentLogBasketCount);
-            }
-            if(currentLogBasketCount < Rs2LogBasket.LOG_BASKET_CAPACITY && Rs2Inventory.isFull() && Rs2Inventory.contains(treeType.getLog())) {
-
-                if (Rs2LogBasket.fillLogBasket()) {
-                    Rs2Antiban.actionCooldown();
-                }
-                int currentLogCountAfterFill = Rs2Inventory.count(treeType.getLogID());
-                int addedLogs = currentLogCountBeforeFill - currentLogCountAfterFill;
-                currentLogBasketCount += addedLogs;
-                log.info("Added {} logs to basket, current count: {}", addedLogs, currentLogBasketCount);
-            }
-        }
+//        if ( currentLogCountBeforeFill > 0 && currentLogBasketCount < Rs2LogBasket.LOG_BASKET_CAPACITY && Rs2LogBasket.hasLogBasket()  && willBank) {
+//            if (currentLogBasketCount == -1) {
+//                Rs2LogBasket.BasketContents content  = Rs2LogBasket.getCurrentBasketContents();
+//                currentLogBasketCount = content == null ? 0 : content.quantity;
+//                log.info("Initialized log basket count to {}", currentLogBasketCount);
+//            }
+//            if(currentLogBasketCount < Rs2LogBasket.LOG_BASKET_CAPACITY && Rs2Inventory.isFull() && Rs2Inventory.contains(treeType.getLog())) {
+//
+//                if (Rs2LogBasket.fillLogBasket()) {
+//                    Rs2Antiban.actionCooldown();
+//                }
+//                int currentLogCountAfterFill = Rs2Inventory.count(treeType.getLogID());
+//                int addedLogs = currentLogCountBeforeFill - currentLogCountAfterFill;
+//                currentLogBasketCount += addedLogs;
+//                log.info("Added {} logs to basket, current count: {}", addedLogs, currentLogBasketCount);
+//            }
+//        }
        
 
         if (Rs2Inventory.isFull()) {

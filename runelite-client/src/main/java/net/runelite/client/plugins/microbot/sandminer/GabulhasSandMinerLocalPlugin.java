@@ -73,5 +73,6 @@ public class GabulhasSandMinerLocalPlugin extends Plugin {
         if (skill == Skill.MINING) {
             rocksMined++;
         }
+
     }
 }

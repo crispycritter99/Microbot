@@ -42,7 +42,7 @@ public class HivesEvent implements BlockingEvent {
             if (Microbot.getClient() == null || !Microbot.isLoggedIn()) return false;
             var beehives = Rs2Npc.getNpcs(x -> x.getId() == net.runelite.api.gameval.NpcID.GATHERING_EVENT_BEES_BEEBOX_1 || x.getId() == net.runelite.api.gameval.NpcID.GATHERING_EVENT_BEES_BEEBOX_2);
             WoodcuttingTree tree = plugin.getSelectedTree();
-            return beehives.findAny().isPresent() && tree != null && Rs2Inventory.count(tree.getLogID()) > 1;
+            return beehives.findAny().isPresent() && tree != null && Rs2Inventory.count(tree.getLogID()) > 20;
         } catch (Exception e) {
             log.error("HivesEvent: Exception in validate method", e);
             return false;
@@ -91,10 +91,10 @@ public class HivesEvent implements BlockingEvent {
             }
             
             // check if we're already working on this beehive
-            if (Rs2Player.isInteracting() || Rs2Player.isAnimating()) {
+            if (Rs2Player.isInteracting() || Rs2Player.isAnimating(1800)) {
                 log.debug("Already working on beehive, waiting for completion");
                 // wait for current action to complete or timeout after 30 seconds
-                boolean completed = sleepUntil(() -> !Rs2Player.isInteracting() && !Rs2Player.isAnimating(), 30000);
+                boolean completed = sleepUntil(() -> !Rs2Player.isInteracting() && !Rs2Player.isAnimating(1800), 30000);
                 
                 if (!completed) {
                     log.warn("Building action timed out, marking beehive {} as potentially completed", targetBeehive.getIndex());

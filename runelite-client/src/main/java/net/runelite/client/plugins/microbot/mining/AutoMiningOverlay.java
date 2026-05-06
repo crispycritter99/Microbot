@@ -11,7 +11,7 @@ import java.awt.*;
 
 public class AutoMiningOverlay extends OverlayPanel {
     @Inject
-    AutoMiningOverlay(AutoMiningPlugin plugin)
+    AutoMiningOverlay(AutoMiningLocalPlugin plugin)
     {
         super(plugin);
         setPosition(OverlayPosition.TOP_LEFT);
@@ -22,7 +22,7 @@ public class AutoMiningOverlay extends OverlayPanel {
         try {
             panelComponent.setPreferredSize(new Dimension(200, 300));
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("AutoMining Plugin V" + AutoMiningPlugin.version)
+                    .text("AutoMining Plugin V" + AutoMiningLocalPlugin.version)
                     .color(Color.GREEN)
                     .build());
 

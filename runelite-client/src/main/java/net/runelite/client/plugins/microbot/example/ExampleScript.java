@@ -18,6 +18,7 @@ import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
+import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -73,6 +74,14 @@ public class ExampleScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
+//                if (Rs2Npc.getNpc(494)==null&&Rs2Npc.getNpc(496)!=null){
+////                    Rs2Inventory.interact("Fishing Explosive");
+////                    sleep(200,400);
+//                    sleepGaussian(600,300);
+//                    Rs2Inventory.useItemOnNpc(6664,496);
+//                    sleep(10000);
+//                    sleepUntil(Rs2Player::isInCombat);
+//                }
 //                System.out.println(""+Rs2Widget.isWidgetVisible(InterfaceID.DIALOG_OPTION, 1));
 //                System.out.println(""+startTime);
 //                Rs2Dialogue.keyPressForCombinationOption("Teak");
@@ -80,20 +89,46 @@ public class ExampleScript extends Script {
 //                if (!Rs2Dialogue.hasCombinationDialogue()) return ;
 //                System.out.println(""+"hi");
 //
-                double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
-                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                    Rs2GameObject.interact("iron rocks");
-                r = new Random();gaussian = r.nextGaussian();
-                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                    Rs2Inventory.hover(0);
-                    Rs2Player.waitForXpDrop(Skill.MINING,5000);
-                Rs2Player.waitForXpDrop(Skill.MINING,5000);
-                r = new Random();gaussian = r.nextGaussian();
-                 value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                    Rs2Inventory.dropAll("iron ore");
+//                Rs2ItemModel gem = Rs2Inventory.get("uncut red topaz");
+//                12582913
+//                System.out.println(Rs2Widget.getWidget(12582913));
+//               System.out.println(Rs2DepositBox.getItemWidget(gem.getSlot()).getOriginalX());
+//                Rs2DepositBox.invokeMenu(6, gem);
+//                    TileObject fung = Rs2GameObject.get("Fairy ring");
+//                ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fung);
+                ;
+
+//                var ops=composition.getOps();
+//                int opIdx = 3;
+//                int numSubOps = ops.getNumSubOps(3);
+//        for (int subIdx = 0; subIdx < numSubOps; subIdx++)
+//        {
+//            String subOp = ops.getSubOp(opIdx, subIdx);
+//            if (subOp == null) continue;
+////            assert subOp != null;
+//            if (subOp.contains("DJR"))
+//            {
+//                int subID = ops.getSubID(opIdx, subIdx);
+//                System.out.println(95031+65536*(subID));
+//
+//            }
+//        }
+//                Rs2GameObject.clickObject(fung,"Favourites","DJR");
+//                shutdown();
+//                double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                    Rs2GameObject.interact("iron rocks");
+//                r = new Random();gaussian = r.nextGaussian();
+//                value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                    Rs2Inventory.hover(0);
+//                    Rs2Player.waitForXpDrop(Skill.MINING,5000);
+//                Rs2Player.waitForXpDrop(Skill.MINING,5000);
+//                r = new Random();gaussian = r.nextGaussian();
+//                 value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                    Rs2Inventory.dropAll("iron ore");
 //                Widget dialogueOption = Rs2Dialogue.getCombinationOption("Mahogany", false);
 ////                System.out.println(""+dialogueOption.getOnKeyListener()[7].toString().charAt(0));
 //                Object[] keys = dialogueOption.getOnKeyListener();
@@ -118,7 +153,7 @@ public class ExampleScript extends Script {
 //                Microbot.doInvoke(new NewMenuEntry("Eat", Rs2Inventory.slot(385), 9764864, MenuAction.CC_OP.getId(), 2, 385, "Shark"), new Rectangle(1, 1));
 //shutdown();
 //                Microbot.status=""+dialogueOption.getText();
-//                if (Rs2Player.isInteracting()||Rs2Player.isAnimating()||Rs2Player.isMoving()) return;
+                if (Rs2Player.isInteracting()||Rs2Player.isAnimating()||Rs2Player.isMoving()) return;
 //                double LOG_MEAN = 1; double LOG_STD = 0.8;
 //                Random r = new Random();double gaussian = r.nextGaussian();
 //                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
@@ -127,9 +162,19 @@ public class ExampleScript extends Script {
 //                sleep(600);
 //                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
 //                if (npc == null) return;
-//                Rs2Npc.interact(npc);
-//                sleep(1200);
 
+                if (Rs2Inventory.isFull())
+                {
+                    Rs2Inventory.dropAll(false,"scimitar","bar","dagger","necklace");
+                }
+                Rs2GameObject.interact(60514);
+                Rs2Player.waitForXpDrop(Skill.THIEVING,1800);
+                
+//                Rs2Walker.walkFastCanvas(new WorldPoint(2799,9568,3));
+//                sleep(600);
+//            Rs2Player.waitForXpDrop(Skill.AGILITY,1800);
+//                    Rs2Inventory.interact("unfinished broad bolts","use");
+//                    Rs2Inventory.interact("feather");
 
 //                Rs2Inventory.slotInteract(27,"use");
 //                Rs2GameObject.interact("Chaos Altar");
@@ -137,14 +182,15 @@ public class ExampleScript extends Script {
 ////                        return;
 ////
 ////                }
-//                    if (Rs2Player.isInteracting()) return;
+//                    if (Rs2Player.isInCombat()) return;
 //                if (Rs2Inventory.contains("wing",false)){
 //                    Rs2Walker.walkTo(new WorldPoint(1559,9452,0));
 //                    shutdown();
 ////                        sleep(6000);
 //                    return;
 //                }
-//                    Rs2Npc.interact("Sunlight Moth","catch");
+//                    Rs2Npc.interact("Demonic gorilla","attack");
+
 //                    sleep(600);
 
 
