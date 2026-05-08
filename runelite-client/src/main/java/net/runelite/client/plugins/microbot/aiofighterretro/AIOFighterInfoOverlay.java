@@ -3,6 +3,8 @@ package net.runelite.client.plugins.microbot.aiofighterretro;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.aiofighterretro.combat.SlayerScript;
+import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.skills.slayer.Rs2Slayer;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.ui.FontManager;
@@ -72,6 +74,10 @@ public class AIOFighterInfoOverlay extends OverlayPanel {
                     .right(config.slayerMode() ? "Enabled" : "Disabled")
                     .build());
 
+//            panelComponent.getChildren().add(LineComponent.builder()
+//                    .left("Slayer Mode: ")
+//                    .right(Rs2Player.getLocalPlayer().getInteracting().getName()+"")
+//                    .build());
             if (config.slayerMode()) {
                 panelComponent.getChildren().add(LineComponent.builder()
                         .left("Slayer Task: ")

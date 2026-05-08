@@ -24,10 +24,7 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.security.Login;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -123,11 +120,15 @@ public class AutoMiningScript extends Script {
 //                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), initialPlayerLocation);
 
                         if (rock != null) {
+                            double LOG_MEAN = 0.25; double LOG_STD = 0.34;
+                            Random r = new Random();double gaussian = r.nextGaussian();
+                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                            sleep((int) value * 200);
                             if (Rs2GameObject.interact(rock)) {
-                                sleepTicks(2);
+//                                sleepTicks(2);
                                 Rs2Player.waitForXpDrop(Skill.MINING, true);
-                                Rs2Antiban.actionCooldown();
-                                Rs2Antiban.takeMicroBreakByChance();
+//                                Rs2Antiban.actionCooldown();
+//                                Rs2Antiban.takeMicroBreakByChance();
                             }
                         }
                         break;
@@ -165,8 +166,17 @@ public class AutoMiningScript extends Script {
                                     Rs2Inventory.useItemOnNpc(ItemID.BASALT, NpcID.MY2ARM_SNOWFLAKE);
                                     Rs2Walker.walkTo(2841, 10339, 0);
                                 }
-                            } else {
-                                if (!Rs2Bank.bankItemsAndWalkBackToOriginalPosition(itemNames, initialPlayerLocation, 0, config.distanceToStray()))
+                            } else if (activeRock == Rocks.IRON){
+                                if (Rs2DepositBox.openDepositBox()) {
+
+                                        Rs2DepositBox.depositAll();
+                                        sleep(600,300);
+                                        Rs2GameObject.interact(new WorldPoint(3021,9720,0));
+                                    Rs2Player.waitForXpDrop(Skill.MINING, true);
+                                }
+                            }
+                            else {
+                                if (!Rs2Bank.bankItemsAndWalkBackToOriginalPosition(itemNames, initialPlayerLocation, 0, 0))
                                     return;
                             }
 

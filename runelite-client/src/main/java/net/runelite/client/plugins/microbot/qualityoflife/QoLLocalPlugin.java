@@ -31,7 +31,7 @@ import net.runelite.client.plugins.microbot.qualityoflife.scripts.bank.BankpinSc
 import net.runelite.client.plugins.microbot.qualityoflife.scripts.pvp.PvpScript;
 
 import net.runelite.client.plugins.microbot.util.Global;
-import net.runelite.client.plugins.microbot.util.antiban.FieldUtil;
+
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -704,17 +704,6 @@ public class QoLLocalPlugin extends Plugin implements KeyListener {
      */
     private boolean updateUiElements() {
         try {
-            // Get the Field object for the accent color (BRAND_ORANGE) in the ColorScheme class
-            Field accentColorField = ColorScheme.class.getDeclaredField("BRAND_ORANGE");
-            // Update the accent color with the value from the config
-            FieldUtil.setFinalStatic(accentColorField, config.accentColor());
-
-            // Get the PluginToggleButton class to access its ON_SWITCHER field
-            Class<?> pluginButton = Class.forName("net.runelite.client.plugins.microbot.ui.MicrobotPluginToggleButton");
-            Field onSwitcherPluginPanel = pluginButton.getDeclaredField("ON_SWITCHER");
-            onSwitcherPluginPanel.setAccessible(true);
-            // Update the ON_SWITCHER field with a remapped image based on the config toggle button color
-            FieldUtil.setFinalStatic(onSwitcherPluginPanel, remapImage(SWITCHER_ON_IMG, config.toggleButtonColor()));
 
             // Find the ConfigPlugin instance from the plugin manager
             MicrobotPlugin microbotPlugin = (MicrobotPlugin) Microbot.getPluginManager().getPlugins().stream()

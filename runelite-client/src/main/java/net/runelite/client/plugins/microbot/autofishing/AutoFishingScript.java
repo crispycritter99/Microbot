@@ -117,7 +117,7 @@ public class AutoFishingScript extends Script {
             fishingLocation = selectedFish.getClosestLocation(Rs2Player.getWorldLocation());
         }
         if (fishingLocation != null) {
-            Rs2Walker.walkTo(fishingLocation,20);
+            Rs2Walker.walkTo(fishingLocation);
         }
     }
 

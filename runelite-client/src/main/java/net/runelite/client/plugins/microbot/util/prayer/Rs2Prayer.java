@@ -109,12 +109,14 @@ public class Rs2Prayer {
 	private static Rectangle getPrayerBounds(Rs2PrayerEnum prayer) {
 		Widget prayerWidget = Rs2Widget.getWidget(prayer.getIndex());
 		if (prayerWidget == null) {
+            System.out.println("Prayer widget not found");
 			log.warn("Prayer widget not found: {}", prayer.getName());
 			return Rs2UiHelper.getDefaultRectangle(); // return a default rectangle if the widget is not found
 		}
 
 		Rectangle bounds = prayerWidget.getBounds();
 		if (bounds == null || bounds.width <= 0 || bounds.height <= 0) {
+            System.out.println("Invalid prayer bounds for "+" prayer.getName()");
 			log.warn("Invalid prayer bounds for: {}", prayer.getName());
 			return Rs2UiHelper.getDefaultRectangle(); // return a default rectangle if bounds are invalid
 		}
