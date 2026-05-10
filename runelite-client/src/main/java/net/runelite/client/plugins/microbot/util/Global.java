@@ -41,7 +41,7 @@ public class Global {
         try {
             Thread.sleep(start);
         } catch (InterruptedException ignored) {
-            // ignore interrupted
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -96,10 +96,13 @@ public class Global {
         T methodResponse;
         final long endTime = System.currentTimeMillis()+timeoutMillis;
         do {
+            if (Thread.currentThread().isInterrupted()) {
+                return null;
+            }
             methodResponse = method.call();
             done = methodResponse != null;
             sleep(sleepMillis);
-        } while (!done && System.currentTimeMillis() < endTime);
+        } while (!done && !Thread.currentThread().isInterrupted() && System.currentTimeMillis() < endTime);
         return methodResponse;
     }
 
@@ -123,7 +126,7 @@ public class Global {
         if (Microbot.getClient().isClientThread()) return false;
         long startTime = System.currentTimeMillis();
         try {
-            while (System.currentTimeMillis() - startTime < time) {
+            while (!Thread.currentThread().isInterrupted() && System.currentTimeMillis() - startTime < time) {
                 if (awaitedCondition.getAsBoolean()) return true;
                 sleep(nextPollIntervalMs());
             }
@@ -153,7 +156,7 @@ public class Global {
         long startTime = System.nanoTime();
         long timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
         try {
-            while (System.nanoTime() - startTime < timeoutNanos) {
+            while (!Thread.currentThread().isInterrupted() && System.nanoTime() - startTime < timeoutNanos) {
                 if (awaitedCondition.getAsBoolean()) {
                     return true;
                 }
@@ -171,11 +174,14 @@ public class Global {
         long startTime = System.currentTimeMillis();
         try {
             do {
+                if (Thread.currentThread().isInterrupted()) {
+                    return false;
+                }
                 if (awaitedCondition.getAsBoolean()) {
                     return true;
                 }
                 sleep(nextPollIntervalMs());
-            } while (System.currentTimeMillis() - startTime < 5000);
+            } while (!Thread.currentThread().isInterrupted() && System.currentTimeMillis() - startTime < 5000);
         } catch (Exception e) {
             Microbot.logStackTrace("Global Sleep: ", e);
         }
@@ -187,11 +193,14 @@ public class Global {
         long startTime = System.currentTimeMillis();
         try {
             do {
+                if (Thread.currentThread().isInterrupted()) {
+                    return false;
+                }
                 if (awaitedCondition.getAsBoolean()) {
                     return true;
                 }
                 sleep(time);
-            } while (System.currentTimeMillis() - startTime < timeout);
+            } while (!Thread.currentThread().isInterrupted() && System.currentTimeMillis() - startTime < timeout);
         } catch (Exception e) {
             Microbot.logStackTrace("Global Sleep: ", e);
         }
@@ -203,6 +212,9 @@ public class Global {
         long startTime = System.currentTimeMillis();
         try {
             do {
+                if (Thread.currentThread().isInterrupted()) {
+                    return false;
+                }
                 if (resetCondition.getAsBoolean()) {
                     startTime = System.currentTimeMillis();
                 }
@@ -210,7 +222,7 @@ public class Global {
                     return true;
                 }
                 sleep(time);
-            } while (System.currentTimeMillis() - startTime < timeout);
+            } while (!Thread.currentThread().isInterrupted() && System.currentTimeMillis() - startTime < timeout);
         } catch (Exception e) {
             Microbot.logStackTrace("Global Sleep: ", e);
         }
@@ -230,8 +242,11 @@ public class Global {
         long startTime = System.currentTimeMillis();
         try {
             do {
+                if (Thread.currentThread().isInterrupted()) {
+                    return;
+                }
                 done = Microbot.getClientThread().runOnClientThreadOptional(awaitedCondition::getAsBoolean).orElse(false);
-            } while (!done && System.currentTimeMillis() - startTime < time);
+            } while (!done && !Thread.currentThread().isInterrupted() && System.currentTimeMillis() - startTime < time);
         } catch (Exception e) {
             Microbot.logStackTrace("Global Sleep: ", e);
         }
