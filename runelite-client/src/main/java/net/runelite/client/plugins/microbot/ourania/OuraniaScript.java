@@ -370,9 +370,9 @@ public class OuraniaScript extends Script
 //							}
 //						}
 //						else {
-							if (!Rs2Inventory.contains("molten glass")) {
-								Rs2Bank.withdrawX("molten glass", 11);
-							}
+//							if (!Rs2Inventory.contains("molten glass")) {
+//								Rs2Bank.withdrawX("molten glass", 11);
+//							}
 							if (Rs2Inventory.hasAnyPouch()) {
 								while (!Rs2Inventory.allPouchesFull() && isRunning()) {
 									Rs2Bank.withdrawAll(config.essence().getItemId());
@@ -411,33 +411,33 @@ public class OuraniaScript extends Script
 								}
 
 								if (altarModel != null) altarModel.click("craft-rune");
-								sleep(200,600);
-								boolean done = false;
-//								boolean hasCraftingAnimation = false;
-								long detectedTime=-1;
-								long startTimeloop = System.currentTimeMillis();
-								do {
-									done = isNearAltar();
-									if (Rs2Player.getAnimation()==884){
-//										hasCraftingAnimation = true;
-										detectedTime=System.currentTimeMillis();
-									}
-									if ((System.currentTimeMillis() - detectedTime >1800)&&Rs2Inventory.contains("molten glass")){
-										Rs2Inventory.combine(glassblowingPipe, moltenGlass);
+								Rs2Inventory.waitForInventoryChanges(1800);
+//								boolean done = false;
+////								boolean hasCraftingAnimation = false;
+//								long detectedTime=-1;
+//								long startTimeloop = System.currentTimeMillis();
+//								do {
+//									done = isNearAltar();
+//									if (Rs2Player.getAnimation()==884){
+////										hasCraftingAnimation = true;
+//										detectedTime=System.currentTimeMillis();
+//									}
+//									if ((System.currentTimeMillis() - detectedTime >1800)&&Rs2Inventory.contains("molten glass")){
+//										Rs2Inventory.combine(glassblowingPipe, moltenGlass);
+//
+//										Rs2Widget.sleepUntilHasWidgetText("How many do you wish to make?", 270, 5, false, 5000);
+//
+//										Rs2Keyboard.keyPress('8');
+//
+//										Rs2Widget.sleepUntilHasNotWidgetText("How many do you wish to make?", 270, 5, false, 5000);
+//									}
+//
+//									sleep(100);
+//								} while (!done && System.currentTimeMillis() - startTime < 30000);
 
-										Rs2Widget.sleepUntilHasWidgetText("How many do you wish to make?", 270, 5, false, 5000);
 
-										Rs2Keyboard.keyPress('8');
-
-										Rs2Widget.sleepUntilHasNotWidgetText("How many do you wish to make?", 270, 5, false, 5000);
-									}
-
-									sleep(100);
-								} while (!done && System.currentTimeMillis() - startTime < 30000);
-
-
-//								sleepUntil(this::isNearAltar, 30000);
-								Rs2Inventory.dropAll(false,"light orb");
+								sleepUntil(this::isNearAltar, 30000);
+//								Rs2Inventory.dropAll(false,"light orb");
 							}
 							else
 							{

@@ -153,22 +153,46 @@ public class ExampleScript extends Script {
 //                Microbot.doInvoke(new NewMenuEntry("Eat", Rs2Inventory.slot(385), 9764864, MenuAction.CC_OP.getId(), 2, 385, "Shark"), new Rectangle(1, 1));
 //shutdown();
 //                Microbot.status=""+dialogueOption.getText();
-                if (Rs2Player.isInteracting()||Rs2Player.isAnimating()||Rs2Player.isMoving()) return;
-//                double LOG_MEAN = 1; double LOG_STD = 0.8;
-//                Random r = new Random();double gaussian = r.nextGaussian();
-//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-//                sleep((int) value * 1000+2000);
-//                Rs2GameObject.interact(39095);
-//                sleep(600);
+
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                double LOG_MEAN = 1; double LOG_STD = 0.8;
+                Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value * 1000+2000);
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+
+                Rs2GameObject.interact(39095);
+                sleep(600);
+//                if (Rs2Inventory.contains(2353)){
+//
+//                    Rs2GameObject.interact("Ancient Furnace","Smelt");
+//                        Rs2Player.waitForWalking();
+//                        Rs2Keyboard.keyPress('1');
+//                        sleep(1200);
+//                    }
+//
+//                if (!Rs2Inventory.contains(2353)&&Rs2Inventory.contains(2354)) {
+//                    if (Microbot.getClient().getWidget(14352385) == null) {
+//                        if (!Rs2Inventory.isItemSelected()) {
+//                            Rs2Inventory.use(2354);
+//                        } else {
+//                            Rs2Npc.interact("Isles", "use");
+//                            Rs2Player.waitForWalking();
+//                        }
+//                    } else if (Microbot.getClient().getWidget(14352385) != null) {
+//                        Rs2Keyboard.keyPress('3');
+//                        Rs2Inventory.waitForInventoryChanges(2000);
+//                    }
+//                }
 //                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
 //                if (npc == null) return;
 
-                if (Rs2Inventory.isFull())
-                {
-                    Rs2Inventory.dropAll(false,"scimitar","bar","dagger","necklace");
-                }
-                Rs2GameObject.interact(60514);
-                Rs2Player.waitForXpDrop(Skill.THIEVING,1800);
+//                if (Rs2Inventory.isFull())
+//                {
+//                    Rs2Inventory.dropAll(false,"scimitar","bar","dagger","necklace");
+//                }
+//                Rs2GameObject.interact(60514);
+//                Rs2Player.waitForXpDrop(Skill.THIEVING,1800);
                 
 //                Rs2Walker.walkFastCanvas(new WorldPoint(2799,9568,3));
 //                sleep(600);

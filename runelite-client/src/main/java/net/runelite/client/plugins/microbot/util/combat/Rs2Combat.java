@@ -179,7 +179,7 @@ public class Rs2Combat {
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
                     Actor interactingActor = player.getInteracting();
                     if (interactingActor == null || interactingActor.getCombatLevel() < 1) return false;
-                    return player.getAnimation() != -1 || player.isInteracting();
+                    return !interactingActor.isDead()||player.getAnimation() != -1 || player.isInteracting()||interactingActor.getWorldLocation().distanceTo(player.getWorldLocation())<20;
                 })
                 .orElse(false);
     }

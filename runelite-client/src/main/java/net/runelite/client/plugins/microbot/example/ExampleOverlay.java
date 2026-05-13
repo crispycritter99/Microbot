@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.example;
 
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.giantsfoundry.GiantsFoundryState;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -42,6 +43,9 @@ public class ExampleOverlay extends OverlayPanel {
 
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("" + Microbot.status)
+                    .build());
+            panelComponent.getChildren().add(LineComponent.builder()
+                    .left("" + GiantsFoundryState.getCurrentHeat())
                     .build());
             panelComponent.getChildren().add(LineComponent.builder().build());
 //            WorldPoint worldPoint =  Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());

@@ -296,6 +296,7 @@ public class Rs2Magic {
             Microbot.getMouse().click(point);
         } else {
             Microbot.status = info + " " + item.getName();
+//            Microbot.getMouse().click(point);
             Rs2Inventory.interact(item, "cast");
         }
     }
