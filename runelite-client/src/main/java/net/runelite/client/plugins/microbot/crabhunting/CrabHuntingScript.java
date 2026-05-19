@@ -68,6 +68,11 @@ public class CrabHuntingScript extends Script {
                     Rs2Player.waitForXpDrop(Skill.HUNTER);
                     Rs2Inventory.waitForInventoryChanges(3000);
                     Microbot.status="idle";
+//                    LOG_MEAN = 0.05; LOG_STD = 0.34; r = new Random(); gaussian = r.nextGaussian();
+//                     value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                    sleep((int) value*200);
+//                    Rs2Inventory.combine("pestle and mortar","blue crab");
+//                    sleep((int) value*400);
                     //sleep until -1 fish offcut
 //                    Microbot.status="waiting for inventory change";
 //                    Rs2Inventory.waitForInventoryChanges(1800);

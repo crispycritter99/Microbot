@@ -113,8 +113,12 @@ public class Rs2DepositBox {
         if (Rs2Inventory.isEmpty()) return;
         if (!isOpen()) return;
         Widget depositAllWidget = Rs2Widget.findWidget("Deposit Inventory", List.of(getDepositBoxWidget()), false);
+        Widget emptyContainerWidget = Rs2Widget.findWidget("Empty containers", List.of(getDepositBoxWidget()), false);
         if (depositAllWidget == null) return;
-
+        if (Rs2Inventory.contains("Open gem sack")) {
+            Rs2Widget.clickWidget(emptyContainerWidget);
+            sleep(200,600);
+        }
         Rs2Widget.clickWidget(depositAllWidget);
         Rs2Inventory.waitForInventoryChanges(5000);
     }

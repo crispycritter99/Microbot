@@ -11,6 +11,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.api.npc.Rs2NpcQueryable;
 import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
+import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
@@ -50,6 +51,7 @@ import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -62,6 +64,7 @@ import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject
 public class ExampleScript extends Script {
     public static boolean tentacle = false;
     NPC vorkath;
+    private WorldPoint workingTile = null;
     @Inject
     Rs2TileObjectCache rs2TileObjectCache;
     public static boolean lootnet = false;
@@ -154,15 +157,94 @@ public class ExampleScript extends Script {
 //shutdown();
 //                Microbot.status=""+dialogueOption.getText();
 
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-                double LOG_MEAN = 1; double LOG_STD = 0.8;
-                Random r = new Random();double gaussian = r.nextGaussian();
-                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value * 1000+2000);
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                double LOG_MEAN = 1; double LOG_STD = 0.8;
+//                Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value * 1000+2000);
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//
+//                Rs2GameObject.interact(39095);
+//                sleep(600);
+                if (workingTile == null) {
+                   workingTile = Microbot.getRs2TileObjectCache().query().withNames("Mythical cape","Guild trophy space").nearest().getWorldLocation();
+                }
+                Rs2TileObjectModel space = Microbot.getRs2TileObjectCache().query()
+                        .where(o -> o.getWorldLocation().equals(workingTile))
+                        .nearest();
+//                System.out.println(""+space.getId());
+//                if (space!=null&&space.getName().contains("Mythical")) {
+//                    if (space.click()) {
+//                        boolean done = false;
+//                        long detectedTime = -1;
+//                        long startTimeloop = System.currentTimeMillis();
+//                        do {
+//                            done = Rs2Widget.findWidget("Really remove it?", null) != null;
+//
+//
+//                            sleep(100);
+//                        } while (!done && System.currentTimeMillis() - startTime < 5000);
+//
 
-                Rs2GameObject.interact(39095);
-                sleep(600);
+//                        if (Rs2Widget.findWidget("Really remove it?", null) != null) {
+//                            double LOG_MEAN = 0.25;
+//                            double LOG_STD = 0.34;
+//                            Random r = new Random();
+//                            double gaussian = r.nextGaussian();
+//                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                            sleep((int) value * 200);
+//                            Rs2Keyboard.keyPress('1');
+//                            sleep(600);
+//                        }
+////                    }
+////                }
+//                if (Rs2Widget.findWidget("Repeat last task?", null) != null){
+//                    double LOG_MEAN = 0.25; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                    sleep((int) value*200);
+//                    Rs2Keyboard.keyPress('1');
+//                    sleep(600);
+//
+//                }
+//                if (Rs2Inventory.count("Teak plank")<4) return;
+////                if (Rs2GameObject.interact(new WorldPoint(13022,663,1))) {
+////                    boolean done = false;
+////                    long detectedTime = -1;
+////                    long startTimeloop = System.currentTimeMillis();
+////                    do {
+////                        done = Rs2Widget.findWidget("Furniture Creation Menu", null) != null;
+////
+////
+////                        sleep(100);
+////                    } while (!done && System.currentTimeMillis() - startTime < 5000);
+//
+//                    if (Rs2Widget.findWidget("Furniture Creation Menu", null) != null) {
+//                        double LOG_MEAN = 0.25;
+//                        double LOG_STD = 0.34;
+//                        Random r = new Random();
+//                        double gaussian = r.nextGaussian();
+//                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                        sleep((int) value * 200);
+//                        Rs2Keyboard.keyPress('4');
+//                        sleep(600);
+//
+//                    }
+//                Rs2Dialogue.sleepUntilHasCombinationDialogue();
+
+//                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
+//                Rs2Dialogue.keyPressForCombinationOption(plugin.getPlank().getDialogueOption());
+                if (Rs2Dialogue.hasCombinationDialogue()) {
+                    double LOG_MEAN = 0.25;
+                    double LOG_STD = 0.34;
+                    Random r = new Random();
+                    double gaussian = r.nextGaussian();
+                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                    sleep((int) value * 200);
+                    Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                    sleep(600);
+
+                }
+//                }
 //                if (Rs2Inventory.contains(2353)){
 //
 //                    Rs2GameObject.interact("Ancient Furnace","Smelt");

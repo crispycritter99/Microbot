@@ -1,14 +1,7 @@
-package net.runelite.client.plugins.microbot.example;
+package net.runelite.client.plugins.microbot.daeyaltmining;
 
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.giantsfoundry.GiantsFoundryState;
-import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
-import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
-import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
-import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -16,17 +9,12 @@ import net.runelite.client.ui.overlay.components.LineComponent;
 import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.awt.*;
-
-import static net.runelite.client.plugins.microbot.salvaging.SalvagingPlugin.wrecks;
-import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.findReachableObject;
-import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.getAll;
 
 public class ExampleOverlay extends OverlayPanel {
 
     @Inject
-    ExampleOverlay(ExamplePlugin plugin)
+    ExampleOverlay(DaeyaltMiningPlugin plugin)
     {
         super(plugin);
         setPosition(OverlayPosition.TOP_LEFT);
@@ -44,14 +32,12 @@ public class ExampleOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("" + Microbot.status)
                     .build());
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .left("" + GiantsFoundryState.getCurrentHeat())
-                    .build());
+
             panelComponent.getChildren().add(LineComponent.builder().build());
 //            WorldPoint worldPoint =  Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 int deayaltFragments=Rs2Inventory.itemQuantity("Daeyalt shard");
-                long shardsGained=deayaltFragments-ExamplePlugin.startingDaeyaltShard;
-                long timeElapsed=ExamplePlugin.initialTime-System.currentTimeMillis();
+                long shardsGained=deayaltFragments- DaeyaltMiningPlugin.startingDaeyaltShard;
+                long timeElapsed= DaeyaltMiningPlugin.initialTime-System.currentTimeMillis();
                 int shardsPerHour = Math.toIntExact( shardsGained / timeElapsed);
                 panelComponent.getChildren().add(LineComponent.builder()
                         .left("" )

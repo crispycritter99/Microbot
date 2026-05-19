@@ -153,12 +153,12 @@ public class AutoMiningScript extends Script {
                             }
                             else if (activeRock == Rocks.GEM && Rs2Player.getWorldLocation().getRegionID() == GEM_MINE_UNDERGROUND) {
                                 if (Rs2DepositBox.openDepositBox()) {
-                                    if (Rs2Inventory.contains("Open gem bag")) {
-                                        Rs2Inventory.interact("Open gem bag", "Empty");
-                                        Rs2DepositBox.depositAllExcept("Open gem bag");
-                                    } else {
+//                                    if (Rs2Inventory.contains("Open gem sack")) {
+//                                        Rs2Inventory.interact("Open gem bag", "Empty");
+//                                        Rs2DepositBox.depositAll();
+//                                    } else {
                                         Rs2DepositBox.depositAll();
-                                    }
+//                                    }
                                     Rs2DepositBox.closeDepositBox();
                                 }
                             } else if (Rocks.BASALT == activeRock) {

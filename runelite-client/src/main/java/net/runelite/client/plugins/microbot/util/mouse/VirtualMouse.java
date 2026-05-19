@@ -92,14 +92,16 @@ public class VirtualMouse extends Mouse {
     // for the duration of the synthetic dispatch so requestFocus is a no-op; mouse delivery itself is
     // unaffected by focusable state.
     private void dispatchWithoutFocusGrab(Canvas canvas, AWTEvent event) {
+        boolean canvasIsFocused = canvas.isFocusOwner();
         boolean wasFocusable = canvas.isFocusable();
-        if (wasFocusable) canvas.setFocusable(false);
+        boolean shouldGuard = wasFocusable && !canvasIsFocused;
+        if (shouldGuard) canvas.setFocusable(false);
         BotEventGuard.begin();
         try {
             canvas.dispatchEvent(event);
         } finally {
             BotEventGuard.end();
-            if (wasFocusable) canvas.setFocusable(true);
+            if (shouldGuard) canvas.setFocusable(true);
         }
     }
 
