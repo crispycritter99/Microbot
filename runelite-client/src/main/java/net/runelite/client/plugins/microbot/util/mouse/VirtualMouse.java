@@ -87,10 +87,15 @@ public class VirtualMouse extends Mouse {
         dispatchWithoutFocusGrab(canvas, event);
     }
 
-    // Jagex's MOUSE_PRESSED listener calls canvas.requestFocus() when the event source is the Canvas,
-    // which yanks OS keyboard focus away from whatever app the user is typing in. Flip focusable off
-    // for the duration of the synthetic dispatch so requestFocus is a no-op; mouse delivery itself is
-    // unaffected by focusable state.
+    // Jagex's MOUSE_PRESSED listener calls canvas.requestFocus() when the event source is the
+    // Canvas, which yanks OS keyboard focus away from whatever app the user is typing in. Flip
+    // focusable off for the duration of the synthetic dispatch so requestFocus is a no-op; mouse
+    // delivery itself is unaffected by focusable state.
+    //
+    // IMPORTANT: only do this when the canvas is NOT currently the focus owner. If the user is
+    // actively typing in the in-game chat (which lives inside the canvas), the canvas IS the focus
+    // owner, and setFocusable(false) immediately yanks focus away to the parent container — exactly
+    // the opposite of what this method is trying to prevent. Detect that case and skip the toggle.
     private void dispatchWithoutFocusGrab(Canvas canvas, AWTEvent event) {
         boolean canvasIsFocused = canvas.isFocusOwner();
         boolean wasFocusable = canvas.isFocusable();
