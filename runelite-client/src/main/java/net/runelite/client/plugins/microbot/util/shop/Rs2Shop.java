@@ -9,6 +9,7 @@ import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
@@ -16,6 +17,7 @@ import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +39,8 @@ public class Rs2Shop {
     public static void closeShop() {
         Microbot.status = "Closing Shop";
         if (!isOpen()) return;
-        Rs2Widget.clickChildWidget(19660801, 11);
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
+//        Rs2Widget.clickChildWidget(19660801, 11);
         sleepUntilOnClientThread(() -> !isOpen() );
     }
 

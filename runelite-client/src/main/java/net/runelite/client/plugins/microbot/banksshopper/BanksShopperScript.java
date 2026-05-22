@@ -17,6 +17,7 @@ import net.runelite.client.plugins.microbot.util.security.Login;
 import net.runelite.client.plugins.microbot.util.shop.Rs2Shop;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 
@@ -142,10 +143,20 @@ public class BanksShopperScript extends Script {
                     case BANKING:
                         if (Rs2Inventory.isFull()) {
                             WorldPoint placeHolder = Rs2Player.getWorldLocation();
-                            Rs2DepositBox.openDepositBox();
-                            sleepUntil(Rs2DepositBox::isOpen,10000);
-                            sleep(200,700);
-                            Rs2DepositBox.depositAll();
+//                            Rs2DepositBox.openDepositBox();
+//                            sleepUntil(Rs2DepositBox::isOpen,10000);
+//                            double LOG_MEAN = 1; double LOG_STD = 0.8;
+//                            Random r = new Random();double gaussian = r.nextGaussian();
+//                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                            sleep((int) value * 1000+2000);
+//                            Rs2DepositBox.depositAll();
+                            Rs2Bank.openBank();
+                            sleepUntil(Rs2Bank::isOpen,10000);
+                            double LOG_MEAN = 1; double LOG_STD = 0.8;
+                            Random r = new Random();double gaussian = r.nextGaussian();
+                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                            sleep((int) value * 1000+2000);
+                            Rs2Bank.depositAll();
 //                            Rs2Bank.walkToBankAndUseBank();
 //                            sleepUntil(Rs2Bank::isOpen,10000);
 //                            sleep(200,700);
@@ -243,11 +254,11 @@ public class BanksShopperScript extends Script {
             }
         }
         boolean boughtItem = false;
-        for (int count = 0; count < buyCount+1; count++) {
-            boughtItem = Rs2Shop.buyItem(itemName, quantity);
-            sleep(250, 350);
-        }
-
+//        for (int count = 0; count < buyCount+1; count++) {
+//            boughtItem = Rs2Shop.buyItem(itemName, quantity);
+//            sleep(250, 350);
+//        }
+        boughtItem = Rs2Shop.buyItem(itemName, quantity);
 
         if (boughtItem) {
             Rs2Inventory.waitForInventoryChanges(1800);

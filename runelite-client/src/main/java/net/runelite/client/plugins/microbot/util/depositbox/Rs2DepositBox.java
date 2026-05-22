@@ -22,6 +22,7 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
@@ -72,9 +73,10 @@ public class Rs2DepositBox {
      */
     public static boolean closeDepositBox() {
         if (!isOpen()) return false;
-        Widget closeDepositBox = Rs2Widget.findWidget("Close", List.of(getDepositBoxWidget()), false);
-        if (closeDepositBox == null) return false;
-        Rs2Widget.clickWidget(closeDepositBox);
+//        Widget closeDepositBox = Rs2Widget.findWidget("Close", List.of(getDepositBoxWidget()), false);
+//        if (closeDepositBox == null) return false;
+//        Rs2Widget.clickWidget(closeDepositBox);
+        Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
         return sleepUntil(() -> !isOpen());
     }
 

@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.getAll;
+import static net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory.items;
 
 
 public class ExampleScript extends Script {
@@ -166,12 +167,12 @@ public class ExampleScript extends Script {
 //
 //                Rs2GameObject.interact(39095);
 //                sleep(600);
-                if (workingTile == null) {
-                   workingTile = Microbot.getRs2TileObjectCache().query().withNames("Mythical cape","Guild trophy space").nearest().getWorldLocation();
-                }
-                Rs2TileObjectModel space = Microbot.getRs2TileObjectCache().query()
-                        .where(o -> o.getWorldLocation().equals(workingTile))
-                        .nearest();
+//                if (workingTile == null) {
+//                   workingTile = Microbot.getRs2TileObjectCache().query().withNames("Mythical cape","Guild trophy space").nearest().getWorldLocation();
+//                }
+//                Rs2TileObjectModel space = Microbot.getRs2TileObjectCache().query()
+//                        .where(o -> o.getWorldLocation().equals(workingTile))
+//                        .nearest();
 //                System.out.println(""+space.getId());
 //                if (space!=null&&space.getName().contains("Mythical")) {
 //                    if (space.click()) {
@@ -182,6 +183,22 @@ public class ExampleScript extends Script {
 //                            done = Rs2Widget.findWidget("Really remove it?", null) != null;
 //
 //
+                System.out.println("test");
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                double LOG_MEAN = 1; double LOG_STD = 0.8;
+                Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value * 100+2000);
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                List<Rs2ItemModel> itemsToDrop = items(Rs2ItemModel.matches(true, "Rubium geode"))
+                        .collect(Collectors.toList());
+                for (Rs2ItemModel item : itemsToDrop) {
+                    if (item == null) continue;
+                    Rs2Inventory.invokeMenu(item, "Crack-open");
+                    sleep(150, 300);
+                }
+                Rs2GameObject.interact(58921);
+                sleep(600);
 //                            sleep(100);
 //                        } while (!done && System.currentTimeMillis() - startTime < 5000);
 //
@@ -233,17 +250,17 @@ public class ExampleScript extends Script {
 
 //                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
 //                Rs2Dialogue.keyPressForCombinationOption(plugin.getPlank().getDialogueOption());
-                if (Rs2Dialogue.hasCombinationDialogue()) {
-                    double LOG_MEAN = 0.25;
-                    double LOG_STD = 0.34;
-                    Random r = new Random();
-                    double gaussian = r.nextGaussian();
-                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                    sleep((int) value * 200);
-                    Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
-                    sleep(600);
-
-                }
+//                if (Rs2Dialogue.hasCombinationDialogue()) {
+//                    double LOG_MEAN = 0.25;
+//                    double LOG_STD = 0.34;
+//                    Random r = new Random();
+//                    double gaussian = r.nextGaussian();
+//                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                    sleep((int) value * 200);
+//                    Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+//                    sleep(600);
+//
+//                }
 //                }
 //                if (Rs2Inventory.contains(2353)){
 //

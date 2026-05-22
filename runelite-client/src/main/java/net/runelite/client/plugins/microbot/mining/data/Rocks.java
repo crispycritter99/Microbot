@@ -22,6 +22,8 @@ public enum Rocks {
     URT_SALT("Urt salt rocks", 72),
     EFH_SALT("Efh salt rocks", 72),
     TE_SALT("Te salt rocks", 72),
+    RUBIUM("Rubium rocks", 72),
+    RUBIUM_DEPOSIT("Rubium deposit", 72),
     RUNITE("runite rocks", 85);
 
     private final String name;
