@@ -44,6 +44,7 @@ public enum SpecialAttackWeaponEnum {
     DRAGON_THROWNAXE("dragon thrownaxe", 250, false),
     DRAGON_WARHAMMER("dragon warhammer", 500, false),
     DUAL_MACUAHUITL("dual macuahuitl", 250, true),
+    EMBERLIGHT("emberlight", 500, false),
     EXCALIBUR("excalibur", 1000, false),
     GRANITE_HAMMER("granite hammer", 600, false),
     GRANITE_MAUL("granite maul", 600, true),

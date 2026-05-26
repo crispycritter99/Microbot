@@ -737,6 +737,10 @@ public class Rs2Inventory {
         return items(item -> item.getId() == id).reduce((a, b) -> b).orElse(null);
     }
 
+    public static Rs2ItemModel getLast(String name) {
+        return items(item -> item.getName().equalsIgnoreCase(name)).reduce((a, b) -> b).orElse(null);
+    }
+
     /**
      * Gets the item in the inventory that matches the specified filter criteria.
      *

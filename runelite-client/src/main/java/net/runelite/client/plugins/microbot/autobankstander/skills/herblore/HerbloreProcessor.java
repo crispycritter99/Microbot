@@ -130,8 +130,17 @@ public class HerbloreProcessor implements BankStandingProcessor {
         }
         
         log.info("Depositing all items");
-        Rs2Bank.depositAll();
-        sleepUntil(() -> Rs2Inventory.isEmpty(), 3000);
+//        if (findPotion().secondary == ItemID.CRAB_PASTE){
+//            Rs2Bank.depositAllExcept(ItemID.CRAB_PASTE);
+//            Rs2Inventory.waitForInventoryChanges(1800);
+//        }
+//        else {
+            Rs2Bank.depositAll();
+            Rs2Inventory.waitForInventoryChanges(1800);
+            if (1>2) {
+                sleepUntil(() -> Rs2Inventory.isEmpty(), 3000);
+            }
+//        }
         currentlyMakingPotions = false;
         switch (mode) {
             case CLEAN_HERBS:
@@ -296,7 +305,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
     
     private boolean bankForStackableSecondary() {
         int unfinishedCount = Rs2Bank.count(currentPotion.unfinished);
-        int secondaryCount = Rs2Bank.count(currentPotion.secondary);
+        int secondaryCount = Rs2Bank.count(currentPotion.secondary)+Rs2Inventory.count(currentPotion.secondary);
         
         int secondaryRatio = getStackableSecondaryRatio(currentPotion);
         withdrawnAmount = Math.min(unfinishedCount, 27);

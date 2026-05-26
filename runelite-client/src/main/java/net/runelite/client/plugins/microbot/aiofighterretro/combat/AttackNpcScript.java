@@ -24,6 +24,7 @@ import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
+import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
 import net.runelite.client.plugins.microbot.util.magic.Rs2Magic;
@@ -85,6 +86,10 @@ public class AttackNpcScript extends Script {
 
                 if (config.state().equals(State.BANKING) || config.state().equals(State.WALKING))
                     return;
+                if (!Rs2Equipment.isWearing("Bracelet of slaughter")&&Rs2Inventory.hasItem("Bracelet of slaughter"))
+                    Rs2Inventory.wear("Bracelet of slaughter");
+                else if (!Rs2Equipment.isWearing("Expeditious bracelet")&&Rs2Inventory.hasItem("Expeditious bracelet"))
+                    Rs2Inventory.wear("Expeditious bracelet");
                 cache = Microbot.getRs2NpcCache();
                 if (config.reanimateEnsouledHeads()) {
 //                    System.out.println("diddy 1");

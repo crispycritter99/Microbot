@@ -120,16 +120,17 @@ public class AutoMiningScript extends Script {
                             return;
                         }
 
-//                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), Rs2Player.getWorldLocation());
+                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), Rs2Player.getWorldLocation());
 //                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), initialPlayerLocation);
-                        var rock = rs2TileObjectCache.query().fromWorldView().where(x -> x.getName() != null &&x.getName().equalsIgnoreCase(activeRock.getName()) && x.getWorldLocation().distanceTo(Rs2Player.getWorldLocation())<config.distanceToStray()).nearest();
-
+//                        if (1>2) {
+//                            var roock = rs2TileObjectCache.query().where(x -> x.getName() != null && x.getName().equalsIgnoreCase(activeRock.getName()) && x.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < config.distanceToStray()).nearest();
+//                        }
                         if (rock != null) {
                             double LOG_MEAN = 0.25; double LOG_STD = 0.34;
                             Random r = new Random();double gaussian = r.nextGaussian();
                             double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
                             sleep((int) value * 200);
-                            if (rock.click()) {
+                            if (Rs2GameObject.interact(rock)) {
 //                                sleepTicks(2);
                                 Rs2Player.waitForXpDrop(Skill.MINING, true);
 //                                Rs2Antiban.actionCooldown();

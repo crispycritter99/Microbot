@@ -66,7 +66,9 @@ public class Rs2Cannon {
         Rs2GameObject.interact(cannon, "Fire");
         Rs2Player.waitForWalking();
         sleep(1200);
-        Rs2GameObject.interact(cannon, "Fire");
+        if (cannonBallsLeft<5) {
+            Rs2GameObject.interact(cannon, "Fire");
+        }
         sleepUntil(() -> Microbot.getClientThread().runOnClientThreadOptional(() -> Microbot.getClient().getVarpValue(VarPlayer.CANNON_AMMO)).orElse(0) > Rs2Random.between(10, 15));
 		Microbot.pauseAllScripts.compareAndSet(true, false);
         return true;

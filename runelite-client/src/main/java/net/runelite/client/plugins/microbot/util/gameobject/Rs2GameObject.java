@@ -311,29 +311,15 @@ public class Rs2GameObject {
     @Deprecated
     public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint, boolean checkAction, String action) {
         Predicate<TileObject> namePred = nameMatches(objectName, exact);
-
-        Predicate<GameObject> filter = o -> {
-            if (!Rs2GameObject.isReachable(o)) {
-                return false;
-            }
-
-            if (!namePred.test(o)) {
-                return false;
-            }
-
-            if (checkAction) {
-                ObjectComposition comp = convertToObjectComposition(o);
-                return hasAction(comp, action);
-            }
-
-            return true;
-        };
-
         Rs2WorldPoint playerLocation = Rs2Player.getRs2WorldPoint();
-        return getGameObjects(filter, anchorPoint, distance)
+
+        return getGameObjects(namePred::test, anchorPoint, distance)
                 .stream()
-                .min(Comparator.comparingInt(o ->
+                .filter(o -> !checkAction || hasAction(convertToObjectComposition(o), action))
+                .sorted(Comparator.comparingInt(o ->
                         Rs2WorldPoint.quickDistance(playerLocation.getWorldPoint(), o.getWorldLocation())))
+                .filter(Rs2GameObject::isReachable)
+                .findFirst()
                 .orElse(null);
     }
 
@@ -1532,6 +1518,8 @@ public class Rs2GameObject {
 
     // private methods
     private static <T extends TileObject> Stream<T> getSceneObjects(Function<Tile, Collection<? extends T>> extractor) {
+        long startTime = System.currentTimeMillis();
+
         var triple = Microbot.getClientThread().invoke(() -> {
             Player player = Microbot.getClient().getLocalPlayer();
             if (player == null || player.getWorldView() == null) {
@@ -1550,14 +1538,19 @@ public class Rs2GameObject {
             return Triple.of(scene, tiles, z);
         });
 
+        long invokeEnd = System.currentTimeMillis();
+//        System.out.println("[getSceneObjects] Client thread invoke took: " + (invokeEnd - startTime) + "ms");
+
         var result = new ArrayList<T>();
         Tile[][][] tiles = (Tile[][][]) triple.getMiddle();
         int z = triple.getRight();
         if (tiles == null) {
+//            System.out.println("[getSceneObjects] Tiles null, returning early. Total time: " + (System.currentTimeMillis() - startTime) + "ms");
             return result.stream();
         }
 
         int sceneSize = Constants.SCENE_SIZE;
+        long loopStart = System.currentTimeMillis();
 
         for (int x = 0; x < sceneSize; x++) {
             for (int y = 0; y < sceneSize; y++) {
@@ -1585,6 +1578,11 @@ public class Rs2GameObject {
                 }
             }
         }
+
+        long loopEnd = System.currentTimeMillis();
+//        System.out.println("[getSceneObjects] Scene tile loop took: " + (loopEnd - loopStart) + "ms");
+//        System.out.println("[getSceneObjects] Total time: " + (loopEnd - startTime) + "ms | Objects found: " + result.size());
+
         return result.stream();
     }
 
@@ -2177,10 +2175,11 @@ public class Rs2GameObject {
      * @return boolean
      */
     public static boolean isReachable(GameObject tileObject) {
+        long start = System.currentTimeMillis();
+
         WorldArea worldArea = getWorldArea(tileObject);
-        if (worldArea == null) {
-            return false;
-        }
+        if (worldArea == null) return false;
+
         Rs2WorldArea gameObjectArea = new Rs2WorldArea(worldArea);
         List<WorldPoint> interactablePoints = gameObjectArea.getInteractable();
 
@@ -2189,11 +2188,18 @@ public class Rs2GameObject {
             interactablePoints.removeIf(gameObjectArea::contains);
         }
 
+        long filterStart = System.currentTimeMillis();
         WorldPoint walkableInteractPoint = interactablePoints.stream()
                 .filter(Rs2Tile::isWalkable)
-                .filter(Rs2Tile::isTileReachable)
+                .filter(Rs2Tile::isTileReachable)  // log how long this takes
                 .findFirst()
                 .orElse(null);
+
+        System.out.println("[isReachable] id=" + tileObject.getId()
+                + " interactPoints=" + interactablePoints.size()
+                + " filterMs=" + (System.currentTimeMillis() - filterStart)
+                + " totalMs=" + (System.currentTimeMillis() - start));
+
         return walkableInteractPoint != null;
     }
 
