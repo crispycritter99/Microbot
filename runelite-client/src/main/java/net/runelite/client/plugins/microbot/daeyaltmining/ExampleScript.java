@@ -34,15 +34,15 @@ public class ExampleScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
 
-//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-//                double LOG_MEAN = 1; double LOG_STD = 0.8;
-//                Random r = new Random();double gaussian = r.nextGaussian();
-//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-//                sleep((int) value * 1000+2000);
-//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-//
-//                Rs2GameObject.interact(39095);
-//                sleep(600);
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                double LOG_MEAN = 1; double LOG_STD = 0.8;
+                Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value * 1000+2000);
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+
+                Rs2GameObject.interact(39095);
+                sleep(600);
 
 
                 long endTime = System.currentTimeMillis();
