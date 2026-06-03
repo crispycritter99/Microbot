@@ -246,8 +246,8 @@ public class AttackNpcScript extends Script {
 
                     if (!Rs2Camera.isTileOnScreen(npc.getLocalLocation()))
                         Rs2Camera.turnTo(npc);
-
-                    npc.click("attack");
+                    if (npc.getId()==493) npc.click("Disturb");
+                    else npc.click("attack");
                     Microbot.status = "Attacking " + npc.getName();
                     sleep(600);
                     Rs2Antiban.actionCooldown();

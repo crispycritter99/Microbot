@@ -6,6 +6,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 
 import javax.inject.Inject;
@@ -28,15 +29,45 @@ public class CrabHuntingScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
                 Microbot.status="waiting to do something";
-
+                int blueRainbowCrab=Rs2Inventory.count(31680);
+                int orangeRainbowCrab=Rs2Inventory.count(31683);
+                int purpleRainbowCrab=Rs2Inventory.count(31677);
                 if (Rs2Inventory.isFull()){
                     Microbot.status="grinding crabs";
-                    Rs2Inventory.combine("pestle and mortar","blue crab");
-                    sleep(23000);
-                    sleepUntil(()->!Rs2Inventory.contains("Blue crab"),60000);
+                    Rs2ItemModel lastBRCrab = Rs2Inventory.getLast(31680);
+                    Rs2ItemModel lastORCrab = Rs2Inventory.getLast(31683);
+                    Rs2ItemModel lastPRCrab = Rs2Inventory.getLast(31677);
+                    Rs2ItemModel lastPotion = Rs2Inventory.getLast(233);
+                    for (int i = 0; i < blueRainbowCrab; i++) {
+                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31680)) continue;
+                        Rs2Inventory.interact(lastBRCrab,"use");
+                        Rs2Inventory.interact(lastPotion,"use");
+                        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                        sleep((int) value*10);
+                    }
+                    for (int i = 0; i < orangeRainbowCrab; i++) {
+                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31683)) continue;
+                        Rs2Inventory.interact(lastORCrab,"use");
+                        Rs2Inventory.interact(lastPotion,"use");
+                        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                        sleep((int) value*10);
+                    }
+                    for (int i = 0; i < purpleRainbowCrab; i++) {
+                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31677)) continue;
+                        Rs2Inventory.interact(lastPRCrab,"use");
+                        Rs2Inventory.interact(lastPotion,"use");
+                        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                        sleep((int) value*10);
+                    }
+//                    Rs2Inventory.combine("pestle and mortar","blue crab");
+//                    sleep(23000);
+//                    sleepUntil(()->!Rs2Inventory.contains("Blue crab"),60000);
 
                 }
-                    if (!Rs2Inventory.contains("fish offcuts")) return;
+                    if (!Rs2Inventory.contains(false,"fish offcuts")) return;
 //                GameObject trap = Rs2GameObject.getGameObject("Crab trap (empty)");
 ////                GameObject fulltrap = Rs2GameObject.getGameObject("Crab trap (full)");
                 var fulltrap = rs2TileObjectCache.query()
@@ -49,34 +80,60 @@ public class CrabHuntingScript extends Script {
                         .where(x -> x.getName() != null &&x.getName().equalsIgnoreCase("crab trap (empty)"))
 //                        .where(x -> x.getWorldView().getId() == new Rs2PlayerModel().getWorldView().getId())
                         .nearestOnClientThread();
-                System.out.println(emptytrap+" "+fulltrap.getId());
+//                System.out.println(emptytrap+" "+fulltrap.getId());
                 if (emptytrap!=null) {
+
                     emptytrap.click();
                     Microbot.status="baiting trap";
                     //sleep until -1 fish offcut
                     Rs2Inventory.waitForInventoryChanges(3000);
                     Microbot.status="idle";
 //                    Rs2Inventory.waitForInventoryChanges(1800);
-//                    return;
+                    return;
                 }
-                if (fulltrap!=null) {
+                else if (fulltrap!=null) {
                     double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
                     double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                    sleep((int) value*200);
+                    sleep((int) value*400);
                     fulltrap.click();
                     Microbot.status="resetting trap";
                     Rs2Player.waitForXpDrop(Skill.HUNTER);
                     Rs2Inventory.waitForInventoryChanges(3000);
                     Microbot.status="idle";
-//                    LOG_MEAN = 0.05; LOG_STD = 0.34; r = new Random(); gaussian = r.nextGaussian();
-//                     value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-//                    sleep((int) value*200);
-//                    Rs2Inventory.combine("pestle and mortar","blue crab");
-//                    sleep((int) value*400);
-                    //sleep until -1 fish offcut
-//                    Microbot.status="waiting for inventory change";
-//                    Rs2Inventory.waitForInventoryChanges(1800);
-//                    return;
+                    return;
+
+                }
+                else{
+
+                        Microbot.status="grinding crabs";
+                        Rs2ItemModel lastBRCrab = Rs2Inventory.getLast(31680);
+                        Rs2ItemModel lastORCrab = Rs2Inventory.getLast(31683);
+                        Rs2ItemModel lastPRCrab = Rs2Inventory.getLast(31677);
+                        Rs2ItemModel lastPotion = Rs2Inventory.getLast(233);
+                        for (int i = 0; i < blueRainbowCrab; i++) {
+                            if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31680)) continue;
+                            Rs2Inventory.interact(lastBRCrab,"use");
+                            Rs2Inventory.interact(lastPotion,"use");
+                            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                            sleep((int) value*10);
+                        }
+                        for (int i = 0; i < orangeRainbowCrab; i++) {
+                            if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31683)) continue;
+                            Rs2Inventory.interact(lastORCrab,"use");
+                            Rs2Inventory.interact(lastPotion,"use");
+                            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                            sleep((int) value*10);
+                        }
+                        for (int i = 0; i < purpleRainbowCrab; i++) {
+                            if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31677)) continue;
+                            Rs2Inventory.interact(lastPRCrab,"use");
+                            Rs2Inventory.interact(lastPotion,"use");
+                            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                            sleep((int) value*10);
+                        }
                 }
 //                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("lizardman").findFirst().orElse(null);
 //                if (npc == null) return;

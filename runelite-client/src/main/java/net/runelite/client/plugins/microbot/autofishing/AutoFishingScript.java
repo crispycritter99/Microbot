@@ -18,6 +18,8 @@ import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
+import net.runelite.client.plugins.microbot.util.depositbox.DepositBoxLocation;
+import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -212,7 +214,13 @@ public class AutoFishingScript extends Script {
 
     private void handleDepositing() {
         boolean isBarbFishing=(Rs2Bank.getNearestBank()== BankLocation.MOUNT_QUIDAMORTEM&&config.fishToCatch()==Fish.BARBARIAN_FISH);
-
+        if (config.fishToCatch()==Fish.KARAMBWAN){
+            if (Rs2DepositBox.walkToAndUseDepositBox(DepositBoxLocation.GEM_MINE)){
+                Rs2DepositBox.depositAll();
+                sleep(600,300);
+            }
+        }
+        else
         if (isBarbFishing ? Rs2GameObject.interact(30087):Rs2Bank.walkToBankAndUseBank()) {
             if (isBarbFishing) {sleepUntil(Rs2Bank::isOpen, 20_000);}
             if (Microbot.getVarbitValue(VarbitID.BANK_SIDE_SLOT_SHOWOP) != 1 ||

@@ -37,7 +37,7 @@ public class CaviarMixerScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
-                String potion = "Super defence(2)";
+                String potion = "Super attack(2)";
                 // Bank
                 if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(potion)){
                     Rs2Antiban.takeMicroBreakByChance();
