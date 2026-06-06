@@ -14,6 +14,7 @@ import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
 import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
+import net.runelite.client.plugins.microbot.sailing.features.trials.BoatLocation;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
@@ -183,22 +184,53 @@ public class ExampleScript extends Script {
 //                            done = Rs2Widget.findWidget("Really remove it?", null) != null;
 //
 //
-                System.out.println("test");
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-                double LOG_MEAN = 1; double LOG_STD = 0.8;
-                Random r = new Random();double gaussian = r.nextGaussian();
-                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value * 100+2000);
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-                List<Rs2ItemModel> itemsToDrop = items(Rs2ItemModel.matches(true, "Rubium geode"))
-                        .collect(Collectors.toList());
-                for (Rs2ItemModel item : itemsToDrop) {
-                    if (item == null) continue;
-                    Rs2Inventory.invokeMenu(item, "Crack-open");
-                    sleep(150, 300);
+
+//                if (Rs2Npc.interact(15213,"harvest")){
+//                    sleep(2000);
+//                }
+                if (Rs2Player.isInteracting()) return;
+//               WorldPoint safespot = new WorldPoint(2877,4157,0);
+                WorldPoint safespot = new WorldPoint(2402,2163,0);
+               Rs2NpcModel kraken = Rs2Npc.getNpc("kraken");
+                if (Rs2Magic.castOn(MagicAction.TELEKINETIC_GRAB,kraken)){
+                    sleep(2000);
                 }
-                Rs2GameObject.interact(58921);
-                sleep(600);
+                ;
+               if (kraken.getId()==15212&&kraken.getAnimation()!=13219&& kraken.getWorldLocation().distanceTo(safespot)<8){
+                   Microbot.status="attacking";
+                   double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*200);
+                   Rs2Npc.interact(kraken,"attack");
+                   sleep(600);
+               }
+
+//               if (kraken.getId()==15213){
+//                   Microbot.status="looting";
+//                   double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                   if (Rs2Npc.interact(15213,"harvest")){
+//                       sleep(2000);
+//                   }
+//               }
+
+//                System.out.println("test");
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                double LOG_MEAN = 1; double LOG_STD = 0.8;
+//                Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value * 100+2000);
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                List<Rs2ItemModel> itemsToDrop = items(Rs2ItemModel.matches(true, "Rubium geode"))
+//                        .collect(Collectors.toList());
+//                for (Rs2ItemModel item : itemsToDrop) {
+//                    if (item == null) continue;
+//                    Rs2Inventory.invokeMenu(item, "Crack-open");
+//                    sleep(150, 300);
+//                }
+//                Rs2GameObject.interact(58921);
+//                sleep(600);
 //                            sleep(100);
 //                        } while (!done && System.currentTimeMillis() - startTime < 5000);
 //
@@ -326,7 +358,7 @@ public class ExampleScript extends Script {
             } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
-        }, 0, 100, TimeUnit.MILLISECONDS);
+        }, 0, 600, TimeUnit.MILLISECONDS);
         return true;
     }
 //                    if ((Rs2Player.isAnimating())||Rs2Player.isMoving()) {
