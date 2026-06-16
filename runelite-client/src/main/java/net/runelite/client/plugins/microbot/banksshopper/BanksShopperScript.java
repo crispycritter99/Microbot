@@ -220,8 +220,9 @@ public class BanksShopperScript extends Script {
 
 
 
-            sleepUntil(() -> Microbot.getClient().getGameState() == GameState.HOPPING, 15_000);
-            sleepUntil(() -> Microbot.getClient().getGameState() == GameState.LOGGED_IN, 15_000);
+            sleepUntil(() -> Microbot.getClient().getGameState() == GameState.HOPPING, 1_000);
+
+            sleepUntil(() -> Microbot.getClient().getGameState() == GameState.LOGGED_IN, 1_000);
             boolean changed = sleepUntil(() -> Microbot.getClient().getWorld() != currentWorld, 15_000);
 
             if (changed) {
@@ -254,11 +255,11 @@ public class BanksShopperScript extends Script {
             }
         }
         boolean boughtItem = false;
-//        for (int count = 0; count < buyCount+1; count++) {
-//            boughtItem = Rs2Shop.buyItem(itemName, quantity);
-//            sleep(250, 350);
-//        }
-        boughtItem = Rs2Shop.buyItem(itemName, quantity);
+        for (int count = 0; count < buyCount+1; count++) {
+            boughtItem = Rs2Shop.buyItem(itemName, quantity);
+            sleep(250, 350);
+        }
+//        boughtItem = Rs2Shop.buyItem(itemName, quantity);
 
         if (boughtItem) {
             Rs2Inventory.waitForInventoryChanges(1800);

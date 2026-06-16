@@ -111,7 +111,11 @@ public enum PlayStyle {
     }
 
     public int getRandomTickInterval() {
-        return ThreadLocalRandom.current().nextInt(primaryTickInterval, secondaryTickInterval + 1);
+       
+        return ThreadLocalRandom.current().nextInt(
+                Math.min(primaryTickInterval, secondaryTickInterval),
+                Math.max(primaryTickInterval, secondaryTickInterval) + 1
+        );
     }
 
     public void evolvePlayStyle() {

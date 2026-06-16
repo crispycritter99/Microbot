@@ -231,7 +231,7 @@ class DevToolsOverlay extends Overlay {
 			}
 
             String text = composition.getName() + " (ID:" + composition.getId() + ")" +
-                    " (A: " + npc.getAnimation() + ") (P: " + npc.getPoseAnimation() + ") (G: " + npc.getGraphic() + ")";
+                    " (A: " + npc.getAnimation() + ") (P: " + npc.getPoseAnimation() + ") (G: " + npc.getGraphic() + ") (I:"+npc.getIndex()+")";
             if (npc.getModelOverrides() != null) {
                 var mo = npc.getModelOverrides();
                 if (mo.getModelIds() != null) {

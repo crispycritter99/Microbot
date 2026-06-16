@@ -242,7 +242,13 @@ public class AutoWoodcuttingScript extends Script {
         }
 
         if (returnPoint == null) {
-            returnPoint = Rs2Player.getWorldLocation();
+            if (config.TREE()==WoodcuttingTree.IRONWOOD_TREE)
+            {
+                returnPoint = new WorldPoint(2207,2316,0);
+            }
+            else {
+                returnPoint = Rs2Player.getWorldLocation();
+            }
         }
 
         updateActiveTree(config);

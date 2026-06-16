@@ -96,6 +96,7 @@ public enum FishingSpot
 	HARPOONFISH("Harpoonfish", ItemID.TEMPOROSS_RAW_HARPOONFISH,
 		NpcID.TEMPOROSS_HARPOONFISH_FISHINGSPOT_NORTH, NpcID.TEMPOROSS_HARPOONFISH_FISHINGSPOT_SOUTH, NpcID.TEMPOROSS_HARPOONFISH_FISHINGSPOT_SPECIAL
 	),
+	LANTERNHARPOON("Swordtip Squid,Jumbo squid",ItemID.RAW_SWORDTIP_SQUID,15081),
 	INFERNAL_EEL("Infernal Eel", ItemID.INFERNAL_EEL,
 		NpcID.MORULREK_EELS_FISHINGSPOT
 	),
@@ -155,7 +156,7 @@ public enum FishingSpot
 	private final String name;
 	private final String worldMapTooltip;
 	private final int fishSpriteId;
-	private final int[] ids;
+	private final int[]  ids;
 
 	static
 	{

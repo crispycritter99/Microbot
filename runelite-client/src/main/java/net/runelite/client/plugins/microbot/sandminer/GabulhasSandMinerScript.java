@@ -106,7 +106,7 @@ public class GabulhasSandMinerScript extends Script {
 
 
             if (!config.turboMode()) sleep(Rs2Random.nextInt(300, 5000, 0.1, true));
-            if (!Rs2Player.isInteracting() || !Rs2Player.isAnimating()) {
+            if (!Rs2Player.isAnimating()) {
                 if (config.turboMode()) {
                     if (firstRock) {
                         WorldPoint innerMiningPoint = (Rs2Random.dicePercentage(50)) ?
@@ -114,7 +114,8 @@ public class GabulhasSandMinerScript extends Script {
                         GameObject innerSandstoneRock = Rs2GameObject.getGameObject("Sandstone rocks", true, innerMiningPoint);
                         Rs2GameObject.interact(innerSandstoneRock, "Mine");
                         Rs2Player.waitForXpDrop(Skill.MINING, 15000);
-                        Rs2Antiban.actionCooldown();
+
+//                        Rs2Antiban.actionCooldown();
                         firstRock = false;
                         continue;
                     }
@@ -124,10 +125,11 @@ public class GabulhasSandMinerScript extends Script {
                     Rs2GameObject.interact(sandstoneRock, "Mine");
                     if (config.turboMode()) {
                         Rs2Player.waitForXpDrop(Skill.MINING, 15000);
+//                        Rs2Player.waitForXpDrop(Skill.MINING, 5000);
                     } else {
                         Rs2Player.waitForAnimation();
                     }
-                    Rs2Antiban.actionCooldown();
+//                    Rs2Antiban.actionCooldown();
                 }
             }
         }

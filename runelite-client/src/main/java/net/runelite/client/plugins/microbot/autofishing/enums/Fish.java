@@ -31,7 +31,8 @@ public enum Fish {
     MONKFISH("Monkfish", List.of("Raw monkfish", "Monkfish", "Burnt monkfish"), FishingMethod.NET, FishingSpot.MONKFISH.getIds()),
     PIKE("Pike", List.of("Raw pike", "Pike", "Burnt fish"), FishingMethod.BAIT, FishingSpot.SALMON.getIds()),
     SARDINE("Sardine", List.of("Raw sardine", "Sardine", "Burnt fish"), FishingMethod.BAIT, FishingSpot.SHRIMP.getIds()),
-    SHARK("Shark", List.of("Raw shark", "Shark", "Burnt shark"), FishingMethod.HARPOON, FishingSpot.SHARK.getIds());
+    SHARK("Shark", List.of("Raw shark", "Shark", "Burnt shark"), FishingMethod.HARPOON, FishingSpot.SHARK.getIds()),
+    SQUID("Squid",List.of("Raw swordtip squid","Swordtip squid","Burnt swordtip squid","Raw jumbo squid","Jumbo Squid","Burnt jumbo squid"),FishingMethod.LANTERNHARPOON,FishingSpot.SQUID.getIds());
 
     private final String name;
     private final List<String> itemNames; // raw, cook and burnt states

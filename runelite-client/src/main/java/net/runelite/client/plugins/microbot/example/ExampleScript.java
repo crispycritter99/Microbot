@@ -83,9 +83,51 @@ public class ExampleScript extends Script {
 ////                    Rs2Inventory.interact("Fishing Explosive");
 ////                    sleep(200,400);
 //                    sleepGaussian(600,300);
-//                    Rs2Inventory.useItemOnNpc(6664,496);
-//                    sleep(10000);
-//                    sleepUntil(Rs2Player::isInCombat);
+//                    if (!Rs2Player.isInteracting()&&Rs2Npc.getNpc(496)!=null&&Rs2Inventory.useItemOnNpc(6664,496))
+//                        sleep(4000);
+//                        sleepUntil(Rs2Player::isInCombat,7500);
+//                if (Rs2Player.getHealthPercentage()<70&&!Rs2Equipment.isWearing("Ancient sceptre")) {
+//                    Rs2Inventory.equip("Ancient sceptre");
+//                    Rs2Npc.interact("Kraken","attack");
+//                    sleep(1200);
+//                }
+//                if (Rs2Player.getHealthPercentage()>90&&Rs2Equipment.isWearing("Ancient sceptre")) {
+//                    Rs2Inventory.equip("Trident of the swamp");
+//                    Rs2Npc.interact("Kraken","attack");
+//                    sleep(1200);
+//                }
+//                if (Rs2Player.drinkPrayerPotion()) {
+//                    Rs2Player.waitForAnimation();
+//                    Rs2Npc.interact("Kraken","attack");
+//                    sleep(1200);
+//                }
+//                if (Rs2Player.eatAt(50)) {
+//                    Rs2Player.waitForAnimation();
+//                    Rs2Npc.interact("Kraken","attack");
+//                    sleep(1200);
+//                }
+//                if (!Rs2Inventory.contains("ensouled",false))
+//                    return;
+//                Rs2Magic.cast(MagicAction.EXPERT_REANIMATION);
+//                Rs2Inventory.interact("ensouled");
+//                Rs2Player.waitForXpDrop(Skill.PRAYER,20000);
+                if (Rs2Inventory.isFull()) return;
+                var nearbyItems = Rs2GroundItem.getAll(10);
+
+                    for (var item : nearbyItems) {
+                        if (item.getItem().getName().contains("bones")) {
+                            Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
+                            Rs2GroundItem.interact(item);
+                            Rs2Inventory.waitForInventoryChanges(3000);
+                        }
+//                        sleepUntil(() -> Rs2Inventory.waitForInventoryChanges(3000));
+//                        var gePrice = Rs2GrandExchange.getPrice(item.getItem().getId());
+//                        TotalLootValue += gePrice == -1 ? item.getItem().getPrice() * item.getTileItem().getQuantity() : gePrice * item.getTileItem().getQuantity();
+                    }
+
+
+
+//                shutdown();
 //                }
 //                System.out.println(""+Rs2Widget.isWidgetVisible(InterfaceID.DIALOG_OPTION, 1));
 //                System.out.println(""+startTime);
@@ -188,22 +230,44 @@ public class ExampleScript extends Script {
 //                if (Rs2Npc.interact(15213,"harvest")){
 //                    sleep(2000);
 //                }
-                if (Rs2Player.isInteracting()) return;
-//               WorldPoint safespot = new WorldPoint(2877,4157,0);
-                WorldPoint safespot = new WorldPoint(2402,2163,0);
-               Rs2NpcModel kraken = Rs2Npc.getNpc("kraken");
-                if (Rs2Magic.castOn(MagicAction.TELEKINETIC_GRAB,kraken)){
-                    sleep(2000);
-                }
-                ;
-               if (kraken.getId()==15212&&kraken.getAnimation()!=13219&& kraken.getWorldLocation().distanceTo(safespot)<8){
-                   Microbot.status="attacking";
-                   double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
-                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value*200);
-                   Rs2Npc.interact(kraken,"attack");
-                   sleep(600);
-               }
+//                if (Rs2Inventory.contains())
+//               Rs2ItemModel alchable = Rs2Inventory.get(1700,1391,22284);
+//               if (alchable!=null){
+//                   Rs2Magic.alch(alchable);
+//                   sleep(600);
+//                   return;
+//               }
+//                if (Rs2Player.isInteracting()) return;
+//////               WorldPoint safespot = new WorldPoint(2877,4157,0);
+//                WorldPoint safespot = new WorldPoint(2402,2163,0);
+////                WorldPoint safespot = new WorldPoint(2633,2281,0);
+//               Rs2NpcModel braken = Rs2Npc.getNpc(15577);
+//                Rs2NpcModel kraken = Rs2Npc.getNpcByIndex(15576);
+//
+//                if (Rs2Magic.castOn(MagicAction.TELEKINETIC_GRAB,braken)){
+//                    sleep(5000);
+//                }
+//                if (Rs2Npc.interact(15200,"attack")){
+//                    sleep(2000);
+//                }
+//                ;
+//               if (kraken.getId()==15212&&kraken.getAnimation()!=13219&& kraken.getWorldLocation().distanceTo(safespot)<8){
+//                   Microbot.status="attacking";
+//                   double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                   Rs2Npc.interact(kraken,"attack");
+//                   sleep(600);
+//               }
+//                               if (kraken!=null&&kraken.getId()==15200&&kraken.getAnimation()!=13200){
+//                   Microbot.status="attacking";
+//                   double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value*200);
+//                   Rs2Npc.interact(kraken,"attack");
+//                   sleep(600);
+//               }
+
 
 //               if (kraken.getId()==15213){
 //                   Microbot.status="looting";

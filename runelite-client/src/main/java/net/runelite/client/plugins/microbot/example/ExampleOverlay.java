@@ -44,9 +44,11 @@ public class ExampleOverlay extends OverlayPanel {
             panelComponent.getChildren().add(LineComponent.builder()
                     .left("" + Microbot.status)
                     .build());
-            panelComponent.getChildren().add(LineComponent.builder()
-                    .left("" + GiantsFoundryState.getCurrentHeat())
-                    .build());
+            if (Rs2Player.isInteracting()) {
+                panelComponent.getChildren().add(LineComponent.builder()
+                        .left("" + Rs2Player.getInteracting().getWorldLocation())
+                        .build());
+            }
             panelComponent.getChildren().add(LineComponent.builder().build());
 //            WorldPoint worldPoint =  Microbot.getClientThread().invoke(() -> Microbot.getClient().getLocalPlayer().getWorldLocation());
                 int deayaltFragments=Rs2Inventory.itemQuantity("Daeyalt shard");

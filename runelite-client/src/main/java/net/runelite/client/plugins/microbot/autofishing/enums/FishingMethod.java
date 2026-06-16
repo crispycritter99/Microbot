@@ -11,6 +11,7 @@ public enum FishingMethod {
     BIG_NET(List.of("Big net"), List.of("Big fishing net"), 16),
     LURE(List.of("Lure"), List.of("Fly fishing rod", "Feather"), 20),
     HARPOON(List.of("Harpoon"), List.of("Harpoon"), 35),
+    LANTERNHARPOON(List.of("Harpoon"),List.of("Sapphire Lantern"),52),
     CAGE(List.of("Cage"), List.of("Lobster pot"), 40),
     SANDWORMS(List.of("Sandworms", "Bait"), List.of("Fishing rod", "Sandworms"), 15),
     KARAMBWAN_VESSEL(List.of("Fish"), List.of("Karambwan vessel", "Raw karambwanji"), 65),

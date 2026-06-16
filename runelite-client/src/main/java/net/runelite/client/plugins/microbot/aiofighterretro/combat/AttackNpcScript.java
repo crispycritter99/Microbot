@@ -74,7 +74,7 @@ public class AttackNpcScript extends Script {
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
-                if (!Microbot.isLoggedIn() || !super.run() || !config.toggleCombat())
+                if (!Microbot.isLoggedIn() || !super.run())
                     return;
 
                 if (config.centerLocation().distanceTo(Rs2Player.getWorldLocation()) < config.attackRadius() &&
@@ -90,6 +90,8 @@ public class AttackNpcScript extends Script {
                     Rs2Inventory.wear("Bracelet of slaughter");
                 else if (!Rs2Equipment.isWearing("Expeditious bracelet")&&Rs2Inventory.hasItem("Expeditious bracelet"))
                     Rs2Inventory.wear("Expeditious bracelet");
+                if (!config.toggleCombat())
+                    return;
                 cache = Microbot.getRs2NpcCache();
                 if (config.reanimateEnsouledHeads()) {
 //                    System.out.println("diddy 1");
@@ -307,7 +309,7 @@ public class AttackNpcScript extends Script {
         Rs2NpcModel npc = cache.query().where(Rs2ActorModel::isDead).nearest();
         List<String> lizardVariants = new ArrayList<>(Arrays.asList("Lizard", "Desert Lizard", "Small Lizard"));
         if (npc == null) return;
-        if (Microbot.getVarbitValue(SLAYER_AUTOKILL_DESERTLIZARDS) == 0 && lizardVariants.contains(npc.getName()) && npc.getHealthRatio() < 5) {
+        if (Microbot.getVarbitValue(SLAYER_AUTOKILL_DESERTLIZARDS) == 0 && npc.getName()!=null&&lizardVariants.contains(npc.getName()) && npc.getHealthRatio() < 5) {
             if (Rs2Bank.isOpen()) return;
             if (!Rs2Inventory.use(ItemID.SLAYER_ICY_WATER)) return ;
             sleep(100);
@@ -315,7 +317,7 @@ public class AttackNpcScript extends Script {
                 npc.click();
             }
             Rs2Player.waitForAnimation();
-        } else if (Microbot.getVarbitValue(SLAYER_AUTOKILL_ROCKSLUGS) == 0 && npc.getName().equalsIgnoreCase("rockslug") && npc.getHealthRatio() < 5) {
+        } else if (Microbot.getVarbitValue(SLAYER_AUTOKILL_ROCKSLUGS) == 0 && npc.getName()!=null&& npc.getName().equalsIgnoreCase("rockslug") && npc.getHealthRatio() < 5) {
             if (Rs2Bank.isOpen()) return;
             if (!Rs2Inventory.use(ItemID.SLAYER_BAG_OF_SALT)) return;
             sleep(100);
@@ -323,7 +325,7 @@ public class AttackNpcScript extends Script {
                 npc.click();
             }
             Rs2Player.waitForAnimation();
-        } else if (Microbot.getVarbitValue(SLAYER_AUTOKILL_GARGOYLES) == 0 && npc.getName().equalsIgnoreCase("gargoyle") && npc.getHealthRatio() < 3) {
+        } else if (Microbot.getVarbitValue(SLAYER_AUTOKILL_GARGOYLES) == 0 && npc.getName()!=null&&npc.getName().equalsIgnoreCase("gargoyle") && npc.getHealthRatio() < 3) {
             if (Rs2Bank.isOpen()) return ;
             if (!Rs2Inventory.use(ItemID.SLAYER_ROCK_HAMMER)) return;
             sleep(100);

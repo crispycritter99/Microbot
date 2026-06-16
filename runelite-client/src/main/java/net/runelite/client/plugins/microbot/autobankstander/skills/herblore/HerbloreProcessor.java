@@ -327,7 +327,8 @@ public class HerbloreProcessor implements BankStandingProcessor {
     private boolean bankForRegularPotion() {
         int unfinishedCount = Rs2Bank.count(currentPotion.unfinished);
         int secondaryCount = Rs2Bank.count(currentPotion.secondary);
-        withdrawnAmount = Math.min(Math.min(unfinishedCount, secondaryCount), 14);
+//        withdrawnAmount = Math.min(Math.min(unfinishedCount, secondaryCount), 14);
+        withdrawnAmount = 14;
         
         log.info("Withdrawing {} unfinished and secondary", withdrawnAmount);
         Rs2Bank.withdrawX(currentPotion.unfinished, withdrawnAmount);
