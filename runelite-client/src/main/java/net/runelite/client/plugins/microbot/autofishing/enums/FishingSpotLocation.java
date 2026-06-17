@@ -97,7 +97,7 @@ public enum FishingSpotLocation
 	KHARIDIAN_DESERT_SOUTH_WEST(FishingSpot.LOBSTER,
 		new WorldPoint(3139, 2800, 0)),
 	KINGSTOWN_EAST(FishingSpot.SALMON, new WorldPoint(1723, 3685, 0)),
-	LAGUNA(FishingSpot.LANTERNHARPOON,new WorldPoint(1178,2722,0)),
+	LAGUNA(FishingSpot.SQUID,new WorldPoint(1178,2722,0)),
 	LANDS_END_EAST(FishingSpot.SHRIMP, new WorldPoint(1534, 3414, 0)),
 	LANDS_END_WEST(new FishingSpot[]{FishingSpot.SHARK, FishingSpot.LOBSTER, FishingSpot.SHRIMP},
 		new WorldPoint(1484, 3432, 0)),

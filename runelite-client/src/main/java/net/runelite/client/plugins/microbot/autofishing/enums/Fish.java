@@ -120,6 +120,8 @@ public enum Fish {
                 return FishingSpot.ANGLERFISH;
             case DARK_CRAB:
                 return FishingSpot.DARK_CRAB;
+            case SQUID:
+                return FishingSpot.SQUID;
             default:
                 return null;
         }
