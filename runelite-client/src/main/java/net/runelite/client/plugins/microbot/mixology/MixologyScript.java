@@ -7,6 +7,7 @@ import net.runelite.api.gameval.ObjectID;
 
 
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.VarbitID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.mixology.enums.AlchemyObject;
@@ -289,7 +290,7 @@ public class MixologyScript extends Script {
                                 quickActionProcessPotion(nonFulfilledPotion);
                                 alembicQuickActionTicks = 0;
                             }
-                            if (nonFulfilledPotion.potionModifier().alchemyObject() == AlchemyObject.RETORT && config.useQuickActionOnRetort()&&Microbot.getVarbitValue(11327)<15&&Microbot.getVarbitValue(11327)!=0) {
+                            if (nonFulfilledPotion.potionModifier().alchemyObject() == AlchemyObject.RETORT && config.useQuickActionOnRetort()&&Microbot.getVarbitValue(VarbitID.MM_RETORT_PROGRESS)<11&&Microbot.getVarbitValue(11327)!=0) {
                                 quickActionProcessPotion(nonFulfilledPotion);
                                 sleep(350, 400);
                             }

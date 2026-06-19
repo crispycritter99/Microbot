@@ -67,6 +67,7 @@ public class Rs2UiHelper {
         if (Rs2AntibanSettings.naturalMouse) {
             java.awt.Point mousePos = Microbot.getMouse().getMousePosition();
             return Rs2Random.randomPointEx(new Point(mousePos.x, mousePos.y), rectangle, force);
+
         } else
             return Rs2Random.randomPointEx(Microbot.getMouse().getLastClick(), rectangle, force);
     }

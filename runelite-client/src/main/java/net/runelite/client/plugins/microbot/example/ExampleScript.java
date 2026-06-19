@@ -111,19 +111,28 @@ public class ExampleScript extends Script {
 //                Rs2Magic.cast(MagicAction.EXPERT_REANIMATION);
 //                Rs2Inventory.interact("ensouled");
 //                Rs2Player.waitForXpDrop(Skill.PRAYER,20000);
-                if (Rs2Inventory.isFull()) return;
-                var nearbyItems = Rs2GroundItem.getAll(10);
-
-                    for (var item : nearbyItems) {
-                        if (item.getItem().getName().contains("bones")) {
-                            Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
-                            Rs2GroundItem.interact(item);
-                            Rs2Inventory.waitForInventoryChanges(3000);
-                        }
-//                        sleepUntil(() -> Rs2Inventory.waitForInventoryChanges(3000));
-//                        var gePrice = Rs2GrandExchange.getPrice(item.getItem().getId());
-//                        TotalLootValue += gePrice == -1 ? item.getItem().getPrice() * item.getTileItem().getQuantity() : gePrice * item.getTileItem().getQuantity();
-                    }
+//                if (Rs2Inventory.isFull()) return;
+//                var nearbyItems = Rs2GroundItem.getAll(10);
+//
+//                    for (var item : nearbyItems) {
+//                        if (item.getItem().getName().contains("bones")||item.getItem().getName().contains("sheet")) {
+//                            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+//                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                            sleep((int) value*400);
+////                            Rs2GameObject.interact("iron rocks");
+//
+//                            Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
+//                            r = new Random();gaussian = r.nextGaussian();
+//                            value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                            sleep((int) value*400);
+//
+//                            Rs2GroundItem.interact(item);
+//                            Rs2Inventory.waitForInventoryChanges(3000);
+//                        }
+////                        sleepUntil(() -> Rs2Inventory.waitForInventoryChanges(3000));
+////                        var gePrice = Rs2GrandExchange.getPrice(item.getItem().getId());
+////                        TotalLootValue += gePrice == -1 ? item.getItem().getPrice() * item.getTileItem().getQuantity() : gePrice * item.getTileItem().getQuantity();
+//                    }
 
 
 
@@ -286,17 +295,7 @@ public class ExampleScript extends Script {
 //                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
 //                sleep((int) value * 100+2000);
 //                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-//                List<Rs2ItemModel> itemsToDrop = items(Rs2ItemModel.matches(true, "Rubium geode"))
-//                        .collect(Collectors.toList());
-//                for (Rs2ItemModel item : itemsToDrop) {
-//                    if (item == null) continue;
-//                    Rs2Inventory.invokeMenu(item, "Crack-open");
-//                    sleep(150, 300);
-//                }
-//                Rs2GameObject.interact(58921);
-//                sleep(600);
-//                            sleep(100);
-//                        } while (!done && System.currentTimeMillis() - startTime < 5000);
+
 //
 
 //                        if (Rs2Widget.findWidget("Really remove it?", null) != null) {
@@ -358,27 +357,28 @@ public class ExampleScript extends Script {
 //
 //                }
 //                }
-//                if (Rs2Inventory.contains(2353)){
-//
-//                    Rs2GameObject.interact("Ancient Furnace","Smelt");
-//                        Rs2Player.waitForWalking();
-//                        Rs2Keyboard.keyPress('1');
-//                        sleep(1200);
-//                    }
-//
-//                if (!Rs2Inventory.contains(2353)&&Rs2Inventory.contains(2354)) {
-//                    if (Microbot.getClient().getWidget(14352385) == null) {
-//                        if (!Rs2Inventory.isItemSelected()) {
-//                            Rs2Inventory.use(2354);
-//                        } else {
-//                            Rs2Npc.interact("Isles", "use");
-//                            Rs2Player.waitForWalking();
-//                        }
-//                    } else if (Microbot.getClient().getWidget(14352385) != null) {
-//                        Rs2Keyboard.keyPress('3');
-//                        Rs2Inventory.waitForInventoryChanges(2000);
-//                    }
-//                }
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                if (Rs2Inventory.contains(2353)){
+
+                    Rs2GameObject.interact("Ancient Furnace","Smelt");
+                        Rs2Player.waitForWalking();
+                        Rs2Keyboard.keyPress('1');
+                        sleep(1200);
+                    }
+
+                if (!Rs2Inventory.contains(2353)&&Rs2Inventory.contains(2354)) {
+                    if (Microbot.getClient().getWidget(14352385) == null) {
+                        if (!Rs2Inventory.isItemSelected()) {
+                            Rs2Inventory.use(2354);
+                        } else {
+                            Rs2Npc.interact("Isles", "use");
+                            Rs2Player.waitForWalking();
+                        }
+                    } else if (Microbot.getClient().getWidget(14352385) != null) {
+                        Rs2Keyboard.keyPress('3');
+                        Rs2Inventory.waitForInventoryChanges(2000);
+                    }
+                }
 //                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
 //                if (npc == null) return;
 
