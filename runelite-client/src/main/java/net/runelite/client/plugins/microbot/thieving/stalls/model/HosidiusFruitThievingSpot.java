@@ -25,6 +25,7 @@ public class HosidiusFruitThievingSpot implements IStallThievingSpot {
         final GameObject stall = botApi.getGameObject(STALL_ID, SAFESPOT.dx(1));
         if (stall == null)
         {
+            botApi.dropAll(getItemIdsToDrop());
             return;
         }
 

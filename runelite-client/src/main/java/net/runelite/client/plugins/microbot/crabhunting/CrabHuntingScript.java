@@ -32,14 +32,16 @@ public class CrabHuntingScript extends Script {
                 int blueRainbowCrab=Rs2Inventory.count(31680);
                 int orangeRainbowCrab=Rs2Inventory.count(31683);
                 int purpleRainbowCrab=Rs2Inventory.count(31677);
+                int lowBlueRainbowCrab=Rs2Inventory.count(31674);
                 if (Rs2Inventory.isFull()){
                     Microbot.status="grinding crabs";
                     Rs2ItemModel lastBRCrab = Rs2Inventory.getLast(31680);
                     Rs2ItemModel lastORCrab = Rs2Inventory.getLast(31683);
                     Rs2ItemModel lastPRCrab = Rs2Inventory.getLast(31677);
+                    Rs2ItemModel lastBLCrab = Rs2Inventory.getLast(31674);
                     Rs2ItemModel lastPotion = Rs2Inventory.getLast(233);
                     for (int i = 0; i < blueRainbowCrab; i++) {
-                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31680)) continue;
+                        if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31680)) continue;
                         Rs2Inventory.interact(lastBRCrab,"use");
                         Rs2Inventory.interact(lastPotion,"use");
                         double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
@@ -47,7 +49,7 @@ public class CrabHuntingScript extends Script {
                         sleep((int) value*10);
                     }
                     for (int i = 0; i < orangeRainbowCrab; i++) {
-                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31683)) continue;
+                        if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31683)) continue;
                         Rs2Inventory.interact(lastORCrab,"use");
                         Rs2Inventory.interact(lastPotion,"use");
                         double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
@@ -55,12 +57,20 @@ public class CrabHuntingScript extends Script {
                         sleep((int) value*10);
                     }
                     for (int i = 0; i < purpleRainbowCrab; i++) {
-                        if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(31677)) continue;
+                        if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31677)) continue;
                         Rs2Inventory.interact(lastPRCrab,"use");
                         Rs2Inventory.interact(lastPotion,"use");
                         double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
                         double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
                         sleep((int) value*10);
+                    }
+                    for (int i = 0; i < lowBlueRainbowCrab; i++) {
+                        if (!Rs2Inventory.contains(233)||!Rs2Inventory.contains(31674)) continue;
+                        Rs2Inventory.interact(lastBLCrab,"use");
+                        Rs2Inventory.interact(lastPotion,"use");
+                        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                        sleep((int) value*50);
                     }
 //                    Rs2Inventory.combine("pestle and mortar","blue crab");
 //                    sleep(23000);
@@ -91,7 +101,7 @@ public class CrabHuntingScript extends Script {
 //                    Rs2Inventory.waitForInventoryChanges(1800);
                     return;
                 }
-                else if (fulltrap!=null) {
+                else if (fulltrap!=null&&!Rs2Inventory.isFull()) {
                     double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
                     double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
                     sleep((int) value*400);
