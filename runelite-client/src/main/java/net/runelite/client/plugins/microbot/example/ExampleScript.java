@@ -357,31 +357,39 @@ public class ExampleScript extends Script {
 //
 //                }
 //                }
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-                if (Rs2Inventory.contains(2353)){
-
-                    Rs2GameObject.interact("Ancient Furnace","Smelt");
-                        Rs2Player.waitForWalking();
-                        Rs2Keyboard.keyPress('1');
-                        sleep(1200);
-                    }
-
-                if (!Rs2Inventory.contains(2353)&&Rs2Inventory.contains(2354)) {
-                    if (Microbot.getClient().getWidget(14352385) == null) {
-                        if (!Rs2Inventory.isItemSelected()) {
-                            Rs2Inventory.use(2354);
-                        } else {
-                            Rs2Npc.interact("Isles", "use");
-                            Rs2Player.waitForWalking();
-                        }
-                    } else if (Microbot.getClient().getWidget(14352385) != null) {
-                        Rs2Keyboard.keyPress('3');
-                        Rs2Inventory.waitForInventoryChanges(2000);
-                    }
-                }
-//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
-//                if (npc == null) return;
-
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                if (Rs2Inventory.contains(2353)){
+//
+//                    Rs2GameObject.interact("Ancient Furnace","Smelt");
+//                        Rs2Player.waitForWalking();
+//                        Rs2Keyboard.keyPress('1');
+//                        sleep(1200);
+//                    }
+//
+//                if (!Rs2Inventory.contains(2353)&&Rs2Inventory.contains(2354)) {
+//                    if (Microbot.getClient().getWidget(14352385) == null) {
+//                        if (!Rs2Inventory.isItemSelected()) {
+//                            Rs2Inventory.use(2354);
+//                        } else {
+//                            Rs2Npc.interact("Isles", "use");
+//                            Rs2Player.waitForWalking();
+//                        }
+//                    } else if (Microbot.getClient().getWidget(14352385) != null) {
+//                        Rs2Keyboard.keyPress('3');
+//                        Rs2Inventory.waitForInventoryChanges(2000);
+//                    }
+//                }
+                if (Rs2Player.isInteracting())return;
+                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
+                if (npc == null) return;
+                double LOG_MEAN = 0.25;
+                    double LOG_STD = 0.34;
+                    Random r = new Random();
+                    double gaussian = r.nextGaussian();
+                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                    sleep((int) value * 200);
+                Rs2Npc.interact(npc,"attack");
+                sleep(600);
 //                if (Rs2Inventory.isFull())
 //                {
 //                    Rs2Inventory.dropAll(false,"scimitar","bar","dagger","necklace");
