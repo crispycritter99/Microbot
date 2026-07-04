@@ -16,7 +16,8 @@ public enum UnfinishedPotionMode {
     LANTADYME_POTION_UNF("Lantadyme", "Vial of water", "Lantadyme potion (unf)"),
     DWARF_WEED_POTION_UNF("Dwarf weed", "Vial of water", "Dwarf weed potion (unf)"),
     TORSTOL_POTION_UNF("Torstol", "Vial of water", "Torstol potion (unf)"),
-    PILLAR_POTION_UNF("Pillar coral", "Vial of water", "Pillar potion (unf)");;
+    PILLAR_POTION_UNF("Pillar coral", "Vial of water", "Pillar potion (unf)"),
+    UMBRAL_POTION_UNF("Umbral coral", "Vial of water", "Umbral potion (unf)");;;;
 
     private final String herbName;
     private final String vialName;

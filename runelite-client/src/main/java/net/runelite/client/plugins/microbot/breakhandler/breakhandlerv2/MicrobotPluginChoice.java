@@ -5,7 +5,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.microbot.accountselector.AutoLoginPlugin;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerPlugin;
 import net.runelite.client.plugins.microbot.breakhandler.breakhandlerv2.BreakHandlerV2Plugin;
-import net.runelite.client.plugins.microbot.example.ExamplePlugin;
+import net.runelite.client.plugins.microbot.brimhavenspikejumper.BrimhavenSpikeJumperPlugin;
 import net.runelite.client.plugins.microbot.inventorysetups.MInventorySetupsPlugin;
 import net.runelite.client.plugins.microbot.mouserecorder.MouseMacroRecorderPlugin;
 import net.runelite.client.plugins.microbot.questhelper.QuestHelperPlugin;
@@ -23,7 +23,7 @@ public enum MicrobotPluginChoice {
     INVENTORY_SETUPS("Inventory Setups", MInventorySetupsPlugin.class),
     BREAK_HANDLER("BreakHandler (v1)", BreakHandlerPlugin.class),
     BREAK_HANDLER_V2("BreakHandler V2", BreakHandlerV2Plugin.class),
-    EXAMPLE("Example Plugin", ExamplePlugin.class);
+    BRIMHAVEN_SPIKE_JUMPER("Brimhaven Spike Jumper", BrimhavenSpikeJumperPlugin.class);
 
     private final String displayName;
     private final Class<? extends Plugin> pluginClass;

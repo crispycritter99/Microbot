@@ -121,11 +121,11 @@ public class Rs2DepositBox {
 //            Rs2Widget.clickWidget(emptyContainerWidget);
 //            sleep(200,600);
 //        }
-        Rs2Widget.clickWidget(emptyContainerWidget);
-        if (Rs2Inventory.contains("gem sack",false)) {
-            sleep(200, 600);
-            Rs2Widget.clickWidget(depositAllWidget);
-        }
+        Rs2Widget.clickWidget(depositAllWidget);
+//        if (Rs2Inventory.contains("gem sack",false)) {
+//            sleep(200, 600);
+//            Rs2Widget.clickWidget(emptyContainerWidget);
+//        }
         Rs2Inventory.waitForInventoryChanges(5000);
     }
 

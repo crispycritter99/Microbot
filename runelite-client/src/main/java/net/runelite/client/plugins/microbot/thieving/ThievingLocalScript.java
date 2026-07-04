@@ -45,17 +45,17 @@ public class ThievingLocalScript extends Script {
                 if (initialPlayerLocation == null) {
                     initialPlayerLocation = Rs2Player.getWorldLocation();
                 }
-
-                if (Rs2Player.isStunned())
-                    return;
-
-
                 List<Rs2ItemModel> foods = Rs2Inventory.getInventoryFood();
 
                 if (config.useFood()) {
                     boolean hasFood = handleFood(foods);
                     if (!hasFood) return;
                 }
+                if (Rs2Player.isStunned())
+                    return;
+
+
+
 
                 if (Rs2Inventory.isFull()) {
                     Rs2Player.eatAt(99);

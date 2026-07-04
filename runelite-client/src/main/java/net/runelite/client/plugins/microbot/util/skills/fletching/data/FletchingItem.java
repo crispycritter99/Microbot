@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 public enum FletchingItem
 {
     ARROW_SHAFT("Arrow shaft", '1', "arrow shaft", 1),
+    BLISTERWOOD_STAKE("Blisterwood stake", '1', "Blisterwood stake", 1),
     SHORT("Short bows", '2', "shortbow", 1),
     LONG("Long bows", '3', "longbow", 1),
     STOCK("Crossbow stock", '4', "stock", 1),

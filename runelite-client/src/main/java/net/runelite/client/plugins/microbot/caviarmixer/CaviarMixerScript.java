@@ -37,6 +37,7 @@ public class CaviarMixerScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
+//                String potion = "Magic potion(2)";
                 String potion = "Super attack(2)";
                 // Bank
                 if (!Rs2Inventory.contains("caviar")||!Rs2Inventory.contains(potion)){
@@ -44,6 +45,11 @@ public class CaviarMixerScript extends Script {
                     Rs2Bank.openBank();
                     sleepUntil(Rs2Bank::isOpen);
                     Rs2Bank.depositAll();
+                    if (Rs2Bank.count("caviar") == 0 || Rs2Bank.count(potion) == 0) {
+                        Microbot.showMessage("Caviar Mixer stopped: missing caviar or " + potion + " in the bank.");
+                        shutdown();
+                        return;
+                    }
                     Rs2Bank.withdrawX("caviar",13);
                     Rs2Bank.withdrawX(potion,13);
                     Rs2Bank.withdrawOne("caviar");

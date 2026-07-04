@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Default + "Caviar Mixer",
+        name = "<html>[<font color=#D2B48C>K</font>] Caviar Mixer",
         description = "Microbot example plugin",
         tags = {"example", "microbot"},
         enabledByDefault = false

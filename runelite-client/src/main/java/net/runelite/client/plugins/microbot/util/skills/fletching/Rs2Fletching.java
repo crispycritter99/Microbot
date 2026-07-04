@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.util.skills.fletching;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.gameval.ItemID;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -156,9 +157,13 @@ public class Rs2Fletching {
         
         // enable quantity option first
         Rs2Widget.enableQuantityOption( quantity);
-        
+//        Rs2Dialogue.sleepUntilHasCombinationDialogue();
+
+//                        Rs2Dialogue.clickCombinationOption(plugin.getPlank().getDialogueOption());
+        ;
+
         // select the specific option
-        boolean success = selectFletchingOption(optionName);
+        boolean success = Rs2Dialogue.keyPressForCombinationOption(optionName);
         if (success) {
             log.info("selected {} x\"{}\" for fletching", optionName, quantity);
         }

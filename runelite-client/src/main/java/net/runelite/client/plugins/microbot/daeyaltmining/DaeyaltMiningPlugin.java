@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = PluginDescriptor.Default + "Daeyalt Mining",
+        name = "<html>[<font color=#D2B48C>K</font>] Daeyalt Mining",
         description = "Microbot example plugin",
         tags = {"example", "microbot"},
         enabledByDefault = false

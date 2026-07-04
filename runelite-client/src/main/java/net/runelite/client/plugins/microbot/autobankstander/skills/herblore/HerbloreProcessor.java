@@ -277,7 +277,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
         
         if (isSuperCombat(currentPotion)) {
             return bankForSuperCombat();
-        } else if (usesStackableSecondary(currentPotion)||currentPotion.secondary == ItemID.CRAB_PASTE) {
+        } else if (usesStackableSecondary(currentPotion)||currentPotion.secondary == ItemID.CRAB_PASTE||currentPotion.secondary == ItemID.RAINBOW_CRAB_PASTE) {
             return bankForStackableSecondary();
         } else {
             return bankForRegularPotion();
@@ -318,7 +318,7 @@ public class HerbloreProcessor implements BankStandingProcessor {
         
         log.info("Withdrawing {} unfinished and {} secondary", withdrawnAmount, secondaryNeeded);
         Rs2Bank.withdrawX(currentPotion.unfinished, withdrawnAmount);
-        Rs2Bank.withdrawAll(currentPotion.secondary);
+        Rs2Bank.withdrawX(currentPotion.secondary, withdrawnAmount);
         
         return sleepUntil(() -> Rs2Inventory.hasItem(currentPotion.unfinished) && 
                                Rs2Inventory.hasItem(currentPotion.secondary), 3000);

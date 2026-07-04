@@ -10,6 +10,7 @@ public enum HerblorePotion {
     ANTIDOTE_PLUS_PLUS("Antidote++ potion", 79, ItemID.VIAL_COCONUT_MILK, ItemID.IRIT_LEAF),
     ANTIFIRE("Antifire potion", 69, ItemID.LANTADYMEVIAL, ItemID.DRAGON_SCALE_DUST),
     ANTIPOISON("Antipoison potion", 5, ItemID.MARRENTILLVIAL, ItemID.UNICORN_HORN_DUST),
+    ARMADYL_BREW("Armadyl brew",89,ItemID.UMBRALVIAL,ItemID.RAINBOW_CRAB_PASTE),
     ATTACK("Attack potion", 1, ItemID.GUAMVIAL, ItemID.EYE_OF_NEWT),
     BASTION("Bastion potion", 80, ItemID.CADANTINE_BLOODVIAL, ItemID.WINE_OF_ZAMORAK),
     BATTLEMAGE("Battlemage potion", 80, ItemID.CADANTINE_BLOODVIAL, ItemID.CACTUS_POTATO),
