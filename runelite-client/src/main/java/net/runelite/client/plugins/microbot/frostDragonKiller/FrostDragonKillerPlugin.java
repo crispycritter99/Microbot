@@ -16,7 +16,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = "<html>[<font color=#D2B48C>K</font>] FrostDragonKiller",
+        name = "<html>[<font color=#93652a>K</font>] FrostDragonKiller",
         description = "Microbot example plugin",
         tags = {"example", "microbot"},
         enabledByDefault = false

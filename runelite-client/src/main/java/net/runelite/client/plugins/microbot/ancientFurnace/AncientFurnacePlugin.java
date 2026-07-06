@@ -15,7 +15,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = "<html>[<font color=#D2B48C>K</font>] AncientFurnace",
+        name = "<html>[<font color=#93652a>K</font>] AncientFurnace",
         description = "Smiths cannonballs at the Ancient Furnace",
         tags = {"example", "microbot"},
         enabledByDefault = false

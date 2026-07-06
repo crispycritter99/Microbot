@@ -15,7 +15,7 @@ import javax.inject.Inject;
 import java.awt.*;
 
 @PluginDescriptor(
-        name = "<html>[<font color=#D2B48C>K</font>] EnsouledReanimator",
+        name = "<html>[<font color=#93652a>K</font>] EnsouledReanimator",
         description = "Reanimates ensouled heads",
         tags = {"example", "microbot"},
         enabledByDefault = false

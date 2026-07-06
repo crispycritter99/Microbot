@@ -12,6 +12,7 @@ import net.runelite.client.plugins.microbot.giantsfoundry.enums.SmithableBars;
 import net.runelite.client.plugins.microbot.giantsfoundry.enums.Stage;
 import net.runelite.client.plugins.microbot.giantsfoundry.enums.State;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
+import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -68,8 +69,10 @@ public class GiantsFoundryScript extends Script {
                 }
                 if (GiantsFoundryState.getProgressAmount() == 1000) {
                     handIn();
-                    sleep(600, 1200);
-                    Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
+                    Rs2Dialogue.clickContinue();
+
+                    sleepGaussian(4000, 600);
+//                    Rs2Keyboard.keyPress(KeyEvent.VK_SPACE);
                 } else {
                     if (weapon != null) {
                         handleGameLoop();
@@ -327,11 +330,13 @@ public class GiantsFoundryScript extends Script {
         Rs2TileObjectModel obj = GiantsFoundryState.getStageObject(stage);
         if (obj == null) return;
         obj.click();
+//        Rs2Player.waitForWalking();
         Rs2Player.waitForAnimation();
     }
 
     private void handIn() {
         Microbot.getClientThread().invoke(() -> Microbot.getRs2NpcCache().query().withName("kovac").interact("Hand-in"));
+        sleepUntil(Rs2Dialogue::isInDialogue);
     }
 
 }
