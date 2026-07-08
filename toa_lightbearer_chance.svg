@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <rect width="1200" height="700" fill="#17191d"/>
+  <text x="600" y="28" text-anchor="middle" fill="#f4ead7" font-family="Segoe UI, sans-serif" font-size="22" font-weight="600">Effective Lightbearer chance by ToA raid level</text>
+  <text x="600" y="52" text-anchor="middle" fill="#aaa49a" font-family="Segoe UI, sans-serif" font-size="13">Solo · no deaths · no path invocation · Walk the Path off · 2-down Wardens</text>
+  <g stroke="#353941" stroke-width="1">
+    <line x1="90" y1="590" x2="1130" y2="590"/><line x1="90" y1="512.1" x2="1130" y2="512.1"/>
+    <line x1="90" y1="434.3" x2="1130" y2="434.3"/><line x1="90" y1="356.4" x2="1130" y2="356.4"/>
+    <line x1="90" y1="278.6" x2="1130" y2="278.6"/><line x1="90" y1="200.7" x2="1130" y2="200.7"/>
+    <line x1="90" y1="122.9" x2="1130" y2="122.9"/><line x1="90" y1="45" x2="1130" y2="45"/>
+  </g>
+  <g fill="#bcb7ae" font-family="Segoe UI, sans-serif" font-size="12" text-anchor="end">
+    <text x="80" y="594">0.00%</text><text x="80" y="516.1">0.25%</text><text x="80" y="438.3">0.50%</text>
+    <text x="80" y="360.4">0.75%</text><text x="80" y="282.6">1.00%</text><text x="80" y="204.7">1.25%</text>
+    <text x="80" y="126.9">1.50%</text><text x="80" y="49">1.75%</text>
+  </g>
+  <g fill="#bcb7ae" font-family="Segoe UI, sans-serif" font-size="12" text-anchor="middle">
+    <text x="90" y="612">0</text><text x="194" y="612">50</text><text x="298" y="612">100</text><text x="402" y="612">150</text>
+    <text x="506" y="612">200</text><text x="610" y="612">250</text><text x="714" y="612">300</text><text x="818" y="612">350</text>
+    <text x="922" y="612">400</text><text x="1026" y="612">450</text><text x="1130" y="612">500</text>
+  </g>
+  <line x1="90" y1="45" x2="90" y2="590" stroke="#777"/><line x1="90" y1="590" x2="1130" y2="590" stroke="#777"/>
+  <polyline fill="none" stroke="#d79a4b" stroke-width="3" stroke-linejoin="round" points="90.0,588.1 100.4,588.1 110.8,588.0 121.2,588.0 131.6,587.9 142.0,587.9 152.4,587.8 162.8,587.8 173.2,587.8 183.6,587.7 194.0,473.0 204.4,470.6 214.8,468.0 225.2,465.5 235.6,462.8 246.0,460.0 256.4,457.3 266.8,454.5 277.2,451.6 287.6,448.6 298.0,445.5 308.4,442.5 318.8,439.3 329.2,436.1 339.6,432.7 350.0,429.2 360.4,425.8 370.8,422.2 381.2,418.5 391.6,414.7 402.0,410.7 412.4,406.9 422.8,402.7 433.2,398.5 443.6,394.2 454.0,389.6 464.4,385.2 474.8,380.4 485.2,375.6 495.6,370.5 506.0,365.2 516.4,360.1 526.8,354.5 537.2,348.9 547.6,343.0 558.0,336.8 568.4,330.7 578.8,324.2 589.2,317.5 599.6,310.6 610.0,303.2 620.4,296.0 630.8,288.2 641.2,280.2 651.6,271.7 662.0,262.9 672.4,254.1 682.8,244.6 693.2,234.8 703.6,224.5 714.0,213.6 724.4,205.0 734.8,195.7 745.2,193.8 755.6,189.9 766.0,186.0 776.4,184.2 786.8,180.4 797.2,176.7 807.6,174.9 818.0,171.1 828.4,165.7 838.8,162.2 849.2,156.5 859.6,150.8 870.0,147.1 880.4,141.6 890.8,135.7 901.2,132.3 911.6,126.4 922.0,120.2 932.4,122.1 942.8,121.4 953.2,120.8 963.6,122.9 974.0,122.5 984.4,122.7 994.8,128.0 1005.2,131.1 1015.6,134.3 1026.0,137.6 1036.4,130.0 1046.8,131.1 1057.2,126.0 1067.6,127.3 1078.0,119.1 1088.4,121.0 1098.8,112.8 1109.2,114.7 1119.6,109.2 1130.0,111.3"/>
+  <line x1="194" y1="45" x2="194" y2="590" stroke="#6c9f6c" stroke-dasharray="5 5" opacity=".7"/>
+  <text x="202" y="570" fill="#8fc68f" font-family="Segoe UI, sans-serif" font-size="12">Lightbearer unlocks at 50</text>
+  <text x="610" y="650" text-anchor="middle" fill="#ddd7ce" font-family="Segoe UI, sans-serif" font-size="14">Raid level / invocation</text>
+  <text x="22" y="318" transform="rotate(-90 22 318)" text-anchor="middle" fill="#ddd7ce" font-family="Segoe UI, sans-serif" font-size="14">Chance per completed raid</text>
+  <text x="1130" y="675" text-anchor="end" fill="#777" font-family="Segoe UI, sans-serif" font-size="11">OSRS Wiki calculator formula · generated 2026-07-04</text>
+</svg>

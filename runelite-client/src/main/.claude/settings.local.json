@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(mvn -pl runelite-client -am package -DskipTests -q)",
+      "Bash(cmd /c \"cd C:\\\\Users\\\\Daniel\\\\Desktop\\\\Microbot && mvn -pl runelite-client -am package -DskipTests -q 2>&1 | tail -30\")",
+      "Bash(cmd /c \"cd C:\\\\Users\\\\Daniel\\\\Desktop\\\\Microbot && mvn -pl runelite-client -am package -DskipTests -q 2>&1 | tail -20\")"
+    ]
+  }
+}
