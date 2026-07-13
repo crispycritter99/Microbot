@@ -24,8 +24,11 @@ import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.grounditems.GroundItem;
 import net.runelite.client.plugins.microbot.util.grounditem.InteractModel;
+import net.runelite.client.plugins.microbot.util.grounditem.LootingParameters;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
+import net.runelite.client.plugins.microbot.util.grounditem.Rs2LootEngine;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.item.Rs2EnsouledHead;
@@ -60,10 +63,19 @@ import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 import static net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject.getAll;
+import static net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem.waitForGroundItemDespawn;
 import static net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory.items;
 
 
 public class FrostDragonKillerScript extends Script {
+    private static final Set<String> ELEMENTAL_RUNE_NAMES = Set.of(
+            "air rune", "water rune", "earth rune", "fire rune",
+            "mind rune", "body rune", "chaos rune", "death rune",
+            "cosmic rune", "nature rune", "law rune", "astral rune",
+            "blood rune", "soul rune", "wrath rune", "mist rune",
+            "dust rune", "smoke rune", "steam rune", "lava rune", "mud rune"
+    );
+
     public static boolean tentacle = false;
     NPC vorkath;
     private WorldPoint workingTile = null;
@@ -105,7 +117,7 @@ public class FrostDragonKillerScript extends Script {
                 if (!super.run()) return;
                 long startTime = System.currentTimeMillis();
                 if (Rs2Player.isInteracting()) return;
-                Rs2NpcModel frostDragon = Rs2Npc.getNpcByIndex(21933);
+                Rs2NpcModel frostDragon = Rs2Npc.getNpcByIndex(22065);
 
 
                 if (frostDragon!=null&&!frostDragon.isDead()&&frostDragon.getWorldLocation().distanceTo(Rs2Player.getWorldLocation())<8)
@@ -118,40 +130,26 @@ public class FrostDragonKillerScript extends Script {
                     return;}
 
                 if (Rs2Inventory.isFull()) return;
-                var nearbyItems = Rs2GroundItem.getAll(10);
-                    for (var item : nearbyItems) {
-                        if (shouldLoot(item.getItem().getName())) {
-                            double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
-                            double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                            sleep((int) value*400);
+                LootingParameters params = new LootingParameters(
+                        10,
+                        1,
+                        1,
+                        0,
+                        false,
+                        true,
+                        lootItems.toArray(new String[0])
+                );
 
-                            Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
-                            r = new Random();gaussian = r.nextGaussian();
-                            value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                            sleep((int) value*400);
-
-                            Rs2GroundItem.interact(item,"Cast");
-                            Rs2Inventory.waitForInventoryChanges(3000);
-                        }
-                    }
-
-
-
-                ;
-
-
-
-
-
-
-
-
-
-                
-
-
-
-
+                Rs2LootEngine.with(params)
+                        .withLootAction(this::telekineticGrab)
+                        .addCustom(
+                                "names",
+                                item -> shouldLoot(item.getName())
+                                        && !ELEMENTAL_RUNE_NAMES.contains(
+                                                item.getName().toLowerCase(Locale.ROOT).trim()),
+                                null
+                        )
+                        .loot();
 
                 long endTime = System.currentTimeMillis();
                 long totalTime = endTime - startTime;
@@ -161,6 +159,34 @@ public class FrostDragonKillerScript extends Script {
             }
         }, 0, 600, TimeUnit.MILLISECONDS);
         return true;
+    }
+
+    private void telekineticGrab(GroundItem item) {
+        if (item.getOwnership() != TileItem.OWNERSHIP_SELF) {
+            return;
+        }
+
+        double logMean = 0.05;
+        double logStd = 0.34;
+        Random random = new Random();
+        double gaussian = random.nextGaussian();
+        double value = Math.exp(logMean + logStd * gaussian);
+        sleep((int) value * 400);
+
+        Rs2Magic.cast(MagicAction.TELEKINETIC_GRAB);
+
+        random = new Random();
+        gaussian = random.nextGaussian();
+        value = Math.exp(logMean + logStd * gaussian);
+        sleep((int) value * 400);
+
+        if (item.getOwnership() != TileItem.OWNERSHIP_SELF) {
+            return;
+        }
+        waitForGroundItemDespawn(() -> Rs2GroundItem.interact(item.getName(), "Cast"), item);
+        ;
+//        Rs2Inventory.waitForInventoryChanges(3000);
+//        sleep(600);
     }
 
 

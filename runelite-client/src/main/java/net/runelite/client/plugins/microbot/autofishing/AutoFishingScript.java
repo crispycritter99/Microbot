@@ -9,6 +9,7 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.ObjectID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.autofishing.enums.AutoFishingState;
@@ -23,6 +24,7 @@ import net.runelite.client.plugins.microbot.util.depositbox.Rs2DepositBox;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
@@ -119,7 +121,7 @@ public class AutoFishingScript extends Script {
             fishingLocation = selectedFish.getClosestLocation(Rs2Player.getWorldLocation());
         }
         if (fishingLocation != null) {
-            Rs2Walker.walkTo(fishingLocation);
+            Rs2Walker.walkTo(fishingLocation,10);
         }
     }
 
@@ -217,7 +219,23 @@ public class AutoFishingScript extends Script {
         if (config.fishToCatch()==Fish.KARAMBWAN){
             if (Rs2DepositBox.walkToAndUseDepositBox(DepositBoxLocation.GEM_MINE)){
                 Rs2DepositBox.depositAll();
+                Widget emptyContainerWidget = Rs2Widget.findWidget("Empty containers", List.of(Rs2DepositBox.getDepositBoxWidget()), false);
                 sleep(600,300);
+                Rs2Widget.clickWidget(emptyContainerWidget);
+                sleep(600,300);
+                Rs2Keyboard.keyPress(KeyEvent.VK_ESCAPE);
+                sleep(600,300);
+                Rs2ItemModel rs2Item = Rs2Equipment.get(ItemID.SKILLCAPE_QP);
+//                Rs2Equipment.invokeMenu(rs2Item, "teleport");
+//                boolean done = false;
+//                long startTimeloop = System.currentTimeMillis();
+//                do {
+//                    done = Rs2GameObject.exists(29495);
+//
+//
+//                    sleep(100);
+//                } while (!done && System.currentTimeMillis() - startTimeloop < 5000);
+//                sleep(300,600);
             }
         }
         else

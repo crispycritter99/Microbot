@@ -39,10 +39,5 @@ public interface EntityOps
 	String getOp(int idx);
 
 	@Nullable
-	int getNumSubOps(int idx);
-
-	int getSubID(int idx, int subIdx);
-    EntityOps getSubOps(int idx);
-	@Nullable
-	String getSubOp(int idx, int subIdx);
+	EntityOps getSubOps(int idx);
 }

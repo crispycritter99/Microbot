@@ -126,7 +126,7 @@ public class Rs2DepositBox {
 //            sleep(200, 600);
 //            Rs2Widget.clickWidget(emptyContainerWidget);
 //        }
-        Rs2Inventory.waitForInventoryChanges(5000);
+        Rs2Inventory.waitForInventoryChanges(3000);
     }
 
     /**

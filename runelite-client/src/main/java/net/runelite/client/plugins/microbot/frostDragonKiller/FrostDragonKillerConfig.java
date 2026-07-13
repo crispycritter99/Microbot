@@ -16,6 +16,6 @@ public interface FrostDragonKillerConfig extends Config {
             position = 0
     )
     default String lootItems() {
-        return "bones, sheet, dra, run";
+        return "bones, sheet, dra, rune";
     }
 }
