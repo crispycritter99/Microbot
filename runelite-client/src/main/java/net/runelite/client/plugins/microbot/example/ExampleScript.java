@@ -379,17 +379,30 @@ public class ExampleScript extends Script {
 //                        Rs2Inventory.waitForInventoryChanges(2000);
 //                    }
 //                }
-                if (Rs2Player.isInteracting())return;
-                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
-                if (npc == null) return;
-                double LOG_MEAN = 0.25;
-                    double LOG_STD = 0.34;
-                    Random r = new Random();
-                    double gaussian = r.nextGaussian();
-                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                    sleep((int) value * 200);
-                Rs2Npc.interact(npc,"attack");
+                if (!Rs2Inventory.contains(1925)){
+                    shutdown();
+                    return;
+                }
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+                double LOG_MEAN = 1; double LOG_STD = 0.8;
+                Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value * 1000+2000);
+                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+
+                Rs2GameObject.interact(10048,"Chop");
                 sleep(600);
+//                if (Rs2Player.isInteracting())return;
+//                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
+//                if (npc == null) return;
+//                double LOG_MEAN = 0.25;
+//                    double LOG_STD = 0.34;
+//                    Random r = new Random();
+//                    double gaussian = r.nextGaussian();
+//                    double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                    sleep((int) value * 200);
+//                Rs2Npc.interact(npc,"attack");
+//                sleep(600);
 //                if (Rs2Inventory.isFull())
 //                {
 //                    Rs2Inventory.dropAll(false,"scimitar","bar","dagger","necklace");

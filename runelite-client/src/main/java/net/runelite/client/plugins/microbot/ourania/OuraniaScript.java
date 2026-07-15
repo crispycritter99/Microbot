@@ -155,7 +155,7 @@ public class OuraniaScript extends Script
 								Rs2Inventory.waitForInventoryChanges(1200);
 							}
 							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_CRACKED_CENTER_ALTAR).interact("craft-rune");
-							sleep(200,600);
+							sleep(400,800);
 						}
 //						Rs2Inventory.waitForInventoryChanges(5000);
 						break;
@@ -404,7 +404,7 @@ public class OuraniaScript extends Script
 									Rs2Camera.setPitch(randomPitch);
 									sleepUntil(() -> Rs2Camera.getPitch() == randomPitch);
 								}
-								if (Rs2Camera.getZoom() != 128)
+								if (Rs2Camera.getZoom() == 128)
 								{
 									Rs2Camera.setZoom(128);
 									sleepUntil(() -> Rs2Camera.getZoom() == 128);

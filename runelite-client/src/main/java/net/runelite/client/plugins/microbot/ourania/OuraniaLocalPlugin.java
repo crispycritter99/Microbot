@@ -21,6 +21,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerPlugin;
+import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.grandexchange.Rs2GrandExchange;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -31,6 +32,8 @@ import java.awt.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
 @PluginDescriptor(
 	name = PluginConstants.GMASON + "Ourania Altar Local",
@@ -80,7 +83,8 @@ public class OuraniaLocalPlugin extends Plugin
 		{
 			overlayManager.add(ouraniaOverlay);
 		}
-
+//		Rs2Camera.setZoom(128);
+//		sleepUntil(() -> Rs2Camera.getZoom() == 128);
 		ouraniaScript.run();
 	}
 
