@@ -45,7 +45,7 @@ public class Rs2GroundItem {
         return success;
     }
 
-    public static boolean interact(RS2Item rs2Item, String action) {
+    private static boolean interact(RS2Item rs2Item, String action) {
         if (rs2Item == null) return false;
         try {
             interact(new InteractModel(rs2Item.getTileItem().getId(), rs2Item.getTile().getWorldLocation(), rs2Item.getItem().getName()), action);
@@ -111,61 +111,17 @@ public class Rs2GroundItem {
             Rectangle bounds = canvas == null
                     ? new Rectangle(1, 1, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight())
                     : canvas.getBounds();
-            MenuAction selectedMenuAction = menuAction;
-            String selectedAction = action;
             int worldViewId = localPoint1.getWorldView();
-            Microbot.getClientThread().runOnClientThreadOptional(() -> {
-                MenuEntry entry = Microbot.getClient().getMenu().createMenuEntry(-1)
-                        .setOption(selectedAction)
-                        .setTarget(target)
-                        .setIdentifier(identifier)
-                        .setType(selectedMenuAction)
-                        .setParam0(param0)
-                        .setParam1(param1)
-                        .setItemId(-1)
-                        .setWorldViewId(worldViewId);
-                Microbot.getClient().setMenuEntries(new MenuEntry[]{entry});
-                return true;
-            });
-
-            if (localPoint1 != null) {
-
-                if (canvas != null) {
-                    Microbot.doInvoke(new NewMenuEntry()
-                                    .option(action)
-                                    .param0(param0)
-                                    .param1(param1)
-                                    .opcode(menuAction.getId())
-                                    .identifier(identifier)
-                                    .itemId(-1)
-                                    .target(target)
-                            ,
-                            canvas.getBounds());
-                }
-            } else {
-                Microbot.doInvoke(new NewMenuEntry()
-                                .option(action)
-                                .param0(param0)
-                                .param1(param1)
-                                .opcode(menuAction.getId())
-                                .identifier(identifier)
-                                .itemId(-1)
-                                .target(target)
-                        ,
-                        new Rectangle(1, 1, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
-
-            }
-//            Rs2Reflection.invokeMenu(
-//                    param0,
-//                    param1,
-//                    menuAction.getId(),
-//                    identifier,
-//                    -1,
-//                    worldViewId,
-//                    action,
-//                    target,
-//                    (int) bounds.getCenterX(),
-//                    (int) bounds.getCenterY());
+            Microbot.doInvoke(new NewMenuEntry()
+                            .option(action)
+                            .target(target)
+                            .identifier(identifier)
+                            .opcode(menuAction.getId())
+                            .param0(param0)
+                            .param1(param1)
+                            .itemId(-1)
+                            .worldViewId(worldViewId),
+                    bounds);
             return true;
         } catch (Exception ex) {
             Microbot.logStackTrace("Rs2GroundItem", ex);
