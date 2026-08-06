@@ -106,7 +106,8 @@ public class AutoCookingScript extends Script {
                                 Rs2Camera.turnTo(cookingObject.getLocalLocation());
                                 return;
                             }
-                            Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
+                            cookingObject.click("Cook");
+//                            Rs2Inventory.useItemOnObject(cookingItem.getRawItemID(), cookingObject.getId());
 
                             boolean productionWidgetOpen = Rs2Widget.isProductionWidgetOpen();
                             if (!productionWidgetOpen) {

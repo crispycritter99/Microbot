@@ -28,6 +28,7 @@ public enum HerblorePotion {
     EXTENDED_ANTI_VENOM_PLUS("Extended anti-venom+ potion", 94, ItemID.ANTIVENOM_4, ItemID.ARAXYTE_VENOM_SACK),
     EXTENDED_ANTIFIRE("Extended antifire potion", 84, ItemID._4DOSE1ANTIDRAGON, ItemID.LAVA_SHARD),
     EXTENDED_SUPER_ANTIFIRE("Extended super antifire potion", 98, ItemID._4DOSE3ANTIDRAGON, ItemID.LAVA_SHARD),
+    EXTREME_ENERGY("Extreme energy potion",66, ItemID._4DOSE2ENERGY, ItemID.YELLOW_FIN),
     FISHING("Fishing potion", 50, ItemID.AVANTOEVIAL, ItemID.SNAPE_GRASS),
     HUNTER("Hunter potion", 53, ItemID.AVANTOEVIAL, ItemID.HUNTINGBEAST_SABRETEETH_DUST),
     MAGIC("Magic potion", 76, ItemID.LANTADYMEVIAL, ItemID.CACTUS_POTATO),

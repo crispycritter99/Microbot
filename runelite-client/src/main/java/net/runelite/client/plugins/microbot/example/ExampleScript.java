@@ -150,24 +150,7 @@ public class ExampleScript extends Script {
 //                System.out.println(Rs2Widget.getWidget(12582913));
 //               System.out.println(Rs2DepositBox.getItemWidget(gem.getSlot()).getOriginalX());
 //                Rs2DepositBox.invokeMenu(6, gem);
-//                    TileObject fung = Rs2GameObject.get("Fairy ring");
-//                ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fung);
-                ;
-
-//                var ops=composition.getOps();
-//                int opIdx = 3;
-//                int numSubOps = ops.getNumSubOps(3);
-//        for (int subIdx = 0; subIdx < numSubOps; subIdx++)
-//        {
-//            String subOp = ops.getSubOp(opIdx, subIdx);
-//            if (subOp == null) continue;
-////            assert subOp != null;
-//            if (subOp.contains("DJR"))
-//            {
-//                int subID = ops.getSubID(opIdx, subIdx);
-//                System.out.println(95031+65536*(subID));
-//
-//            }
+//                (Rs2Player.getInteracting()!=null&&Rs2Player.getInteracting().getAnimation()==14050)
 //        }
 //                Rs2GameObject.clickObject(fung,"Favourites","DJR");
 //                shutdown();
@@ -378,20 +361,24 @@ public class ExampleScript extends Script {
 //                        Rs2Keyboard.keyPress('3');
 //                        Rs2Inventory.waitForInventoryChanges(2000);
 //                    }
-//                }
-                if (!Rs2Inventory.contains(1925)){
-                    shutdown();
-                    return;
-                }
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
-                double LOG_MEAN = 1; double LOG_STD = 0.8;
-                Random r = new Random();double gaussian = r.nextGaussian();
-                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-                sleep((int) value * 1000+2000);
-                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
 
-                Rs2GameObject.interact(10048,"Chop");
-                sleep(600);
+//                }
+
+//                if (!Rs2Inventory.contains(1925)){
+//                    shutdown();
+//                    return;
+//                }
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//                double LOG_MEAN = 1; double LOG_STD = 0.8;
+//                Random r = new Random();double gaussian = r.nextGaussian();
+//                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+//                sleep((int) value * 1000+2000);
+//                if (Rs2Player.isAnimating(6500)||Rs2Player.isMoving()) return;
+//
+//                Rs2GameObject.interact(10048,"Chop");
+//                sleep(600);
+
+
 //                if (Rs2Player.isInteracting())return;
 //                Rs2NpcModel npc = Rs2Npc.getAttackableNpcs("kalphite worker").findFirst().orElse(null);
 //                if (npc == null) return;
