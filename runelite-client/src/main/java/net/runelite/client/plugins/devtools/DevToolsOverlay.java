@@ -25,6 +25,30 @@
  */
 package net.runelite.client.plugins.devtools;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Shape;
+import java.util.Arrays;
+import java.util.Set;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import net.runelite.api.Animation;
+import net.runelite.api.CameraFocusableEntity;
+import net.runelite.api.Client;
+import net.runelite.api.Constants;
+import net.runelite.api.DecorativeObject;
+import net.runelite.api.DynamicObject;
+import net.runelite.api.GameObject;
+import net.runelite.api.GraphicsObject;
+import net.runelite.api.ItemLayer;
+import net.runelite.api.NPC;
+import net.runelite.api.NPCComposition;
+import net.runelite.api.Node;
+import net.runelite.api.Perspective;
+import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
@@ -85,24 +109,28 @@ class DevToolsOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D graphics) {
 
-        WorldView tlwv = client.getTopLevelWorldView();
-        WorldView playerWv = client.getLocalPlayer().getWorldView();
+        CameraFocusableEntity cameraFocusable = client.getCameraFocusEntity();
+		if (cameraFocusable == null)
+		{
+			return null;
+		}WorldView tlwv = client.getTopLevelWorldView();
+        WorldView cameraFocusWv = cameraFocusable.getWorldView();
 
         graphics.setFont(FONT);
 
         if (plugin.getPlayers().isActive()) {
             renderPlayers(tlwv, graphics);
-            if (playerWv != tlwv)
+            if (cameraFocusWv != tlwv)
             {
-                renderPlayers(playerWv, graphics);
+                renderPlayers(cameraFocusWv, graphics);
             }
         }
 
         if (plugin.getNpcs().isActive()) {
             renderNpcs(tlwv, graphics);
-            if (playerWv != tlwv)
+            if (cameraFocusWv != tlwv)
             {
-                renderNpcs(playerWv, graphics);
+                renderNpcs(cameraFocusWv, graphics);
             }
         }
 
@@ -117,9 +145,9 @@ class DevToolsOverlay extends Overlay {
         if (plugin.getGroundItems().isActive() || plugin.getGroundObjects().isActive() || plugin.getGameObjects().isActive() || plugin.getWalls().isActive() || plugin.getDecorations().isActive() || plugin.getTileLocation().isActive() || plugin.getMovementFlags().isActive())
         {
             renderTileObjects(tlwv, graphics);
-            if (playerWv != tlwv)
+            if (cameraFocusWv != tlwv)
             {
-                renderTileObjects(playerWv, graphics);
+                renderTileObjects(cameraFocusWv, graphics);
             }
         }
 
@@ -130,18 +158,18 @@ class DevToolsOverlay extends Overlay {
         if (plugin.getGraphicsObjects().isActive())
         {
             renderGraphicsObjects(tlwv, graphics);
-            if (playerWv != tlwv)
+            if (cameraFocusWv != tlwv)
             {
-                renderGraphicsObjects(playerWv, graphics);
+                renderGraphicsObjects(cameraFocusWv, graphics);
             }
         }
 
         if (plugin.getTileFlags().isActive())
         {
             renderTileFlags(tlwv, graphics);
-            if (playerWv != tlwv)
+            if (cameraFocusWv != tlwv)
             {
-                renderTileFlags(playerWv, graphics);
+                renderTileFlags(cameraFocusWv, graphics);
             }
         }
 
@@ -207,9 +235,10 @@ class DevToolsOverlay extends Overlay {
 			}
 		}
 
-        String text = local.getName() + " (A: " + local.getAnimation() + ") (P: " + local.getPoseAnimation() + ") (G: " + local.getGraphic() + ")";
+        if (local != null)
+		{String text = local.getName() + " (A: " + local.getAnimation() + ") (P: " + local.getPoseAnimation() + ") (G: " + local.getGraphic() + ")";
         OverlayUtil.renderActorOverlay(graphics, local, text, CYAN);
-    }
+    }}
 
 	private void renderNpcs(WorldView wv, Graphics2D graphics)
 	{

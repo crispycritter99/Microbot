@@ -25,6 +25,15 @@
  */
 package net.runelite.client.plugins.agility;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Polygon;
+import java.awt.Shape;
+import java.util.List;
+import java.util.Set;
+import javax.inject.Inject;
+import net.runelite.api.CameraFocusableEntity;
 import net.runelite.api.Client;
 import net.runelite.api.NPC;
 import net.runelite.api.Point;
@@ -66,7 +75,13 @@ class AgilityOverlay extends Overlay
 	@Override
 	public Dimension render(Graphics2D graphics)
 	{
-		LocalPoint playerLocation = client.getLocalPlayer().getLocalLocation();
+		CameraFocusableEntity cameraFocus = client.getCameraFocusEntity();
+		if (cameraFocus == null)
+		{
+			return null;
+		}
+
+		LocalPoint playerLocation = cameraFocus.getCameraFocus();
 		Point mousePosition = client.getMouseCanvasPosition();
 		final List<RS2Item> marksOfGrace = plugin.getMarksOfGrace();
 		final Tile stickTile = plugin.getStickTile();
