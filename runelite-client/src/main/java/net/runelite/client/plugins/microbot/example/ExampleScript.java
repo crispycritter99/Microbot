@@ -134,7 +134,16 @@ public class ExampleScript extends Script {
 ////                        TotalLootValue += gePrice == -1 ? item.getItem().getPrice() * item.getTileItem().getQuantity() : gePrice * item.getTileItem().getQuantity();
 //                    }
 
+                ObjectComposition composition = Rs2GameObject.convertToObjectComposition(Rs2GameObject.getGameObject(29495));
+//                composition.getOps().getSubOps();
 
+                System.out.println(95031+65536*(3-1));
+                System.out.println(composition.getOps().getOp(3));
+                System.out.println(composition.getOps().getSubOps(3).getOp(2).toString());
+                System.out.println(composition.getOps().getSubOps(3).getNumOps());
+
+
+                shutdown();
 
 //                shutdown();
 //                }

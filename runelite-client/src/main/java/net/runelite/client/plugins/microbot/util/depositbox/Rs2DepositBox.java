@@ -569,15 +569,27 @@ public class Rs2DepositBox {
      */
     public static boolean walkToAndUseDepositBox(DepositBoxLocation depositBoxLocation) {
         if (isOpen()) return true;
+        if (depositBoxLocation == null) return false;
+
         Rs2Player.toggleRunEnergy(true);
         Microbot.status = "Walking to nearest deposit box " + depositBoxLocation.name();
-        boolean result = depositBoxLocation.getWorldPoint().distanceTo(Rs2Player.getWorldLocation()) <= 8;
-        if (result) {
-            return openDepositBox();
-        } else {
-            Rs2Walker.walkTo(depositBoxLocation.getWorldPoint());
+
+        boolean depositBoxReady = Rs2Walker.walkUntil(
+                depositBoxLocation.getWorldPoint(),
+                5,
+                () -> {
+                    GameObject depositBox = Rs2GameObject.findDepositBox(8);
+                    return depositBox != null
+                            && Rs2GameObject.canWalkTo(depositBox, 8);
+                });
+
+        if (!depositBoxReady) {
+            return false;
         }
-        return false;
+        double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+        sleep((int) value*200);
+        return openDepositBox();
     }
 
     /**

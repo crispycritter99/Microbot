@@ -178,6 +178,7 @@ public class Rs2Walker {
     // Do not let the transport handler turn that future edge into a long movement command:
     // normal route clicks own the approach, then the handler takes over beside the origin.
     private static final int RAW_TRANSPORT_DISPATCH_MAX_DISTANCE = 2;
+    private static final int FAIRY_RING_DISPATCH_MAX_DISTANCE = 15;
     private static final int QUETZAL_MAP_VISIBLE_WAIT_MS = 7_000;
     private static final int QUETZAL_ICON_READY_WAIT_MS = 3_000;
     private static final int FINAL_ADJACENT_CANVAS_NUDGE_CHEBYSHEV = 1;
@@ -5044,17 +5045,21 @@ public class Rs2Walker {
         try {
             for (int i = start; i < endExclusive; i++) {
                 WorldPoint currentWorldPoint = rawPath.get(i);
+                int transportDispatchDistance = getRawTransportDispatchMaxDistance(rawPath, i);
+                int effectiveHandlerRange = allowTransportHandlers
+                        ? Math.max(handlerRange, transportDispatchDistance)
+                        : handlerRange;
                 if (currentWorldPoint == null
                         || currentWorldPoint.getPlane() != playerLoc.getPlane()
-                        || currentWorldPoint.distanceTo2D(playerLoc) > handlerRange) {
+                        || currentWorldPoint.distanceTo2D(playerLoc) > effectiveHandlerRange) {
                     continue;
                 }
                 scannedIdx++;
 
-                if (allowTransportHandlers
+                    if (allowTransportHandlers
                         && hasExplicitTransportStep(rawPath, i)
                         && isRawTransportOriginNearPlayer(
-                        rawPath, i, playerLoc, RAW_TRANSPORT_DISPATCH_MAX_DISTANCE)) {
+                        rawPath, i, playerLoc, transportDispatchDistance)) {
                     WorldPoint before = Rs2Player.getWorldLocation();
                     WorldPoint expectedDestination = i + 1 < rawPath.size() ? rawPath.get(i + 1) : null;
                     long t = System.currentTimeMillis();
@@ -8976,7 +8981,7 @@ public class Rs2Walker {
         for (int ri = rawFrom; ri < rawTo && ri < rawPath.size() - 1; ri++) {
             WorldPoint playerLoc = Rs2Player.getWorldLocation();
             if (!isRawTransportOriginNearPlayer(
-                    rawPath, ri, playerLoc, RAW_TRANSPORT_DISPATCH_MAX_DISTANCE)) {
+                    rawPath, ri, playerLoc, getRawTransportDispatchMaxDistance(rawPath, ri))) {
                 continue;
             }
             if (handleTransports(rawPath, ri)) {
@@ -8984,6 +8989,26 @@ public class Rs2Walker {
             }
         }
         return false;
+    }
+
+    static int getRawTransportDispatchMaxDistance(List<WorldPoint> rawPath, int transportIndex) {
+        if (rawPath == null || transportIndex < 0 || transportIndex >= rawPath.size() - 1) {
+            return RAW_TRANSPORT_DISPATCH_MAX_DISTANCE;
+        }
+
+        WorldPoint origin = rawPath.get(transportIndex);
+        WorldPoint destination = rawPath.get(transportIndex + 1);
+        if (origin == null || destination == null) {
+            return RAW_TRANSPORT_DISPATCH_MAX_DISTANCE;
+        }
+        Set<Transport> transports = Rs2PathApi.getTransports().get(origin);
+        if (transports != null && transports.stream().anyMatch(transport ->
+                transport.getType() == TransportType.FAIRY_RING
+                        && Objects.equals(transport.getDestination(), destination))) {
+            return FAIRY_RING_DISPATCH_MAX_DISTANCE;
+        }
+
+        return RAW_TRANSPORT_DISPATCH_MAX_DISTANCE;
     }
 
     static boolean isRawTransportOriginNearPlayer(List<WorldPoint> rawPath,
@@ -10895,7 +10920,8 @@ public class Rs2Walker {
         TileObject fairyRingObject = PohTeleports.isInHouse() ? PohTeleports.getFairyRings() : Rs2GameObject.getAll(o -> Objects.equals(o.getWorldLocation(), transport.getOrigin())).stream().findFirst().orElse(null);
         if (fairyRingObject == null) return false;
 
-        if (!PohTeleports.isInHouse() && !Rs2GameObject.canWalkTo(fairyRingObject, 25)) return false;
+        if (!PohTeleports.isInHouse()
+                && !Rs2GameObject.canWalkTo(fairyRingObject, FAIRY_RING_DISPATCH_MAX_DISTANCE)) return false;
 
         boolean hasLumbridgeElite = Microbot.getVarbitValue(VarbitID.LUMBRIDGE_DIARY_ELITE_COMPLETE) == 1;
 
@@ -10917,33 +10943,41 @@ public class Rs2Walker {
             }
         }
 
-        String lastDestinationAction = "last-destination (" + transport.getDisplayInfo() + ")";
+        String lastDestinationAction = "Last-destination (" + transport.getDisplayInfo() + ")";
         String treeLastDestinationAction = "Ring-last-destination (" + transport.getDisplayInfo() + ")";
         ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
         log.info("Interacting with Fairy Ring @ {}", fairyRingObject.getWorldLocation());
+        log.info(lastDestinationAction);
+        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, true)+"");
+        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, false)+"");
+        final var ops=composition.getOps();
+        int opIdx = 3;
 
-//        final var ops=composition.getOps();
-//        int opIdx = 3;
-//        int numSubOps = ops.getNumSubOps(3);
-//        int identifiervalue = -1;
-//        for (int subIdx = 0; subIdx < numSubOps; subIdx++)
-//        {
-//            String subOp = ops.getSubOp(opIdx, subIdx);
-//            if (subOp == null) continue;
-////            assert subOp != null;
-//            if (subOp.contains(transport.getDisplayInfo()))
-//            {
-//                int subID = ops.getSubID(opIdx, subIdx);
-//                identifiervalue = 95031+65536*(subID-1);
-//                System.out.println(95031+65536*(subID-1));
-//
-//            }
-//        }
+        int identifiervalue = -1;
+        for (int subIdx = 0; subIdx < 4; subIdx++) {
+//            System.out.println("hey");
+            EntityOps subOp = ops.getSubOps(subIdx);
+            if (subOp == null) continue;
+            for (int Op = 1; Op < composition.getOps().getSubOps(opIdx).getNumOps() + 1; Op++) {
+//            assert subOp != null;
+                System.out.println(subOp.getSubOps(opIdx));
+                if (subOp.getSubOps(Op) != null){
+                    System.out.println(subOp.getSubOps(Op).getOp(opIdx).toString());
+                }
+//                if(subOp.getSubOps(opIdx)==null) {continue;}
+                if (subOp.getSubOps(opIdx) != null && subOp.getSubOps(Op).getOp(opIdx).toString().contains(transport.getDisplayInfo())) {
+                    int subID = Op;
+                    identifiervalue = 95031 + 65536 * (subID - 1);
+                    System.out.println(95031 + 65536 * (subID - 1));
+
+                }
+            }
+        }
         // we can use the last-destination to handle fairy rings
-//        if (identifiervalue !=-1&&Rs2GameObject.hasAction(composition, "Favourites", true)){
-//            Rs2GameObject.clickObject(fairyRingObject, "Favourites",transport.getDisplayInfo());
-//        }
-        if (Rs2GameObject.hasAction(composition, lastDestinationAction, true)) {
+        if (identifiervalue !=-1&&Rs2GameObject.hasAction(composition, "Favourites", true)){
+            Rs2GameObject.clickObject(fairyRingObject, "Favourites",transport.getDisplayInfo());
+        }
+        else if (composition.getOps().getOp(2).contains(lastDestinationAction)) {
             Rs2GameObject.interact(fairyRingObject, lastDestinationAction);
         } else if (Rs2GameObject.hasAction(composition, treeLastDestinationAction, true)) {
             Rs2GameObject.interact(fairyRingObject, treeLastDestinationAction);
@@ -10954,7 +10988,9 @@ public class Rs2Walker {
             } else if (Rs2GameObject.hasAction(composition, "Ring-configure", true)) {
                 Rs2GameObject.interact(fairyRingObject, "Ring-configure");
             }
-            sleepUntil(() -> !Rs2Player.isMoving() && !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 10000);
+            sleepUntil(() -> Rs2Player.isMoving()
+                    || !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 2000);
+            sleepUntil(() -> !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 15000);
 
             if (Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON)) {
                 log.warn("Fairy ring interface did not open (interrupted by combat?). Retrying next iteration.");
