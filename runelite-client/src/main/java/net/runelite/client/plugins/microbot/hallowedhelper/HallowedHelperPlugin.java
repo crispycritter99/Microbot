@@ -17,6 +17,7 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.npc.Rs2Npc;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
@@ -26,7 +27,6 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.*;
-import java.util.stream.Collectors;
 
 //        name = "<html>Hallowed <font size=\"\" color=\"red\"<b>BETA</font></b></html>",
 @PluginDescriptor(
@@ -519,51 +519,12 @@ public class HallowedHelperPlugin extends Plugin {
 
     private void locateSepulchreGameObjects()
     {
-    //    final LocatableQueryResults<GameObject> locatableQueryResults = new GameObjectQuery().result(client);
-
-        List<Tile> tilesList = new ArrayList<>();
-        Scene scene = client.getTopLevelWorldView().getScene();
-        Tile[][][] tiles = scene.getTiles();
-        int z = client.getTopLevelWorldView().getPlane();
-        for (int x = 0; x < Constants.SCENE_SIZE;x++)
-        {
-            for (int y = 0; y < Constants.SCENE_SIZE;y++)
-            {
-                Tile tile = tiles[z][x][y];
-                if (tile == null)
-                {
-                    continue;
-                }
-                tilesList.add(tile);
-            }
-        }
-
-        Collection<GameObject> gameObjs = new ArrayList<>();
-        for (Tile tile : tilesList)
-        {
-            GameObject[] gameObjects = tile.getGameObjects();
-            if (gameObjects != null)
-            {
-                gameObjs.addAll(Arrays.asList(gameObjects));
-            }
-        }
-
-        Collection<GameObject> gameResults = gameObjs.stream().filter(Objects::nonNull).distinct().collect(Collectors.toList());
-
-        for (final GameObject gameObject : gameResults)
+        for (final GameObject gameObject : Rs2GameObject.getGameObjects())
         {
             addGameObject(gameObject);
         }
 
-    //    final LocatableQueryResults<GroundObject> groundObjectResults = new GroundObjectQuery().result(client);
-
-        Collection<GroundObject> groundObjs = new ArrayList<>();
-        for (Tile tile : tilesList)
-        {
-            groundObjs.add(tile.getGroundObject());
-        }
-
-        for (final GroundObject groundObject : groundObjs)
+        for (final GroundObject groundObject : Rs2GameObject.getGroundObjects())
         {
             addGroundObject(groundObject);
         }

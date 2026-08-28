@@ -175,7 +175,7 @@ public enum FishingSpotLocation
 		new WorldPoint(1253, 3542, 0)),
 	MUDSKIPPER_POINT(FishingSpot.SHRIMP,
 		new WorldPoint(2995, 3158, 0), new WorldPoint(2985, 3176, 0)),
-	MUDSKIPPER_SOUND(FishingSpot.KARAMBWAN, new WorldPoint(2891, 3134, 0)),
+	MUDSKIPPER_SOUND(FishingSpot.KARAMBWAIN, new WorldPoint(2891, 3134, 0)),
 	MUSA_POINT(new FishingSpot[]{FishingSpot.LOBSTER, FishingSpot.SHRIMP}, new WorldPoint(2925, 3179, 0)),
 	MYTHS_GUILD_NORTH(FishingSpot.LOBSTER, new WorldPoint(2456, 2893, 0)),
 	OBSERVATORY_EAST(FishingSpot.SALMON, new WorldPoint(2466, 3151, 0)),

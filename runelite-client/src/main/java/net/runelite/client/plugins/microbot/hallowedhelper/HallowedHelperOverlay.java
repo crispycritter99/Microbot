@@ -217,6 +217,7 @@ class HallowedHelperOverlay extends Overlay
         currentpoint = 1;
         boolean unreachable = client.getLocalPlayer().getLocalLocation().getX() > 7359 && plugin.floor4_fire_rotation > 2;
         if(plugin.Floor4WizardBottom1 != null) {
+
             w = plugin.Floor4WizardBottom1.getWorldLocation();
             w = new WorldPoint(w.getX() + 1, w.getY() + 1, w.getPlane());
             ArrayList<Color> rotation = Rotation.floor4_rotations_north.get(plugin.floor4_fire_rotation - 1);
@@ -1476,28 +1477,38 @@ class HallowedHelperOverlay extends Overlay
                     }
                 }
 
-                String overlaytext = "";
+                String tickText = null;
                 int diffrenceinticks = Math.abs(ticks - maxTick);
                 int ticksuntillunsafe = -1;
-                if(config.ShowValues()) {
-                    OverlayUtil.renderTileOverlay(graphics, statue.getGameObject(), statue.getTicksUntilNextAnimation() + "/" + maxTick, color);
+                if(config.ShowValues())
+                {
+                    tickText = ticks + "/" + maxTick;
                 }
                 else
                 {
-                    if(ticks > 0) {
-                        if(config.ShowFireTickCounter()) {
-                            overlaytext = "" + ticks;
+                    if(ticks > 0)
+                    {
+                        if(config.ShowFireTickCounter())
+                        {
+                            tickText = Integer.toString(ticks);
                         }
                     }
                     else
                     {
                         ticksuntillunsafe = Math.abs(ticks - maxTick);
-                        if(config.ShowReversedFireTickCounter()) {
-                            overlaytext = "(" + ticksuntillunsafe + ")";
+                        if(config.ShowReversedFireTickCounter())
+                        {
+                            tickText = "(" + ticksuntillunsafe + ")";
                         }
                     }
                 }
-                renderLine(gameObject, graphics, color, diffrenceinticks, ticksuntillunsafe, overlaytext);
+
+                if (tickText != null)
+                {
+                    OverlayUtil.renderTileOverlay(graphics, gameObject, tickText, color);
+                }
+
+                renderLine(gameObject, graphics, color, diffrenceinticks, ticksuntillunsafe, "");
             }
         }
     }
