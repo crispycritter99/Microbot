@@ -588,7 +588,7 @@ public class Rs2DepositBox {
         }
         double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
         double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-        sleep((int) value*200);
+        sleep((int) value*400);
         return openDepositBox();
     }
 

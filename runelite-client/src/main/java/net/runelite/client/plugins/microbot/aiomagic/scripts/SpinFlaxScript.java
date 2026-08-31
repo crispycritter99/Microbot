@@ -17,6 +17,7 @@ import net.runelite.client.plugins.microbot.util.magic.Runes;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 
 import javax.inject.Inject;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class SpinFlaxScript extends Script {
@@ -129,6 +130,10 @@ public class SpinFlaxScript extends Script {
                             break;
                         }
                         Rs2Player.waitForXpDrop(Skill.MAGIC, 10000, false);
+                        double LOG_MEAN = 0.05; double LOG_STD = 0.34;
+                        Random r = new Random();double gaussian = r.nextGaussian();
+                        double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                        sleep((int) value*200);
                         castsDone++;
                         break;
                 }

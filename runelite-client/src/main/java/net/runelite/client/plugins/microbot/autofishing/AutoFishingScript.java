@@ -33,10 +33,7 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import java.awt.event.KeyEvent;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -218,6 +215,9 @@ public class AutoFishingScript extends Script {
         boolean isBarbFishing=(Rs2Bank.getNearestBank()== BankLocation.MOUNT_QUIDAMORTEM&&config.fishToCatch()==Fish.BARBARIAN_FISH);
         if (config.fishToCatch()==Fish.KARAMBWAN){
             if (Rs2DepositBox.walkToAndUseDepositBox(DepositBoxLocation.GEM_MINE)){
+                double LOG_MEAN = 0.05; double LOG_STD = 0.34;Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value*400);
                 Rs2DepositBox.depositAll();
                 Widget emptyContainerWidget = Rs2Widget.findWidget("Empty containers", List.of(Rs2DepositBox.getDepositBoxWidget()), false);
                 sleep(600,300);

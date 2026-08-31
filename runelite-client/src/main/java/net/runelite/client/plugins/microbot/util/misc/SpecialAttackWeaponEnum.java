@@ -18,7 +18,7 @@ public enum SpecialAttackWeaponEnum {
     BARRELCHEST_ANCHOR("barrelchest anchor", 500, true),
     BONE_DAGGER("bone dagger", 750, false),
     BRINE_SABRE("brine sabre", 750, false),
-    BURNING_CLAWS("burning claws", 300, true),
+    BURNING_CLAWS("burning claws", 350, true),
     CRYSTAL_AXE("crystal axe", 1000, false),
     CRYSTAL_FELLING_AXE("crystal felling axe", 1000, false),
     CRYSTAL_HALBERD("crystal halberd", 300, true),
