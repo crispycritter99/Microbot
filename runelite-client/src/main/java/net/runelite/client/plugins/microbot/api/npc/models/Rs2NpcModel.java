@@ -13,7 +13,6 @@ import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
-import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.walker.recovery.CantReachTargetRecovery;
 
@@ -208,11 +207,15 @@ public class Rs2NpcModel extends Rs2ActorModel implements IEntity
                         log.error("Error interacting with NPC '{}' for action '{}': WorldPoint is null", npcName, action);
                         return false;
                     }
-                    CantReachTargetRecovery.walkTo(
-                            Rs2Tile.getNearestWalkableTileWithLineOfSight(npcWorldPoint), 0);
-                    Microbot.pauseAllScripts.compareAndSet(true, false);
                     Microbot.cantReachTargetRetries++;
-                    return false;
+                    if (CantReachTargetRecovery.walkTo(npcWorldPoint, 2)) {
+                        Microbot.pauseAllScripts.compareAndSet(true, false);
+                        Microbot.cantReachTarget = false;
+                        Microbot.cantReachTargetRetries = 0;
+                        // fall through and click from beside it
+                    } else {
+                        return false;
+                    }
                 } else {
                     Microbot.pauseAllScripts.compareAndSet(true, false);
                     Microbot.cantReachTarget = false;

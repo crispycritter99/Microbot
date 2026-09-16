@@ -1246,8 +1246,8 @@ final class Rs2WalkerMovement {
     }
 
     static boolean clearInterimTargetIfReachedOrExpired(WorldPoint playerLoc,
-                                                                List<WorldPoint> path,
-                                                                long nowMs) {
+                                                                 List<WorldPoint> path,
+                                                                 long nowMs) {
         WorldPoint interim = routeState.interimTargetWp;
         recordInterimDistanceProgress(interim, playerLoc, nowMs);
         if (interim != null && path != null && !path.isEmpty()) {
@@ -1281,6 +1281,12 @@ final class Rs2WalkerMovement {
         }
         clearInterimTarget(reason);
         return true;
+    }
+
+    static boolean shouldYieldForInterimCheckpoint(List<WorldPoint> path) {
+        return routeState.interimTargetWp != null
+                && !clearInterimTargetIfReachedOrExpired(
+                        Rs2Player.getWorldLocation(), path, System.currentTimeMillis());
     }
 
     static boolean shouldYieldForActiveRecoveryInterim(WorldPoint interim,

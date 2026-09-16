@@ -39,6 +39,7 @@ import net.runelite.client.plugins.microbot.util.security.LoginManager;
 import net.runelite.client.config.ConfigProfile;
 import net.runelite.client.plugins.microbot.util.settings.Rs2Settings;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
+import net.runelite.client.plugins.microbot.util.walker.Rs2InteractionApproach;
 import net.runelite.client.plugins.microbot.util.walker.Rs2PathApi;
 import net.runelite.client.plugins.microbot.util.walker.Rs2RouteRequest;
 import net.runelite.client.plugins.microbot.util.walker.Rs2RouteResult;
@@ -3545,9 +3546,13 @@ public class Rs2Bank {
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             TileObject[] candidates = {Rs2GameObject.findBank(), Rs2GameObject.findGrandExchangeBooth()};
             for (TileObject candidate : candidates) {
-                if (candidate instanceof GameObject
+                boolean ready = candidate instanceof GameObject
+                        ? Rs2InteractionApproach.isReady((GameObject) candidate)
+                        : candidate instanceof WallObject
+                                && Rs2InteractionApproach.isReady((WallObject) candidate);
+                if (candidate != null
                         && candidate.getWorldLocation().distanceTo(bankLocation.getWorldPoint()) <= 12
-                        && net.runelite.client.plugins.microbot.util.walker.Rs2InteractionApproach.isReady((GameObject) candidate)) {
+                        && ready) {
                     return candidate;
                 }
             }
