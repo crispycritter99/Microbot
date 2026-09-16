@@ -30,9 +30,9 @@ public final class Rs2InteractionApproach {
 
     public static boolean isReady(WallObject object) {
         if (object == null) return false;
+        WorldPoint target = object.getWorldLocation();
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             WorldPoint player = Rs2Player.getWorldLocation();
-            WorldPoint target = object.getWorldLocation();
             if (!withinRange(player, target)
                     || !Rs2Camera.isTileOnScreen(object)) return false;
             return hasReachableWallApproach(
