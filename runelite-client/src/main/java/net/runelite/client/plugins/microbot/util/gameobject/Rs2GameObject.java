@@ -22,6 +22,7 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.util.walker.recovery.CantReachTargetRecovery;
 import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nullable;
@@ -1777,14 +1778,16 @@ public class Rs2GameObject {
 
     public static boolean clickObject(TileObject object, String action) {
         if (object == null) return false;
-        if (Microbot.isCantReachTargetDetectionEnabled && Microbot.cantReachTarget) {
+        if (CantReachTargetRecovery.shouldStart(
+                Microbot.isCantReachTargetDetectionEnabled, Microbot.cantReachTarget)) {
             // The game said "I can't reach that!" on the previous interaction — something solid sits
             // between us and the target, most often a shut door. The walker is the only recovery
             // that opens doors; its arrival check requires a standable tile BESIDE an unwalkable
             // target, which is exactly the reachability proof a follow-up click needs. LOS is
             // deliberately not consulted: solid objects fail line-of-sight from everywhere
             // (docs/entity-guides), which is how the old opt-in checkCanReach path deadlocked.
-            if (Microbot.cantReachTargetRetries >= Rs2Random.between(3, 5)) {
+            if (CantReachTargetRecovery.retryExhausted(
+                    Microbot.cantReachTargetRetries, Rs2Random.between(3, 5))) {
                 Microbot.pauseAllScripts.compareAndSet(false, true);
                 Microbot.showMessage("Your bot tried to interact with an object for "
                         + Microbot.cantReachTargetRetries + " times but failed. Please take a look at what is happening.");
@@ -1795,7 +1798,7 @@ public class Rs2GameObject {
             Microbot.cantReachTargetRetries++;
             Microbot.log("[Interact] can't-reach recovery: walking to object " + object.getId()
                     + " at " + objectLocation + " (attempt " + Microbot.cantReachTargetRetries + ")");
-            if (Rs2Walker.walkTo(objectLocation, 2)) {
+            if (CantReachTargetRecovery.walkTo(objectLocation, 2)) {
                 Microbot.pauseAllScripts.compareAndSet(true, false);
                 Microbot.cantReachTarget = false;
                 Microbot.cantReachTargetRetries = 0;
