@@ -25,6 +25,8 @@
 package net.runelite.client.plugins;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -75,6 +77,11 @@ public abstract class Plugin implements Module
 	public String getName()
 	{
 		return getClass().getAnnotation(PluginDescriptor.class).name();
+	}
+
+	public void setInjector(Injector injector)
+	{
+		this.injector = injector;
 	}
 
 	/**

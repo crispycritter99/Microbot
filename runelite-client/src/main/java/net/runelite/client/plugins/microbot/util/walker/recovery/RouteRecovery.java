@@ -1,11 +1,10 @@
 package net.runelite.client.plugins.microbot.util.walker.recovery;
 
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.plugins.microbot.shortestpath.Transport;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 /**
@@ -24,6 +23,69 @@ public final class RouteRecovery {
     private static final int FORWARD_SCAN_TILES = 24;
 
     private RouteRecovery() {
+    }
+
+    /**
+     * What the recovery block should do with its chosen click target. One value per outcome so the
+     * imperative shell in {@code Rs2Walker} is a flat if/else with no decision logic of its own — every
+     * guard interaction (preemption vs walled vs cooldown) is pinned by the decision-table tests instead
+     * of being re-discovered live (the walled-guard cooldown bug: the cooldown was written into the
+     * guard's entry condition, so while it ran the walled check vanished and recovery clicked through
+     * the shop wall it existed to avoid).
+     */
+    public enum RecoveryClickAction {
+        /** No blockers: clamp and issue the minimap click. */
+        CLICK,
+        /** A door interaction is settling or the player is mid-walk — a click now would CANCEL it. */
+        YIELD_ACTION_IN_FLIGHT,
+        /** Target is walled off (Euclidean-near yet absent from the player BFS): replan from reality. */
+        REPLAN_WALLED,
+        /** Target is walled off but a replan just happened — wait out the cooldown; NEVER click. */
+        WAIT_WALLED,
+        /** No usable target (null / the player's own tile): skip the click, fall through to rejoin logic. */
+        NO_TARGET
+    }
+
+    /**
+     * The recovery click decision, pure. Guard ORDER is part of the contract and pinned by tests:
+     * <ol>
+     *   <li>Action-in-flight preemption first — the recovery pass is seconds long and its door scans can
+     *       interact mid-pass; a stale click would cancel the door-open and drag the player away.
+     *       {@code walkerOwnedMovement} must be true only for movement the walker itself issued
+     *       (recent click / interaction) — external movement such as combat retaliation dragging the
+     *       player must NOT preempt, or the corrective click never fires while the drag lasts.</li>
+     *   <li>Walled-target check second — a target within {@code walledRadius} that is absent from the
+     *       player-origin BFS is separated by a wall/door (the BFS step budget comfortably covers the
+     *       radius). The {@code replanCooldownMs} chooses REPLAN vs WAIT only; it must never re-enable
+     *       the click.</li>
+     *   <li>Otherwise CLICK (targets beyond the radius stay trusted — the BFS cannot vouch out there).</li>
+     * </ol>
+     * An empty/null {@code reachable} disables the walled check (headless tests, collision-odd tiles).
+     */
+    public static RecoveryClickAction decideRecoveryClick(WorldPoint recoverTarget,
+                                                          WorldPoint playerLoc,
+                                                          boolean doorInteractionSettling,
+                                                          boolean walkerOwnedMovement,
+                                                          Set<WorldPoint> reachable,
+                                                          int walledRadius,
+                                                          long nowMs,
+                                                          long lastWalledReplanAtMs,
+                                                          long replanCooldownMs) {
+        if (doorInteractionSettling || walkerOwnedMovement) {
+            return RecoveryClickAction.YIELD_ACTION_IN_FLIGHT;
+        }
+        if (recoverTarget == null || playerLoc == null || recoverTarget.equals(playerLoc)) {
+            return RecoveryClickAction.NO_TARGET;
+        }
+        boolean walled = reachable != null && !reachable.isEmpty()
+                && !reachable.contains(recoverTarget)
+                && playerLoc.distanceTo2D(recoverTarget) <= walledRadius;
+        if (walled) {
+            return nowMs - lastWalledReplanAtMs > replanCooldownMs
+                    ? RecoveryClickAction.REPLAN_WALLED
+                    : RecoveryClickAction.WAIT_WALLED;
+        }
+        return RecoveryClickAction.CLICK;
     }
 
     /**
@@ -150,21 +212,21 @@ public final class RouteRecovery {
      * {@code maxEuclidean} tiles of the player), so recovery can walk the player ONTO it and let the normal
      * transport handler cross next tick. Returns {@code null} when none qualifies.
      * <p>
-     * Pure and fully injected ({@code reachable} tiles and the {@code transports} map are parameters), so it
+	 * Pure and fully injected ({@code reachable} tiles and the transport-origin predicate are parameters), so it
      * is exercised headlessly by {@code RouteRecoveryTest} rather than requiring a live walk. Rationale: the
      * far-side fallback otherwise clicks the opposite bank, which the client cannot reach, so the player
      * loops on the near bank and the transport (which only dispatches while standing on its origin) never
      * fires.
      */
-    public static WorldPoint findReachableTransportOriginAhead(List<WorldPoint> rawPath,
-                                                               int startIndex,
-                                                               WorldPoint playerLoc,
-                                                               Set<WorldPoint> reachable,
-                                                               Map<WorldPoint, Set<Transport>> transports,
-                                                               int maxEuclidean,
-                                                               int forwardScanTiles) {
-        if (rawPath == null || rawPath.isEmpty() || playerLoc == null || reachable == null
-                || transports == null || transports.isEmpty() || startIndex < 0 || startIndex >= rawPath.size()) {
+	public static WorldPoint findReachableTransportOriginAhead(List<WorldPoint> rawPath,
+	                                                           int startIndex,
+	                                                           WorldPoint playerLoc,
+	                                                           Set<WorldPoint> reachable,
+	                                                           Predicate<WorldPoint> hasTransportOrigin,
+	                                                           int maxEuclidean,
+	                                                           int forwardScanTiles) {
+		if (rawPath == null || rawPath.isEmpty() || playerLoc == null || reachable == null
+				|| hasTransportOrigin == null || startIndex < 0 || startIndex >= rawPath.size()) {
             return null;
         }
         int maxSq = maxEuclidean * maxEuclidean;
@@ -180,9 +242,56 @@ public final class RouteRecovery {
             if (euclideanSq(wp, playerLoc) > maxSq) {
                 continue; // within minimap-click reach
             }
-            Set<Transport> ts = transports.get(wp);
-            if (ts != null && !ts.isEmpty()) {
+			if (hasTransportOrigin.test(wp)) {
                 return wp; // nearest reachable transport / shortcut origin ahead
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds the route tile recovery should click to approach the first planned transport edge ahead.
+     * If the transport origin itself is reachable, it is returned. Otherwise the last reachable raw-route
+     * tile before that origin is returned. The latter is required for object-occupied origins such as fairy
+     * rings: collision correctly excludes the ring tile from the player BFS, but walking beside it lets the
+     * normal ranged/near-origin transport handler dispatch it on the next pass.
+     * <p>
+     * The scan stops at the first exact transport edge, even when no approach is usable, so recovery never
+     * skips an unresolved transport and targets a later route branch. Both collision state and exact planned
+     * edge recognition are injected to keep the decision independent of live client state.
+     *
+     * @return the reachable transport origin or its last reachable approach tile; {@code null} when the
+     * first transport has no usable approach or there is no transport in the scan window.
+     */
+    public static WorldPoint findReachableTransportApproachAhead(List<WorldPoint> rawPath,
+                                                                 int startIndex,
+                                                                 WorldPoint playerLoc,
+                                                                 Set<WorldPoint> reachable,
+                                                                 BiPredicate<WorldPoint, WorldPoint> hasTransportStep,
+                                                                 int maxEuclidean,
+                                                                 int forwardScanTiles) {
+        if (rawPath == null || rawPath.size() < 2 || playerLoc == null || reachable == null
+                || hasTransportStep == null || startIndex < 0 || startIndex >= rawPath.size() - 1
+                || maxEuclidean < 0 || forwardScanTiles < 0) {
+            return null;
+        }
+
+        int maxSq = maxEuclidean * maxEuclidean;
+        int lastEdgeExclusive = Math.min(rawPath.size() - 1, startIndex + forwardScanTiles + 1);
+        WorldPoint bestApproach = null;
+        for (int ri = startIndex; ri < lastEdgeExclusive; ri++) {
+            WorldPoint origin = rawPath.get(ri);
+            WorldPoint destination = rawPath.get(ri + 1);
+            boolean usableOrigin = origin != null
+                    && origin.getPlane() == playerLoc.getPlane()
+                    && !origin.equals(playerLoc)
+                    && reachable.contains(origin)
+                    && euclideanSq(origin, playerLoc) <= maxSq;
+            if (usableOrigin) {
+                bestApproach = origin;
+            }
+            if (origin != null && destination != null && hasTransportStep.test(origin, destination)) {
+                return usableOrigin ? origin : bestApproach;
             }
         }
         return null;

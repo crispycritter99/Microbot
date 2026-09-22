@@ -25,30 +25,6 @@
  */
 package net.runelite.client.plugins.devtools;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Polygon;
-import java.awt.Shape;
-import java.util.Arrays;
-import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import net.runelite.api.Animation;
-import net.runelite.api.CameraFocusableEntity;
-import net.runelite.api.Client;
-import net.runelite.api.Constants;
-import net.runelite.api.DecorativeObject;
-import net.runelite.api.DynamicObject;
-import net.runelite.api.GameObject;
-import net.runelite.api.GraphicsObject;
-import net.runelite.api.ItemLayer;
-import net.runelite.api.NPC;
-import net.runelite.api.NPCComposition;
-import net.runelite.api.Node;
-import net.runelite.api.Perspective;
-import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
