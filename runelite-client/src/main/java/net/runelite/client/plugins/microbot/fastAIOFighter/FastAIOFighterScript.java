@@ -113,6 +113,7 @@ public class FastAIOFighterScript extends Script {
                 if (Rs2Player.isInteracting())return;
                 Rs2NpcModel npc = attackableNpcs.stream()
                         .flatMap(name -> Rs2Npc.getAttackableNpcs(name))
+
                         .findFirst()
                         .orElse(null);
                 if (npc == null) return;

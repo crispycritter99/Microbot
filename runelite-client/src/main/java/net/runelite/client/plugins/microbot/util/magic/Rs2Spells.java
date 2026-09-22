@@ -2,8 +2,6 @@ package net.runelite.client.plugins.microbot.util.magic;
 
 import java.util.HashMap;
 import lombok.Getter;
-import net.runelite.api.Skill;
-import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.skillcalculator.skills.MagicAction;
 
 import java.util.List;
@@ -423,7 +421,7 @@ public enum Rs2Spells implements Spell {
             Runes.EARTH, 8,
             Runes.ASTRAL, 1
     ), Rs2Spellbook.LUNAR),
-    NPC_CONTACT(MagicAction.NPC_CONTACT, Map.of(
+    NPC_CONTACT(MagicAction.ASTRAL_CONTACT, Map.of(
             Runes.AIR, 2,
             Runes.ASTRAL, 1,
             Runes.COSMIC, 1

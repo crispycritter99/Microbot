@@ -357,7 +357,7 @@ public class Rs2Magic {
             return false;
         }
 
-        if (!cast(MagicAction.NPC_CONTACT)) return false;
+        if (!cast(MagicAction.ASTRAL_CONTACT)) return false;
         if (!sleepUntilTrue(() -> !Rs2Widget.isHidden(CHOOSE_CHARACTER_WIDGET_ID), 100, 5000)) return false;
 
         final Widget chooseCharacterWidget = Rs2Widget.getWidget(CHOOSE_CHARACTER_WIDGET_ID);

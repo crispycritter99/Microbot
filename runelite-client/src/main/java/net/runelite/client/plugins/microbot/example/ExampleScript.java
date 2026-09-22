@@ -134,16 +134,16 @@ public class ExampleScript extends Script {
 ////                        TotalLootValue += gePrice == -1 ? item.getItem().getPrice() * item.getTileItem().getQuantity() : gePrice * item.getTileItem().getQuantity();
 //                    }
 
-                ObjectComposition composition = Rs2GameObject.convertToObjectComposition(Rs2GameObject.getGameObject(29495));
-//                composition.getOps().getSubOps();
-
-                System.out.println(95031+65536*(3-1));
-                System.out.println(composition.getOps().getOp(3));
-                System.out.println(composition.getOps().getSubOps(3).getOp(2).toString());
-                System.out.println(composition.getOps().getSubOps(3).getNumOps());
-
-
-                shutdown();
+//                ObjectComposition composition = Rs2GameObject.convertToObjectComposition(Rs2GameObject.getGameObject(29495));
+////                composition.getOps().getSubOps();
+//
+//                System.out.println(95031+65536*(3-1));
+//                System.out.println(composition.getOps().getOp(3));
+//                System.out.println(composition.getOps().getSubOps(3).getOp(2).toString());
+//                System.out.println(composition.getOps().getSubOps(3).getNumOps());
+//
+//
+//                shutdown();
 
 //                shutdown();
 //                }
@@ -372,7 +372,19 @@ public class ExampleScript extends Script {
 //                    }
 
 //                }
-
+                    if (Rs2Player.isAnimating(4000))return;
+                double LOG_MEAN = 1; double LOG_STD = 0.8;
+                Random r = new Random();double gaussian = r.nextGaussian();
+                double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+                sleep((int) value * 100+2000);
+                    if (Rs2Inventory.combine(21350,33547)){
+                        Rs2Dialogue.sleepUntilHasCombinationDialogue();
+                        sleepGaussian(300,50);
+                        Rs2Dialogue.keyPressForCombinationOption("Seeking amethyst arrow");
+                        sleepGaussian(300,50);
+                        Rs2Inventory.hover(0);
+                        sleep(4000);
+                    }
 //                if (!Rs2Inventory.contains(1925)){
 //                    shutdown();
 //                    return;

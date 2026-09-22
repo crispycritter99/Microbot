@@ -39,6 +39,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -149,13 +150,24 @@ public class OuraniaScript extends Script
 //							return;
 //						}
 						//if
+						if (Rs2Player.isMoving()) return;
 						while (!Rs2Inventory.allPouchesEmpty()) {
 							if (!Rs2Inventory.isFull()&&Rs2Inventory.hasAnyPouch()&&!Rs2Inventory.allPouchesEmpty()) {
 								Rs2Inventory.emptyPouches();
-								Rs2Inventory.waitForInventoryChanges(1200);
+								double LOG_MEAN = 0.05; double LOG_STD = 0.34;
+								Random r = new Random();double gaussian = r.nextGaussian();
+								double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+								sleep((int) value*200);
+								Rs2Inventory.waitForInventoryChanges(600);
 							}
 							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_CRACKED_CENTER_ALTAR).interact("craft-rune");
-							sleep(400,800);
+							Rs2Player.waitForXpDrop(Skill.RUNECRAFT);
+//							Rs2Inventory.emptyPouches();
+							double LOG_MEAN = 0.05; double LOG_STD = 0.34;
+							Random r = new Random();double gaussian = r.nextGaussian();
+							double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+							sleep((int) value*400);
+//							sleep(400,800);
 						}
 //						Rs2Inventory.waitForInventoryChanges(5000);
 						break;
@@ -165,7 +177,10 @@ public class OuraniaScript extends Script
 							Rs2Magic.cast(MagicAction.OURANIA_TELEPORT);
 						}
 						sleepUntil(() -> Rs2Player.getWorldLocation().distanceTo(new WorldPoint(2468, 3246, 0)) < 24);
-
+						double LOG_MEAN = 0.05; double LOG_STD = 0.34;
+						Random r = new Random();double gaussian = r.nextGaussian();
+						double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+						sleep((int) value*400);
 						if (plugin.isBreakHandlerEnabled())
 						{
 							BreakHandlerScript.setLockState(false);
@@ -173,12 +188,18 @@ public class OuraniaScript extends Script
 
 						if (Rs2Inventory.hasDegradedPouch() && Rs2Magic.hasRequiredRunes(Rs2Spells.NPC_CONTACT))
 						{
-//							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_ENTRANCE).interact("Climb");
-//							sleep(200,600);
+							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_ENTRANCE).interact("Climb");
+							 LOG_MEAN = 0.05;  LOG_STD = 0.34;
+							r = new Random(); gaussian = r.nextGaussian();
+							value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+							sleep((int) value*400);
 							Rs2Magic.repairPouchesWithLunar();
 							return;
 						}
 
+						r = new Random();gaussian = r.nextGaussian();
+						value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+						sleep((int) value*400);
 						if (config.directInteract() && Microbot.isPluginEnabled(GpuPlugin.class))
 						{
 							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_ENTRANCE).interact("Climb");
@@ -384,8 +405,9 @@ public class OuraniaScript extends Script
 							Rs2Bank.withdrawAll(config.essence().getItemId());
 							Rs2Inventory.waitForInventoryChanges(1800);
 //						}
-						Rs2Bank.closeBank();
+						if (Rs2Bank.closeBank())Rs2Antiban.takeMicroBreakByChance();
 						sleepUntil(() -> !Rs2Bank.isOpen());
+						Rs2Antiban.takeMicroBreakByChance();
 						break;
 					case RUNNING_TO_ALTAR:
 						if (plugin.isBreakHandlerEnabled())
@@ -410,7 +432,14 @@ public class OuraniaScript extends Script
 									sleepUntil(() -> Rs2Camera.getZoom() == 128);
 								}
 
-								if (altarModel != null) altarModel.click("craft-rune");
+								if (altarModel != null) {
+									altarModel.click("craft-rune");
+									 LOG_MEAN = 0.05;  LOG_STD = 0.34;
+									 r = new Random(); gaussian = r.nextGaussian();
+									value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+									sleep((int) value*500+500);
+									Rs2Inventory.hover(0);
+								}
 								Rs2Inventory.waitForInventoryChanges(1800);
 //								boolean done = false;
 ////								boolean hasCraftingAnimation = false;
@@ -462,7 +491,7 @@ public class OuraniaScript extends Script
 				Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
 				Microbot.log("Error in Ourania Altar Script: " + ex.getMessage());
 			}
-		}, 0, 600, TimeUnit.MILLISECONDS);
+		}, 0, 100, TimeUnit.MILLISECONDS);
 		return true;
 	}
 
