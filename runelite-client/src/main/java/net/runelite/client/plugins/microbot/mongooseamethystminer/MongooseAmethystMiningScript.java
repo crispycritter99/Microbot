@@ -60,6 +60,8 @@ public class MongooseAmethystMiningScript extends Script {
         debug("executeTask() start; status=" + status + ", miningSpot=" + miningSpot
                 + ", oreVein=" + (oreVein == null ? "null" : oreVein.getWorldLocation()));
         try {
+            if (!Microbot.isLoggedIn()) return;
+            if (!super.run()) return;
             if (!super.run() || !Microbot.isLoggedIn()) {
                 miningSpot = MiningSpot.NULL;
                 oreVein = null;
