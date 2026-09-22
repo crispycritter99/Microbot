@@ -7286,17 +7286,17 @@ public class Rs2Walker {
 
 
     // Constants for widget IDs
-    private static final int SLOT_ONE = 26083331;
-    private static final int SLOT_TWO = 26083332;
-    private static final int SLOT_THREE = 26083333;
+    public static final int SLOT_ONE = 26083331;
+    public static final int SLOT_TWO = 26083332;
+    public static final int SLOT_THREE = 26083333;
 
-    private static final int SLOT_ONE_CW_ROTATION = 26083347;
-    private static final int SLOT_ONE_ACW_ROTATION = 26083348;
-    private static final int SLOT_TWO_CW_ROTATION = 26083349;
-    private static final int SLOT_TWO_ACW_ROTATION = 26083350;
-    private static final int SLOT_THREE_CW_ROTATION = 26083351;
-    private static final int SLOT_THREE_ACW_ROTATION = 26083352;
-    private static int fairyRingGraphicId = 569;
+    public static final int SLOT_ONE_CW_ROTATION = 26083347;
+    public static final int SLOT_ONE_ACW_ROTATION = 26083348;
+    public static final int SLOT_TWO_CW_ROTATION = 26083349;
+    public static final int SLOT_TWO_ACW_ROTATION = 26083350;
+    public static final int SLOT_THREE_CW_ROTATION = 26083351;
+    public static final int SLOT_THREE_ACW_ROTATION = 26083352;
+    public static int fairyRingGraphicId = 569;
 
     private static boolean handleFairyRing(Transport transport) {
 
@@ -7333,9 +7333,9 @@ public class Rs2Walker {
         ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
         log.info("Interacting with Fairy Ring @ {}", fairyRingObject.getWorldLocation());
         log.info(lastDestinationAction);
-        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, true)+"");
-        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, false)+"");
-        final var ops=composition.getOps();
+        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, true) + "");
+        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, false) + "");
+        final var ops = composition.getOps();
         int opIdx = 3;
 
         int identifiervalue = -1;
@@ -7346,7 +7346,7 @@ public class Rs2Walker {
             for (int Op = 1; Op < composition.getOps().getSubOps(opIdx).getNumOps() + 1; Op++) {
 //            assert subOp != null;
                 System.out.println(subOp.getSubOps(opIdx));
-                if (subOp.getSubOps(Op) != null){
+                if (subOp.getSubOps(Op) != null) {
                     System.out.println(subOp.getSubOps(Op).getOp(opIdx).toString());
                 }
 //                if(subOp.getSubOps(opIdx)==null) {continue;}
@@ -7359,10 +7359,9 @@ public class Rs2Walker {
             }
         }
         // we can use the last-destination to handle fairy rings
-        if (identifiervalue !=-1&&Rs2GameObject.hasAction(composition, "Favourites", true)){
-            Rs2GameObject.clickObject(fairyRingObject, "Favourites",transport.getDisplayInfo());
-        }
-        else if (composition.getOps().getOp(2).contains(lastDestinationAction)) {
+        if (identifiervalue != -1 && Rs2GameObject.hasAction(composition, "Favourites", true)) {
+            Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo());
+        } else if (composition.getOps().getOp(2).contains(lastDestinationAction)) {
             Rs2GameObject.interact(fairyRingObject, lastDestinationAction);
         } else if (Rs2GameObject.hasAction(composition, treeLastDestinationAction, true)) {
             Rs2GameObject.interact(fairyRingObject, treeLastDestinationAction);
@@ -7376,14 +7375,9 @@ public class Rs2Walker {
             sleepUntil(() -> Rs2Player.isMoving()
                     || !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 2000);
             sleepUntil(() -> !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 15000);
-
-    static final int SLOT_ONE_CW_ROTATION = 26083347;
-    static final int SLOT_ONE_ACW_ROTATION = 26083348;
-    static final int SLOT_TWO_CW_ROTATION = 26083349;
-    static final int SLOT_TWO_ACW_ROTATION = 26083350;
-    static final int SLOT_THREE_CW_ROTATION = 26083351;
-    static final int SLOT_THREE_ACW_ROTATION = 26083352;
-    static int fairyRingGraphicId = 569;
+        }
+        return true;
+    }
 
 
 
