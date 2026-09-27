@@ -402,7 +402,7 @@ final class Rs2WalkerDoors {
             return false;
         }
 
-        int start = Math.max(0, rawStart - Math.max(0, backtrackEdges));
+        int start = rawScanStartEdge(rawPath, rawStart, playerLoc, backtrackEdges);
         int endExclusive = Math.min(rawPath.size() - 1, rawStart + Math.max(1, lookaheadEdges));
         for (int ri = start; ri < endExclusive && ri < rawPath.size() - 1; ri++) {
             WorldPoint a = rawPath.get(ri);

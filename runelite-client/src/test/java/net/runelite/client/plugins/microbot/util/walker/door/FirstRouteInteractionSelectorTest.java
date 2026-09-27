@@ -189,6 +189,30 @@ public class FirstRouteInteractionSelectorTest {
     }
 
     @Test
+    public void recoveryScanKeepsUncrossedTransportButFindsDoorAfterObservedLanding() {
+        int beforeCrossing = FirstRouteInteractionSelector.scanStartEdge(ROUTE, 6, point(3),
+                point(3), point(4), false, 3);
+        assertEquals(3, beforeCrossing);
+        assertEquals(-1, FirstRouteInteractionSelector.firstInteractionEdge(ROUTE, beforeCrossing, 5,
+                point(3), reachableThrough(10), 10,
+                edge -> edge == 5, edge -> edge == 3));
+
+        int afterCrossing = FirstRouteInteractionSelector.scanStartEdge(ROUTE, 6, point(4),
+                point(3), point(4), true, 3);
+        assertEquals(4, afterCrossing);
+        assertEquals(5, FirstRouteInteractionSelector.firstInteractionEdge(ROUTE, afterCrossing, 5,
+                point(4), reachableThrough(10), 10,
+                edge -> edge == 5, edge -> edge == 3));
+    }
+
+    @Test
+    public void recentTransportAtFinalBacktrackedEdgeCanBeSkipped() {
+        List<WorldPoint> route = eastRoute(5);
+        assertEquals(4, FirstRouteInteractionSelector.scanStartEdge(route, 5, point(4),
+                point(3), point(4), true, 2));
+    }
+
+    @Test
     public void recentLongTransportLandingOneTileOffDestinationAdvancesPastExactEdge() {
         List<WorldPoint> route = new ArrayList<>();
         route.add(point(0));

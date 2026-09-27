@@ -4491,6 +4491,14 @@ public class Rs2Walker {
         return rawPathForwardAnchorIndex(rawPath, playerLoc, rawAnchorIndex);
     }
 
+    /** Skip a backtracked transport only after its exact edge has an observed crossing. */
+    static int rawScanStartEdge(List<WorldPoint> rawPath, int anchor, WorldPoint playerLoc,
+                                int backtrackEdges) {
+        return FirstRouteInteractionSelector.scanStartEdge(rawPath, anchor, playerLoc,
+                routeState.lastTransportOriginLocation, routeState.lastTransportDestinationLocation,
+                isRecentTransportEdgeWindow(), backtrackEdges);
+    }
+
     private static boolean handlePendingDoorBeforeRouteClick(List<WorldPoint> rawPath,
                                                              List<WorldPoint> path,
                                                              int fromPathIdx,
@@ -4513,7 +4521,7 @@ public class Rs2Walker {
             return false;
         }
 
-        int from = Math.max(0, Math.min(rawStart, rawTarget) - 2);
+        int from = rawScanStartEdge(rawPath, Math.min(rawStart, rawTarget), playerLoc, 2);
         int toExclusive = Math.min(rawPath.size() - 1, Math.max(rawStart, rawTarget) + 1);
         for (int ri = from; ri < toExclusive && ri < rawPath.size() - 1; ri++) {
             WorldPoint a = rawPath.get(ri);
@@ -4560,7 +4568,7 @@ public class Rs2Walker {
             return false;
         }
 
-        int start = Math.max(0, rawEdgeStart - Math.max(0, backtrackEdges));
+        int start = rawScanStartEdge(rawPath, rawEdgeStart, playerLoc, backtrackEdges);
         int endExclusive = Math.min(rawPath.size() - 1, rawEdgeStart + Math.max(1, lookaheadEdges));
         for (int ri = start; ri < endExclusive && ri < rawPath.size() - 1; ri++) {
             WorldPoint from = rawPath.get(ri);
@@ -4681,7 +4689,7 @@ public class Rs2Walker {
         }
         lastRawScanEarlyReturn = "ran";
 
-        int start = Math.max(0, rawStart - 2);
+        int start = rawScanStartEdge(rawPath, rawStart, playerLoc, 2);
         int endExclusive = Math.min(rawPath.size() - 1, rawStart + 12);
         // Per-stage timing: this scan has been measured at 5.6s returning handled=false after a
         // transport (each probe does several client-thread scene lookups). Attribute the cost so a

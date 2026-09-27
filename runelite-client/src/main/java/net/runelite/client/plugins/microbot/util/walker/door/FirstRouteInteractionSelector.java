@@ -46,11 +46,19 @@ public final class FirstRouteInteractionSelector {
     public static int scanStartEdge(List<WorldPoint> rawPath, int anchor, WorldPoint playerLoc,
                                     WorldPoint recentOrigin, WorldPoint recentDestination,
                                     boolean recentlyHandled) {
+        return scanStartEdge(rawPath, anchor, playerLoc, recentOrigin, recentDestination,
+                recentlyHandled, 2);
+    }
+
+    /** Applies the same crossing check to a caller-selected backtrack window. */
+    public static int scanStartEdge(List<WorldPoint> rawPath, int anchor, WorldPoint playerLoc,
+                                    WorldPoint recentOrigin, WorldPoint recentDestination,
+                                    boolean recentlyHandled, int backtrackEdges) {
         if (rawPath == null || rawPath.size() < 2) {
             return 0;
         }
-        int boundedAnchor = Math.max(0, Math.min(anchor, rawPath.size() - 2));
-        int start = Math.max(0, boundedAnchor - 2);
+        int boundedAnchor = Math.max(0, Math.min(anchor, rawPath.size() - 1));
+        int start = Math.max(0, boundedAnchor - Math.max(0, backtrackEdges));
         if (!recentlyHandled || playerLoc == null || recentOrigin == null || recentDestination == null) {
             return start;
         }
