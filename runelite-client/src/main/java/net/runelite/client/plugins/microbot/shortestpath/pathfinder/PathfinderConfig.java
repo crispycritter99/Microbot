@@ -1305,6 +1305,13 @@ public class PathfinderConfig {
         return (long) Math.max(0, carried) + (useBankItems ? Math.max(0, banked) : 0) >= fare;
     }
 
+    /** The refresh snapshot already includes bank quantities when {@code useBankItems} is enabled. */
+    static int knownCurrencyQuantity(String currencyName, Map<Integer, Integer> availableQuantities) {
+        int itemId = currencyItemId(currencyName);
+        return itemId < 0 || availableQuantities == null
+                ? -1 : availableQuantities.getOrDefault(itemId, 0);
+    }
+
     private boolean useTransport(Transport transport, boolean inCombat) {
         // This runs once per expanded catalog edge during every refresh. Keep individual rejection
         // reasons at TRACE; DEBUG already receives the per-type aggregate emitted by refreshTransports.
@@ -1359,7 +1366,15 @@ public class PathfinderConfig {
 
         // If you don't have the required currency & amount for transport
         if (transport.getCurrencyAmount() > 0) {
-            if (refreshCurrencyCache != null) {
+            int knownCurrencyQuantity = knownCurrencyQuantity(
+                    transport.getCurrencyName(), refreshAvailableItemQuantities);
+            if (knownCurrencyQuantity >= 0) {
+                // Bank rows restored from saved IDs load item names on the client thread. The
+                // name-based bank lookup below can therefore take seconds even for Coins.
+                if (knownCurrencyQuantity < transport.getCurrencyAmount()) {
+                    return false;
+                }
+            } else if (refreshCurrencyCache != null) {
                 int[] cached = refreshCurrencyCache.computeIfAbsent(transport.getCurrencyName(), name -> {
                     int invCount = Rs2Inventory.itemQuantity(name);
                     int bankCount = useBankItems ? Rs2Bank.count(name) : 0;

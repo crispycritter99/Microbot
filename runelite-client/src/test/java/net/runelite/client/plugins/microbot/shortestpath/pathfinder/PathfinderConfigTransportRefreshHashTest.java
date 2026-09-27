@@ -4,6 +4,7 @@ import net.runelite.api.Quest;
 import net.runelite.api.QuestState;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.shortestpath.Transport;
 import net.runelite.client.plugins.microbot.shortestpath.WorldPointUtil;
 import net.runelite.client.plugins.microbot.shortestpath.TransportVarPlayer;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class PathfinderConfigTransportRefreshHashTest {
@@ -34,6 +36,19 @@ public class PathfinderConfigTransportRefreshHashTest {
         assertTrue(PathfinderConfig.hasAvailableCurrencyForFare(400, 100, 500, true));
         assertFalse(PathfinderConfig.hasAvailableCurrencyForFare(400, 100, 500, false));
         assertFalse(PathfinderConfig.hasAvailableCurrencyForFare(400, 99, 500, true));
+    }
+
+    @Test
+    public void knownFareCurrenciesUseTheRefreshQuantitySnapshot() {
+        Map<Integer, Integer> inventoryOnly = Map.of(ItemID.COINS, 400);
+        Map<Integer, Integer> withBank = Map.of(ItemID.COINS, 500, ItemID.ECTOTOKEN, 3);
+
+        assertEquals(400, PathfinderConfig.knownCurrencyQuantity("Coins", inventoryOnly));
+        assertEquals(500, PathfinderConfig.knownCurrencyQuantity("Coins", withBank));
+        assertEquals(3, PathfinderConfig.knownCurrencyQuantity("Ecto-token", withBank));
+        assertEquals(0, PathfinderConfig.knownCurrencyQuantity("Ecto-token", inventoryOnly));
+        assertEquals("unknown currency must use the name-based fallback", -1,
+                PathfinderConfig.knownCurrencyQuantity("custom token", withBank));
     }
 
     @Test

@@ -118,6 +118,7 @@ import static net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTranspor
 final class Rs2WalkerDoors {
 
     private static final ThreadLocal<Boolean> ADJACENT_BLOCKED_EDGE_ALLOWED = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> VERIFIED_FIRST_ROUTE_DOOR = new ThreadLocal<>();
 
     private Rs2WalkerDoors() {
     }
@@ -419,17 +420,23 @@ final class Rs2WalkerDoors {
                 break;
             }
             if (a.distanceTo2D(playerLoc) > HANDLER_RANGE && b.distanceTo2D(playerLoc) > HANDLER_RANGE) {
-                continue;
+                break;
             }
             if (shouldDeferDoorHandlingToTransport(rawPath, ri)) {
-                continue;
+                break;
             }
             if (!hasDoorLikeSceneObjectOnSegment(a, b, playerLoc, HANDLER_RANGE)) {
+                if (reachableCache != null && !reachableCache.containsKey(b)) {
+                    break;
+                }
                 continue;
             }
             if (handleDoorsWithTimeoutBudgeted(rawPath, ri, timeoutMs, true)) {
                 return true;
             }
+            // A detected first door still owns this route edge while its click is throttled,
+            // deferred, or unresolved. A later visible door is not the next interaction.
+            return false;
         }
         return false;
     }
@@ -2161,8 +2168,8 @@ final class Rs2WalkerDoors {
         if (location.getPlane() != playerLoc.getPlane()
                 || location.distanceTo2D(playerLoc) > radiusTiles
                 || doorAttemptLedger.isDoorBlacklisted(location)
-                || Rs2DoorProbe.isCatalogTransportObject(object)
-                || !Rs2DoorGeometry.isDoorOnSegment(object, fromWp, toWp)) {
+                || !Rs2DoorGeometry.isDoorOnSegment(object, location, fromWp, toWp)
+                || Rs2DoorProbe.isCatalogTransportObject(object)) {
             return false;
         }
         // Same crossed-face resolution as isUnresolvedRouteDoorObject: a conquered gate behind the
@@ -2182,6 +2189,16 @@ final class Rs2WalkerDoors {
         return Rs2DoorClassifier.isRouteDoorObject(object instanceof WallObject, comp.getName(), action);
     }
 
+    static boolean isPendingRouteDoorObject(TileObject object, WorldPoint location,
+                                            WorldPoint fromWp, WorldPoint toWp,
+                                            WorldPoint playerLoc, int radiusTiles) {
+        return object != null && location != null
+                && location.getPlane() == playerLoc.getPlane()
+                && location.distanceTo2D(playerLoc) <= radiusTiles
+                && Rs2DoorGeometry.isDoorOnSegment(object, location, fromWp, toWp)
+                && isPendingRouteDoorObject(object, fromWp, toWp, playerLoc, radiusTiles);
+    }
+
 	/**
 	 * Door handling can include dialogue and waits; bound it so the walker cannot hang
 	 * indefinitely on a bad interact. If the timeout elapses, return false so the main
@@ -2194,6 +2211,21 @@ final class Rs2WalkerDoors {
     static boolean handleDoorsWithTimeoutBudgeted(List<WorldPoint> path, int index, long timeoutMs,
                                                           boolean allowSegmentProbe) {
         return handleDoorsWithTimeout(path, index, timeoutMs, true, allowSegmentProbe);
+    }
+
+    /** The ordered raw-route selector has proved this is the first pending interaction. */
+    static boolean handleVerifiedFirstRouteDoorAtRange(List<WorldPoint> path, int index, long timeoutMs) {
+        boolean previous = Boolean.TRUE.equals(VERIFIED_FIRST_ROUTE_DOOR.get());
+        VERIFIED_FIRST_ROUTE_DOOR.set(true);
+        try {
+            return handleDoorsWithTimeoutBudgeted(path, index, timeoutMs, true);
+        } finally {
+            if (previous) {
+                VERIFIED_FIRST_ROUTE_DOOR.set(true);
+            } else {
+                VERIFIED_FIRST_ROUTE_DOOR.remove();
+            }
+        }
     }
 
     static boolean handleDoorsWithTimeout(List<WorldPoint> path, int index, long timeoutMs,
@@ -2800,17 +2832,23 @@ final class Rs2WalkerDoors {
             if (!isDoorNearSideReachable(reachableCache, rawPath.get(ri))) {
                 return false;
             }
-            if (reachableCache != null && reachableCache.containsKey(rawPath.get(ri))
-                    && reachableCache.containsKey(rawPath.get(ri + 1))
-                    && !hasDoorLikeSceneObjectOnSegment(rawPath.get(ri), rawPath.get(ri + 1),
-                            playerLoc, HANDLER_RANGE)) {
+            if (shouldDeferDoorHandlingToTransport(rawPath, ri)) {
+                return false;
+            }
+            boolean farSideReachable = reachableCache != null
+                    && reachableCache.containsKey(rawPath.get(ri + 1));
+            boolean doorCandidate = (reachableCache == null || farSideReachable)
+                    && hasDoorLikeSceneObjectOnSegment(rawPath.get(ri), rawPath.get(ri + 1),
+                    playerLoc, HANDLER_RANGE);
+            if (farSideReachable && !doorCandidate) {
                 continue;
             }
             long remainingTimeoutMs = Math.max(1L, timeoutMs - elapsed);
             if (handleDoorsWithTimeoutBudgeted(rawPath, ri, remainingTimeoutMs, false)) {
                 return true;
             }
-            if (isDoorInteractionSettling()) {
+            if (doorCandidate || (reachableCache != null && !farSideReachable)
+                    || isDoorInteractionSettling()) {
                 return false;
             }
         }
@@ -2843,6 +2881,9 @@ final class Rs2WalkerDoors {
         }
         if (!doorInteractionWhileApproachingEnabled()) {
             return true;
+        }
+        if (Boolean.TRUE.equals(VERIFIED_FIRST_ROUTE_DOOR.get())) {
+            return false;
         }
         // While MOVING, only act on a door we are practically standing at. The probe searches ten
         // tiles, which was harmless while interaction required standing still — arriving implied
