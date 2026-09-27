@@ -2786,10 +2786,8 @@ public class Rs2Walker {
                                 int finishThRecovery = tightFinishThreshold(target, pathLastRecovery, distance);
                                 waitForMovementStartAfterRecovery(target, playerLoc, clickedRecoveryTarget, target,
                                         finishThRecovery);
-                                // Next outer iteration runs checkIfStuck/isStuckTooLong before tile delta — avoid
-                                // spurious stall-recalc right after issuing recovery movement.
-                                routeState.lastMovedTimeMs = System.currentTimeMillis();
-                                routeState.stuckCount = 0;
+                                // The wait can time out without movement. Let checkIfStuck on the next
+                                // pass credit an actual tile change instead of crediting the click.
                                 exit = WalkExit.LOCAL_RECOVERY_CLICK;
                                 break;
                             }
@@ -2858,11 +2856,10 @@ public class Rs2Walker {
 										INTERIM_MOVING_POLL_MS);
                                 WorldPoint posAfterWait = Rs2Player.getWorldLocation();
                                 recordInterimDistanceProgress(interimFinal, posAfterWait, System.currentTimeMillis());
-								if ((posAfterWait != null && posBeforeWait.distanceTo2D(posAfterWait) > 0)
-                                        || Rs2Player.isMoving()) {
-									routeState.lastMovedTimeMs = System.currentTimeMillis();
-									routeState.stuckCount = 0;
-								}
+                                if (posAfterWait != null && !posAfterWait.equals(posBeforeWait)) {
+                                    routeState.lastMovedTimeMs = System.currentTimeMillis();
+                                    routeState.stuckCount = 0;
+                                }
                                 boolean closeEnoughForNextClick = posAfterWait != null
                                         && interimFinal.distanceTo2D(posAfterWait) <= interimPreclickTiles();
                                 if (!closeEnoughForNextClick && Rs2Player.isMoving()) {
@@ -3854,8 +3851,6 @@ public class Rs2Walker {
         }
         if ("active route idle nudge".equals(logLabel)) {
             routeState.lastActiveRouteIdleNudgeAtMs = routeState.interimSetAtMs;
-        } else {
-            routeState.lastMovedTimeMs = routeState.interimSetAtMs;
         }
         routeState.idleNudgeStationarySinceMs = routeState.interimSetAtMs;
         routeState.idleNudgeLastObservedLocation = playerLoc;
@@ -5907,6 +5902,7 @@ public class Rs2Walker {
         return routeState.routeProgressIdx;
     }
 
+    /** Anchors later click selection without treating an issued click as observed route progress. */
     static void hintRouteProgressIndex(List<WorldPoint> path, int hintedIdx, WorldPoint target) {
         if (path == null || path.isEmpty() || hintedIdx < 0 || hintedIdx >= path.size()) {
             return;
@@ -5926,13 +5922,13 @@ public class Rs2Walker {
             routeState.routeProgressPathEnd = pathEnd;
             routeState.routeProgressPathSize = path.size();
             routeState.routeProgressIdx = hintedIdx;
-            recordRouteProgressAdvanced();
+            // Start the new route's stagnation clock, but a click hint is not player movement.
+            routeState.routeProgressAdvancedAtMs = System.currentTimeMillis();
             return;
         }
 
         if (hintedIdx > routeState.routeProgressIdx) {
             routeState.routeProgressIdx = hintedIdx;
-            recordRouteProgressAdvanced();
         }
     }
 
@@ -7606,15 +7602,8 @@ public class Rs2Walker {
         if (routeStatus.isCalculating())
             return WalkerState.MOVING;
 
-        boolean bankTripWhenCacheUnavailable = config == null || config.bankTripWhenCacheUnavailable();
-        if (!forceBanking && bankTripWhenCacheUnavailable && !Rs2Bank.hasBankMirrorSnapshot()
-                && System.currentTimeMillis() - routeState.lastBankBootstrapMissAtMs > BANK_BOOTSTRAP_MISS_COOLDOWN_MS) {
-            WalkerState bootstrapState = bootstrapBankMirrorForBankedPathing(distance);
-            if (bootstrapState == WalkerState.EXIT || bootstrapState == WalkerState.UNREACHABLE) {
-                return bootstrapState;
-            }
-        }
         int chebyshevToTarget = pl.distanceTo(target);
+        Rs2RouteResult directProbe = null;
         if (!forceBanking && chebyshevToTarget <= 100) {
             // Straight-line proximity says nothing about the walkable route: the Shantay gate is
             // ~30 tiles away and ~700 by inventory-only path without a pass. Skipping the compare
@@ -7622,10 +7611,16 @@ public class Rs2Walker {
             // and the walker silently took the detour. One direct pathfind (cheap for a close,
             // reachable target) decides whether the short-circuit is safe; a partial path counts
             // as a detour too, since banking may be exactly what unlocks the blocked transport.
-            List<WorldPoint> directProbePath = getWalkPath(pl, target);
-            int directProbeTiles = getTotalTilesFromPath(directProbePath, target);
+            directProbe = Rs2PathApi.plan(Rs2RouteRequest.to(pl, target)
+                    .withRefreshTarget(target)
+                    .withBankItems(false)
+                    .withPurpose(Rs2RouteRequest.Purpose.BANK_ROUTE_DIRECT));
+            int directProbeTiles = getTotalTilesFromPath(directProbe.getPath(), target);
             int directPathCeiling = shortWalkDirectPathCeiling(chebyshevToTarget);
-            if (directProbeTiles <= directPathCeiling) {
+            if (directProbe.getTerminationReason() == Rs2RouteTermination.TARGET_REACHED
+                    && directProbe.isTargetReached(0)
+                    && directProbeTiles <= directPathCeiling
+                    && Rs2WalkerBankingPlanner.hasCarriedConsumablesForRoute(directProbe)) {
                 WebWalkLog.spInfo("bank_walk | skip_compare_short_distance dist={} directTiles={} goal={}",
                         chebyshevToTarget, directProbeTiles, target);
                 return walkWithStateInternal(target, distance);
@@ -7635,17 +7630,31 @@ public class Rs2Walker {
                     directProbeTiles == Integer.MAX_VALUE ? "partial" : String.valueOf(directProbeTiles),
                     directPathCeiling, target);
         }
+        boolean bankTripWhenCacheUnavailable = config == null || config.bankTripWhenCacheUnavailable();
+        if (!forceBanking && bankTripWhenCacheUnavailable && !Rs2Bank.hasBankMirrorSnapshot()
+                && System.currentTimeMillis() - routeState.lastBankBootstrapMissAtMs > BANK_BOOTSTRAP_MISS_COOLDOWN_MS) {
+            // Bootstrapping may move us to the bank, so the earlier direct route is no longer reusable.
+            directProbe = null;
+            WalkerState bootstrapState = bootstrapBankMirrorForBankedPathing(distance);
+            if (bootstrapState == WalkerState.EXIT || bootstrapState == WalkerState.UNREACHABLE) {
+                return bootstrapState;
+            }
+        }
         // Check what transport items are needed
         long compareStartedAt = System.currentTimeMillis();
         long compareFromWalkStart = routeState.walkSessionStartedAtMs > 0 ? compareStartedAt - routeState.walkSessionStartedAtMs : 0L;
         WebWalkLog.tmark("compare_start", compareFromWalkStart, target, pl, "bank_vs_direct");
-        TransportRouteAnalysis comparison = compareRoutes(target);
+        TransportRouteAnalysis comparison = Rs2WalkerBankingPlanner.compareRoutes(null, target, directProbe);
         WebWalkLog.tmark("compare_done", System.currentTimeMillis() - compareStartedAt, target, pl,
                 "direct=" + comparison.getDirectDistance() + " bank=" + comparison.getBankingRouteDistance());
-        List<Rs2TransportEdge> missingTransports = getMissingTransportEdges(
-                Rs2WalkerBankingPlanner.getRequiredTransportEdgesFromBank(comparison));
+        List<Rs2TransportEdge> bankRouteTransports =
+                Rs2WalkerBankingPlanner.getRequiredTransportEdgesFromBank(comparison);
+        List<Rs2TransportEdge> missingTransports = getMissingTransportEdges(bankRouteTransports);
 
-        Rs2TransportLoadout transportLoadout = getMissingTransportEdgeLoadout(missingTransports);
+        // A fare may be affordable for each edge separately but not for the whole route.
+        // Plan the loadout from every selected edge so carried currency is counted only once.
+        Rs2TransportLoadout transportLoadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+                bankRouteTransports, comparison.getTransportEdgesToBank());
         Map<Integer, Integer> missingItemsWithQuantities = transportLoadout.getWithdrawals();
         if (!missingTransports.isEmpty()) {
             WebWalkLog.bankWalkDebug("missing_items nTrans={} to={} missingKinds={} equipKinds={} satisfiable={}",
@@ -7654,10 +7663,10 @@ public class Rs2Walker {
         }
         if (!transportLoadout.isSatisfiable()) {
             WebWalkLog.spWarn("bank_walk | selected bank route has no executable loadout goal={}", target);
-            return forceBanking ? WalkerState.EXIT : walkWithStateInternal(target, distance);
+            return forceBanking ? WalkerState.EXIT : walkDirectAfterBankComparison(comparison, target, distance);
         }
         // If no missing transport items, go directly
-        if (transportLoadout.isEmpty() && !forceBanking) {
+        if (transportLoadout.isEmpty() && !forceBanking && comparison.getDirectDistance() >= 0) {
             WebWalkLog.spInfo("bank_walk | direct_no_missing_items goal={}", target);
             WalkerState state = walkWithStateInternal(target, distance);
             if (state == WalkerState.ARRIVED) {
@@ -7674,10 +7683,8 @@ public class Rs2Walker {
             // Use config for minimum bank route savings
             int minBankRouteSavings = config != null ? config.minBankRouteSavings() : 0;
             boolean preferTransportToTarget = config != null && config.preferTransportToTarget();
-            int tileSavings = comparison.getTileSavings();
-            boolean tieAndPreferBank = comparison.isTie() && preferTransportToTarget;
-            boolean bankRouteIsBetter = (!comparison.isDirectIsFaster() && tileSavings >= minBankRouteSavings)
-                    || (tieAndPreferBank && tileSavings >= minBankRouteSavings);
+            boolean bankRouteIsBetter = comparison.isBankRouteWorthTrip(
+                    minBankRouteSavings, preferTransportToTarget);
             // If forced banking or banking route is more efficient (with min savings), go via bank
             if (forceBanking || bankRouteIsBetter) {
                 if (comparison.getNearestBank() != null) {
@@ -7685,18 +7692,29 @@ public class Rs2Walker {
                             Rs2Player.getWorldLocation(), comparison.getBankLocation(), target);
                     // Handle the complete banking workflow using legacy walkTo approach
                     return walkWithBankingState(
-                            comparison.getBankLocation(), transportLoadout, target, distance);
+                            comparison.getBankLocation(), transportLoadout, bankRouteTransports, target, distance);
                 } else {
                     log.warn("\n\tBanking route requested but no accessible bank found, trying direct route");
-                    return walkWithStateInternal(target, distance);
+                    return walkDirectAfterBankComparison(comparison, target, distance);
                 }
             } else {
                 log.info("\n\tDirect route is more efficient despite missing items or does not meet min savings, traveling directly");
-                return walkWithStateInternal(target, distance);
+                return walkDirectAfterBankComparison(comparison, target, distance);
             }
         }
 
 
+    }
+
+    private static WalkerState walkDirectAfterBankComparison(TransportRouteAnalysis comparison,
+                                                              WorldPoint target, int distance) {
+        if (comparison.isDirectRouteStepsExact()
+                && !Rs2WalkerBankingPlanner.hasCarriedConsumablesForRoute(
+                        comparison.getDirectTransportEdges())) {
+            WebWalkLog.spWarn("bank_walk | direct route cannot fund selected transports goal={}", target);
+            return WalkerState.UNREACHABLE;
+        }
+        return walkWithStateInternal(target, distance);
     }
 
 
@@ -7766,6 +7784,7 @@ public class Rs2Walker {
      */
     private static WalkerState walkWithBankingState(WorldPoint bankLocation,
                                                     Rs2TransportLoadout transportLoadout,
+                                                    List<Rs2TransportEdge> bankRouteTransports,
                                                     WorldPoint finalTarget,int distance) {
         try {
             if (bankLocation == null || finalTarget == null || transportLoadout == null
@@ -7789,6 +7808,16 @@ public class Rs2Walker {
             if(!sleepUntil(()-> Rs2Bank.isOpen(), 8000)) {
                 log.warn("Failed to open bank within timeout at: " + bankLocation);
                 return WalkerState.EXIT;
+            }
+
+            // The walk to the bank can choose a different path or spend different supplies than
+            // the compared route. Size withdrawals against the inventory actually at the bank.
+            transportLoadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+                    bankRouteTransports);
+            if (!transportLoadout.isSatisfiable()) {
+                WebWalkLog.spWarn("bank_walk | selected route unavailable with current bank inventory goal={}",
+                        finalTarget);
+                return fallbackDirectFromBank(finalTarget, distance, "bank-loadout-changed");
             }
 
             // Step 3: Withdraw missing transport items
