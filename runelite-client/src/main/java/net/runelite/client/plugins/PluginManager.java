@@ -32,6 +32,8 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableGraph;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.ClassPath.ClassInfo;
+import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.*;
 import lombok.Getter;
@@ -81,28 +83,30 @@ public class PluginManager {
     private final Scheduler scheduler;
     private final ConfigManager configManager;
     private final Provider<GameEventManager> sceneTileManager;
-    private final List<Plugin> plugins = new CopyOnWriteArrayList<>();
+    private final PluginModuleFactory pluginModuleFactory;
+	private final List<Plugin> plugins = new CopyOnWriteArrayList<>();
     @Getter
     private final List<Plugin> activePlugins = new CopyOnWriteArrayList<>();
 
-    public void addPlugin(Plugin plugin) {
-        plugins.add(plugin);
-    }
-
-    @Inject
-    @VisibleForTesting
-    PluginManager(
-            @Named("safeMode") final boolean safeMode,
-            final EventBus eventBus,
-            final Scheduler scheduler,
-            final ConfigManager configManager,
-            final Provider<GameEventManager> sceneTileManager) {
-        this.safeMode = safeMode;
-        this.eventBus = eventBus;
-        this.scheduler = scheduler;
-        this.configManager = configManager;
-        this.sceneTileManager = sceneTileManager;
-    }
+	@Inject
+	@VisibleForTesting
+	PluginManager(
+		@Named("developerMode") final boolean developerMode,
+		@Named("safeMode") final boolean safeMode,
+		final EventBus eventBus,
+		final Scheduler scheduler,
+		final ConfigManager configManager,
+		final Provider<GameEventManager> sceneTileManager,
+		final PluginModuleFactory pluginModuleFactory)
+	{
+		this.developerMode = developerMode;
+		this.safeMode = safeMode;
+		this.eventBus = eventBus;
+		this.scheduler = scheduler;
+		this.configManager = configManager;
+		this.sceneTileManager = sceneTileManager;
+		this.pluginModuleFactory = pluginModuleFactory;
+	}
 
     @Subscribe
     public void onProfileChanged(ProfileChanged profileChanged) {
@@ -361,7 +365,7 @@ public class PluginManager {
                 newPlugins.add(plugin);
                 add(plugin);
             } catch (PluginInstantiationException ex) {
-                log.error("Error instantiating plugin!", ex);
+                log.error("Error instantiating plugin {}!", pluginClazz, ex);
             }
 
             loaded++;
@@ -497,13 +501,19 @@ public class PluginManager {
 
     private Plugin instantiate(List<Plugin> scannedPlugins, Class<Plugin> clazz) throws PluginInstantiationException {
         PluginDependency[] pluginDependencies = clazz.getAnnotationsByType(PluginDependency.class);
-        List<Plugin> deps = new ArrayList<>();
+        List<Module> modules = new ArrayList<>();
         for (PluginDependency pluginDependency : pluginDependencies) {
             Optional<Plugin> dependency = scannedPlugins.stream().filter(p -> p.getClass() == pluginDependency.value()).findFirst();
             if (!dependency.isPresent()) {
                 throw new PluginInstantiationException("Unmet dependency for " + clazz.getSimpleName() + ": " + pluginDependency.value().getSimpleName());
             }
-            deps.add(dependency.get());
+            var module = dependency.get().getPublicModule();
+			if (module == null)
+			{
+				throw new PluginInstantiationException("Plugin dependency " + pluginDependency.value().getSimpleName() + " does not expose any services");
+			}
+
+			modules.add(module);
         }
 
         Plugin plugin;
@@ -518,35 +528,10 @@ public class PluginManager {
         try {
             Injector parent = Microbot.getInjector();
 
-            if (deps.size() > 1) {
-                List<Module> modules = new ArrayList<>(deps.size());
-                for (Plugin p : deps) {
-                    // Create a module for each dependency
-                    Module module = (Binder binder) ->
-                    {
-                        binder.bind((Class<Plugin>) p.getClass()).toInstance(p);
-                        binder.install(p);
-                    };
-                    modules.add(module);
-                }
-
-                // Create a parent injector containing all of the dependencies
-                parent = parent.createChildInjector(modules);
-            } else if (!deps.isEmpty()) {
-                // With only one dependency we can simply use its injector
-                parent = deps.get(0).injector;
-            }
-
-            // Create injector for the module
-            Module pluginModule = (Binder binder) ->
-            {
-                // Since the plugin itself is a module, it won't bind itself, so we'll bind it here
-                binder.bind(clazz).toInstance(plugin);
-                binder.install(plugin);
-            };
-            Injector pluginInjector = parent.createChildInjector(pluginModule);
+            modules.add(pluginModuleFactory.new PluginModule(plugin));
+            Injector pluginInjector = parent.createChildInjector(modules);
             plugin.injector = pluginInjector;
-        } catch (CreationException ex) {
+        } catch (Throwable ex) {
             throw new PluginInstantiationException(ex);
         }
 
