@@ -48,6 +48,29 @@ public class WalkerRouteCorpusTest {
 
     // ---- harness -----------------------------------------------------------------------------------
 
+    @Test
+    public void gemMineToKarambwansUsesQuestCapeAndFairyRing() throws Exception {
+        PathfinderConfig config = configWith(t -> unrestricted(t) || t.getType() == TransportType.FAIRY_RING);
+        Transport cape = allTransports.get(null).stream()
+                .filter(t -> "Quest point cape: Teleport".equals(t.getDisplayInfo()))
+                .findFirst().orElseThrow(AssertionError::new);
+        Field teleports = PathfinderConfig.class.getDeclaredField("usableTeleports");
+        teleports.setAccessible(true);
+        teleports.set(config, new HashSet<>(Set.of(cape)));
+        Field penalty = PathfinderConfig.class.getDeclaredField("distanceBeforeUsingTeleport");
+        penalty.setAccessible(true);
+        penalty.setInt(config, 20);
+
+        WorldPoint goal = new WorldPoint(2899, 3118, 0);
+        Pathfinder pathfinder = runPathfinder(config, new WorldPoint(2842, 9383, 0), goal);
+        assertTrue("route must reach the karambwan fishing spot", arrives(pathfinder.getPath(), goal, 0));
+        assertTrue("route should use the available cape; cost=" + pathfinder.getSelectedPathCost(),
+                selectsTransport(pathfinder, t -> t == cape));
+        assertTrue("route should use DKP", selectsTransport(pathfinder,
+                t -> t.getType() == TransportType.FAIRY_RING
+                        && new WorldPoint(2900, 3111, 0).equals(t.getDestination())));
+    }
+
     /** A transport with no requirements at all — usable by any account in any state. */
     private static boolean unrestricted(Transport t) {
         return (t.getQuests() == null || t.getQuests().isEmpty())

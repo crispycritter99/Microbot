@@ -285,6 +285,7 @@ public class AutoFishingScript extends Script {
             sleepUntil(() -> !Rs2Inventory.isFull());
 //            Rs2Bank.toggleAllLocks();
             Rs2Bank.closeBank();
+
         }
     }
 

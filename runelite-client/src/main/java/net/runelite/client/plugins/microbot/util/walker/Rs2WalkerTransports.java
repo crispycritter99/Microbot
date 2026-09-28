@@ -3087,6 +3087,17 @@ final class Rs2WalkerTransports {
         }
     }
 
+    static String fairyRingLastDestinationAction(EntityOps ops, String code) {
+        if (ops == null || code == null || !code.trim().matches("(?i)[a-d][i-l][p-s]")) return null;
+        for (int i = 0; i < ops.getNumOps(); i++) {
+            String option = ops.getOp(i);
+            for (String action : new String[]{"Last-destination", "Ring-last-destination"}) {
+                if ((action + " (" + code.trim() + ")").equalsIgnoreCase(option)) return action;
+            }
+        }
+        return null;
+    }
+
     private static boolean handleFairyRing(Transport transport) {
 
         Rs2ItemModel startingWeapon = null;
@@ -3116,16 +3127,17 @@ final class Rs2WalkerTransports {
             }
         }
 
-        String lastDestinationAction = "last-destination (" + transport.getDisplayInfo() + ")";
-        String treeLastDestinationAction = "Ring-last-destination (" + transport.getDisplayInfo() + ")";
+        String lastDestinationAction = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            ObjectComposition live = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+            return fairyRingLastDestinationAction(live == null ? null : live.getOps(), transport.getDisplayInfo());
+        }).orElse(null);
         ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
-        log.info("Interacting with Fairy Ring @ {}", fairyRingObject.getWorldLocation());
-
-        // we can use the last-destination to handle fairy rings
-        if (Rs2GameObject.hasAction(composition, lastDestinationAction, true)) {
-            Rs2GameObject.interact(fairyRingObject, lastDestinationAction);
-        } else if (Rs2GameObject.hasAction(composition, treeLastDestinationAction, true)) {
-            Rs2GameObject.interact(fairyRingObject, treeLastDestinationAction);
+        if (composition == null) return false;
+        // Prefer the verified live destination; otherwise resolve Favourites through its submenu.
+        if (lastDestinationAction != null) {
+            if (!Rs2GameObject.interact(fairyRingObject, lastDestinationAction)) return false;
+        } else if (Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo())) {
+            // The requested favourite was dispatched.
         } else {
             // We have to configure fairy rings through the interface
             if (Rs2GameObject.hasAction(composition, "Configure", true)) {

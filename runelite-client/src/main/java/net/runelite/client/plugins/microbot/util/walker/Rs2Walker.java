@@ -1935,12 +1935,13 @@ public class Rs2Walker {
             int earlyRouteStartIdx = stabilizeRouteProgressWithRawWatermark(rawPath, path, walkLoop.closestTileIndex(path), target, walkLoop.playerLoc);
             boolean immediateRouteTransportPending = hasImmediatePlannedTransportStep(path, earlyRouteStartIdx, walkLoop.playerLoc);
 
-            // Do not clear walk target while a sticky minimap interim is active — breaks
-            // isWalkCancelled and forces EXIT while the flag is still carrying the player.
-            // Partial paths end at an intermediate waypoint (dst still far from {@code target});
-            // clearing here would drop currentTarget before the partial-path retry/recalc branch.
-            if (!partialPath && isNear(dst, walkLoop.playerLoc) && routeState.interimTargetWp == null) {
+            // Finish before recovery/continuation clicks, including when a minimap click is still
+            // in flight. Use the raw route so smoothing cannot hide a required transport or detour.
+            if (!partialPath && canFinishRouteEarly(walkLoop.playerLoc, target, rawPath, distance,
+                    i -> hasExplicitTransportStep(rawPath, i))) {
+                clearInterimTarget("arrived-near-route-end");
                 setTarget(null, "rs2walker:processWalk:reached-path-endpoint");
+                return WalkerState.ARRIVED;
             }
 
             boolean shouldIssueActiveRouteIdleNudge = shouldIssueActiveRouteIdleNudge();
@@ -3857,6 +3858,40 @@ public class Rs2Walker {
         routeState.idleNudgeStationarySinceMs = routeState.interimSetAtMs;
         routeState.idleNudgeLastObservedLocation = playerLoc;
         routeState.stuckCount = 0;
+        return true;
+    }
+
+    static boolean canFinishRouteEarly(WorldPoint playerLoc, WorldPoint target,
+                                       List<WorldPoint> rawPath, int distance,
+                                       java.util.function.IntPredicate isTransportStep) {
+        if (playerLoc == null || target == null || rawPath == null || rawPath.isEmpty()
+                || distance < 0 || playerLoc.getPlane() != target.getPlane()
+                || playerLoc.distanceTo2D(target) > distance) {
+            return false;
+        }
+        WorldPoint end = rawPath.get(rawPath.size() - 1);
+        if (end.getPlane() != target.getPlane() || end.distanceTo2D(target) > distance) {
+            return false;
+        }
+        // Require a known position on the route; nearest-tile matching can jump across a wall
+        // or a still-pending transport. indexOf also conservatively keeps the first loop visit.
+        int start = rawPath.indexOf(playerLoc);
+        if (start < 0) {
+            return false;
+        }
+        int remaining = 0;
+        for (int i = start; i < rawPath.size() - 1; i++) {
+            WorldPoint from = rawPath.get(i);
+            WorldPoint to = rawPath.get(i + 1);
+            if (isTransportStep.test(i) || from.getPlane() != to.getPlane()
+                    || from.distanceTo2D(to) > 1) {
+                return false;
+            }
+            remaining += from.distanceTo2D(to);
+            if (remaining > distance) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -7298,7 +7333,7 @@ public class Rs2Walker {
     public static final int SLOT_THREE_ACW_ROTATION = 26083352;
     public static int fairyRingGraphicId = 569;
 
-    private static boolean handleFairyRing(Transport transport) {
+    public static boolean handleFairyRing(Transport transport) {
 
         Rs2ItemModel startingWeapon = null;
 
@@ -7328,43 +7363,17 @@ public class Rs2Walker {
             }
         }
 
-        String lastDestinationAction = "Last-destination (" + transport.getDisplayInfo() + ")";
-        String treeLastDestinationAction = "Ring-last-destination (" + transport.getDisplayInfo() + ")";
+        String lastDestinationAction = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            ObjectComposition live = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+            return Rs2WalkerTransports.fairyRingLastDestinationAction(live == null ? null : live.getOps(), transport.getDisplayInfo());
+        }).orElse(null);
         ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
-        log.info("Interacting with Fairy Ring @ {}", fairyRingObject.getWorldLocation());
-        log.info(lastDestinationAction);
-        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, true) + "");
-        log.info(Rs2GameObject.hasAction(composition, lastDestinationAction, false) + "");
-        final var ops = composition.getOps();
-        int opIdx = 3;
-
-        int identifiervalue = -1;
-        for (int subIdx = 0; subIdx < 4; subIdx++) {
-//            System.out.println("hey");
-            EntityOps subOp = ops.getSubOps(subIdx);
-            if (subOp == null) continue;
-            for (int Op = 1; Op < composition.getOps().getSubOps(opIdx).getNumOps() + 1; Op++) {
-//            assert subOp != null;
-                System.out.println(subOp.getSubOps(opIdx));
-                if (subOp.getSubOps(Op) != null) {
-                    System.out.println(subOp.getSubOps(Op).getOp(opIdx).toString());
-                }
-//                if(subOp.getSubOps(opIdx)==null) {continue;}
-                if (subOp.getSubOps(opIdx) != null && subOp.getSubOps(Op).getOp(opIdx).toString().contains(transport.getDisplayInfo())) {
-                    int subID = Op;
-                    identifiervalue = 95031 + 65536 * (subID - 1);
-                    System.out.println(95031 + 65536 * (subID - 1));
-
-                }
-            }
-        }
-        // we can use the last-destination to handle fairy rings
-        if (identifiervalue != -1 && Rs2GameObject.hasAction(composition, "Favourites", true)) {
-            Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo());
-        } else if (composition.getOps().getOp(2).contains(lastDestinationAction)) {
-            Rs2GameObject.interact(fairyRingObject, lastDestinationAction);
-        } else if (Rs2GameObject.hasAction(composition, treeLastDestinationAction, true)) {
-            Rs2GameObject.interact(fairyRingObject, treeLastDestinationAction);
+        if (composition == null) return false;
+        // Prefer the verified live destination; otherwise resolve Favourites through its submenu.
+        if (lastDestinationAction != null) {
+            if (!Rs2GameObject.interact(fairyRingObject, lastDestinationAction)) return false;
+        } else if (Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo())) {
+            // The requested favourite was dispatched.
         } else {
             // We have to configure fairy rings through the interface
             if (Rs2GameObject.hasAction(composition, "Configure", true)) {
@@ -8131,6 +8140,11 @@ public class Rs2Walker {
         }
     }
 
+    private static boolean isRouteCameraEnabled() {
+        return Microbot.getConfigManager() != null
+                && Microbot.getConfigManager().getConfig(ShortestPathConfig.class).adjustCameraWhileWalking();
+    }
+
     static void alignCameraTowardWalkTarget(WorldPoint walkTarget) {
         WorldPoint routeTarget = currentTarget;
         if (walkTarget == null || routeTarget == null) {
@@ -8138,6 +8152,11 @@ public class Rs2Walker {
         }
         // Rotate after issuing the click so the camera cannot invalidate its canvas position.
         Microbot.getClientThread().invokeLater(() -> {
+            if (!isRouteCameraEnabled()) {
+                ++routeCameraTurnGeneration;
+                releaseRouteCameraKeys();
+                return;
+            }
             if (!routeTarget.equals(currentTarget) || Microbot.getClient().getLocalPlayer() == null
                     || Microbot.getClient().getGameState() != GameState.LOGGED_IN) {
                 return;
@@ -8181,7 +8200,7 @@ public class Rs2Walker {
                 if (generation != routeCameraTurnGeneration) {
                     return true;
                 }
-                if (!routeTarget.equals(currentTarget)
+                if (!isRouteCameraEnabled() || !routeTarget.equals(currentTarget)
                         || Microbot.getClient().getGameState() != GameState.LOGGED_IN
                         || Microbot.getClient().getLocalPlayer() == null
                         || Microbot.getClient().getLocalPlayer().getWorldLocation().getPlane() != walkTarget.getPlane()

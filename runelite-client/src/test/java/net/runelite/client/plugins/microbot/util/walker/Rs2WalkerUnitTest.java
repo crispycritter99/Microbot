@@ -2035,6 +2035,33 @@ public class Rs2WalkerUnitTest {
     }
 
     @Test
+    public void earlyArrivalHonorsDistanceAndPendingTransports() {
+        WorldPoint start = new WorldPoint(3200, 3200, 0);
+        WorldPoint middle = new WorldPoint(3201, 3200, 0);
+        WorldPoint goal = new WorldPoint(3202, 3200, 0);
+        List<WorldPoint> path = Arrays.asList(start, middle, goal);
+        assertTrue(Rs2Walker.canFinishRouteEarly(start, goal, path, 2, i -> false));
+        assertFalse(Rs2Walker.canFinishRouteEarly(start, goal, path, 1, i -> false));
+        assertFalse("adjacent transport must still execute",
+                Rs2Walker.canFinishRouteEarly(start, goal, path, 2, i -> i == 1));
+        assertTrue("completed transport must not prevent arrival",
+                Rs2Walker.canFinishRouteEarly(middle, goal, path, 2, i -> i == 0));
+        assertTrue(Rs2Walker.canFinishRouteEarly(goal, goal, path, 0, i -> false));
+    }
+
+    @Test
+    public void earlyArrivalRejectsDetoursOffRouteAndDiscontinuities() {
+        WorldPoint start = new WorldPoint(3200, 3200, 0);
+        WorldPoint goal = new WorldPoint(3202, 3200, 0);
+        assertFalse(Rs2Walker.canFinishRouteEarly(start, goal, Arrays.asList(start, goal), 10, i -> false));
+        List<WorldPoint> detour = Arrays.asList(start, new WorldPoint(3200, 3201, 0),
+                new WorldPoint(3201, 3201, 0), new WorldPoint(3202, 3201, 0), goal);
+        assertFalse(Rs2Walker.canFinishRouteEarly(start, goal, detour, 2, i -> false));
+        assertFalse(Rs2Walker.canFinishRouteEarly(new WorldPoint(3201, 3200, 0), goal, detour, 10, i -> false));
+        assertFalse(Rs2Walker.canFinishRouteEarly(new WorldPoint(3202, 3200, 1), goal, detour, 10, i -> false));
+    }
+
+    @Test
     public void routeArrivalSatisfied_usesTightFinalApproachThreshold() {
         WorldPoint goal = new WorldPoint(3304, 3336, 0);
         List<WorldPoint> path = Arrays.asList(

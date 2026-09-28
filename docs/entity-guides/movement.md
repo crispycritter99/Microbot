@@ -346,3 +346,33 @@ if (CantReachTargetRecovery.shouldStart(detectionEnabled, cantReachTarget)) {
 **Where this applies:** `Rs2GameObject.clickObject`, `Rs2Npc.interact`, `Rs2NpcModel.interact`, legacy walker door dispatch, and any future interaction helper that starts `Rs2Walker.walkTo` in response to the global can't-reach flag.
 
 **Defensive check:** During a recovery route through a closed door, assert that the door click occurs once, the original object or NPC target is passed unchanged to the walker, nested recovery is suppressed, and retry exhaustion still returns failure.
+
+## Early arrival must inspect the remaining raw route
+
+When finishing within the caller's arrival distance, check the unsmoothed route from the player's current tile through its endpoint. Reject early arrival if a planned transport remains, including an adjacent same-plane door or gate, or if the remaining walking distance exceeds the allowance. Do not infer completion from straight-line proximity or the smoothed endpoint alone. Partial paths are intermediate segments, not arrival.
+
+**Why this matters:** A nearby endpoint can be on the other side of a required transport. Conversely, waiting for a sticky minimap target to clear can add unnecessary clicks after an unobstructed route is already within the caller's finish distance.
+
+**Where this applies:** `Rs2Walker.processWalk` and `canFinishRouteEarly`.
+
+**Defensive check:** Cover pending and completed adjacent transports, detours, off-route positions, different planes, and exact-tile requests.
+
+## Match fairy-ring destination codes against live operations
+
+`ObjectComposition.getActions()` can expose only `Last-destination`, while `getOps().getOp(i)` exposes `Last-destination (DKP)`. Read the live operations on the client thread and verify the requested code case-insensitively before using the static `Last-destination` interaction label. Check this direct option before scanning favourites. A missing or different code must not activate last destination.
+
+**Why this matters:** Comparing the dynamic label case-sensitively missed DKP and opened Configure on repeat trips. Passing the full dynamic label to a helper that resolves static action names can also select the wrong slot.
+
+**Where this applies:** `Rs2WalkerTransports.handleFairyRing` and object interaction helpers.
+
+**Defensive check:** Test the captured DKP option, a different requested code, null slots, and the `Ring-last-destination` variant.
+
+## Resolve object submenu parents from static actions
+
+A fairy ring can report three live parent operations while Favourites exists at parent index 3. Locate the parent in the static action labels, enter it with `getSubOps(parentIndex)`, then scan `getOp(subIndex)` up to the submenu count, skipping nulls. Read operations on the client thread. Select the object menu action from the parent index and pack the identifier as `(objectId & 0xFFFF) | (subIndex << 16)`; never hardcode the ring ID or renumber sparse submenu slots.
+
+**Why this matters:** Nested `getSubOps()` calls and a hardcoded identifier missed favourites or sent the wrong action. Missing parent/submenu labels must return false without dispatching a default option.
+
+**Where this applies:** `Rs2GameObject.clickObject(object, action, subAction)` and both fairy-ring handler entry points.
+
+**Defensive check:** Cover the captured sparse submenu (DKP at 1, DJR at 2), a parent beyond the reported live count, index zero, another object ID, and absent labels.

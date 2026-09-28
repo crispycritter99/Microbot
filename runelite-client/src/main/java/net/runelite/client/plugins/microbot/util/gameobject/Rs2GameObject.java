@@ -1960,152 +1960,81 @@ public class Rs2GameObject {
         return true;
     }
 
-    public static boolean clickObject(TileObject object, String action,String subAction) {
-        if (object == null) return false;
-        if (Rs2Player.getWorldLocation().distanceTo(object.getWorldLocation()) > 51) {
-            Microbot.log("Object with id " + object.getId() + " is not close enough to interact with. Walking to the object....");
-            Rs2Walker.walkTo(object.getWorldLocation());
-            return false;
+    // Resolve the parent from static labels: getNumOps() can exclude a submenu-only parent.
+    static int[] resolveSubmenuAction(String[] actions, EntityOps ops, String action, String subAction) {
+        if (actions == null || ops == null || action == null || subAction == null) return null;
+        for (int parent = 0; parent < Math.min(actions.length, EntityOps.MAX_OPS); parent++) {
+            if (actions[parent] == null
+                    || !action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[parent]))) continue;
+            EntityOps submenu = ops.getSubOps(parent);
+            if (submenu == null) continue;
+            for (int sub = 0; sub < submenu.getNumOps(); sub++) {
+                String label = submenu.getOp(sub);
+                if (label != null && subAction.equalsIgnoreCase(Rs2UiHelper.stripColTags(label))) {
+                    return new int[]{parent, sub};
+                }
+            }
         }
+        return null;
+    }
 
+    static int objectSubmenuIdentifier(int objectId, int subIndex) {
+        return (objectId & 0xFFFF) | (subIndex << 16);
+    }
+
+    public static boolean clickObject(TileObject object, String action, String subAction) {
+        if (object == null || action == null || subAction == null) return false;
         try {
-
-            int param0;
-            int param1;
-            MenuAction menuAction = MenuAction.WALK;
-
-            ObjectComposition objComp = convertToObjectComposition(object);
-            if (objComp == null) return false;
-
-            Microbot.status = action + " " + objComp.getName();
-
-            if (object instanceof GameObject) {
-                GameObject obj = (GameObject) object;
-                if (obj.sizeX() > 1) {
-                    param0 = obj.getLocalLocation().getSceneX() - obj.sizeX() / 2;
-                } else {
-                    param0 = obj.getLocalLocation().getSceneX();
+            NewMenuEntry entry = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+                ObjectComposition composition = convertToObjectComposition(object);
+                if (composition == null || Microbot.getClient().isWidgetSelected()) return null;
+                int[] indices = resolveSubmenuAction(composition.getActions(), composition.getOps(), action, subAction);
+                if (indices == null) return null;
+                MenuAction[] menuActions = {
+                        MenuAction.GAME_OBJECT_FIRST_OPTION, MenuAction.GAME_OBJECT_SECOND_OPTION,
+                        MenuAction.GAME_OBJECT_THIRD_OPTION, MenuAction.GAME_OBJECT_FOURTH_OPTION,
+                        MenuAction.GAME_OBJECT_FIFTH_OPTION
+                };
+                int x = object.getLocalLocation().getSceneX();
+                int y = object.getLocalLocation().getSceneY();
+                if (object instanceof GameObject) {
+                    GameObject gameObject = (GameObject) object;
+                    x = gameObject.getSceneMinLocation().getX();
+                    y = gameObject.getSceneMinLocation().getY();
                 }
-
-                if (obj.sizeY() > 1) {
-                    param1 = obj.getLocalLocation().getSceneY() - obj.sizeY() / 2;
-                } else {
-                    param1 = obj.getLocalLocation().getSceneY();
-                }
-            } else {
-                // Default objects like walls, groundobjects, decorationobjects etc...
-                param0 = object.getLocalLocation().getSceneX();
-                param1 = object.getLocalLocation().getSceneY();
+                return new NewMenuEntry()
+                        .param0(x).param1(y)
+                        .opcode(menuActions[indices[0]].getId())
+                        .identifier(objectSubmenuIdentifier(object.getId(), indices[1]))
+                        .itemId(-1).option(subAction).target(composition.getName())
+                        .gameObject(object).worldViewId(object.getWorldView().getId());
+            }).orElse(null);
+            if (entry == null) return false;
+            WorldPoint playerLocation = Rs2Player.getWorldLocation();
+            if (playerLocation == null) return false;
+            if (playerLocation.distanceTo(object.getWorldLocation()) > 51) {
+                Rs2Walker.walkTo(object.getWorldLocation());
+                return false;
             }
-
-            int index = 0;
-            if (action != null) {
-                String[] actions;
-                if (objComp.getImpostorIds() != null && objComp.getImpostor() != null) {
-                    actions = objComp.getImpostor().getActions();
-                } else {
-                    actions = objComp.getActions();
-                }
-
-                for (int i = 0; i < actions.length; i++) {
-                    if (actions[i] == null) continue;
-                    if (action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
-                        index = i;
-                        break;
-                    }
-                }
-
-                if (index == actions.length)
-                    index = 0;
-            }
-
-            if (index == -1) {
-                Microbot.log("Failed to interact with object " + object.getId() + " " + action);
-            }
-
-
-            if (Microbot.getClient().isWidgetSelected()) {
-                menuAction = MenuAction.WIDGET_TARGET_ON_GAME_OBJECT;
-            } else if (index == 0) {
-                menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
-            } else if (index == 1) {
-                menuAction = MenuAction.GAME_OBJECT_SECOND_OPTION;
-            } else if (index == 2) {
-                menuAction = MenuAction.GAME_OBJECT_THIRD_OPTION;
-            } else if (index == 3) {
-                menuAction = MenuAction.GAME_OBJECT_FOURTH_OPTION;
-            } else if (index == 4) {
-                menuAction = MenuAction.GAME_OBJECT_FIFTH_OPTION;
-            }
-
-            if (!Rs2Camera.isTileOnScreen(object.getLocalLocation())) {
+            if (!Microbot.getClientThread().runOnClientThreadOptional(
+                    () -> Rs2Camera.isTileOnScreen(object.getLocalLocation())).orElse(false)) {
                 Rs2Camera.turnTo(object);
             }
-
-            // both hands must be free before using MINECART
-            if (objComp.getName().toLowerCase().contains("train cart")) {
+            if (entry.getTarget().toLowerCase().contains("train cart")) {
                 Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
                 Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
-                sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
+                if (!sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null
+                        && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null)) return false;
             }
-
-/*            if (object.getWorldView().getId() != -1) {
-                param0 = 3;
-                param1 = 4;
-            }*/
-
-            int worldViewId = WorldView.TOPLEVEL;
-
-            if (!object.getWorldView().isTopLevel()) {
-                var worldView =Microbot.getClientThread().invoke(() ->  Microbot.getClient().getLocalPlayer().getWorldView());
-                if (worldView == null) {
-                    worldViewId = Microbot.getClient().getTopLevelWorldView().getId();
-                } else {
-                    worldViewId = worldView
-                            .getId();
-                }
-
-            }
-            int identifiervalue = -1;
-            var ops=objComp.getOps();
-            int opIdx = 3;
-            for (int subIdx = 0; subIdx < 4; subIdx++)
-            {
-                EntityOps subOp = ops.getSubOps(subIdx);
-                if (subOp == null) continue;
-                for (int Op = 0; Op <objComp.getOps().getSubOps(opIdx).getNumOps()+1;Op++)
-//            assert subOp != null;
-                    if (subOp.getSubOps(Op).toString() .contains(subAction))
-                    {
-                        int subID = Op;
-                        identifiervalue = 95031+65536*(subID-1);
-                        System.out.println(95031+65536*(subID-1));
-
-                    }
-            }
-            if (objComp.getName().toLowerCase().contains("fairy ring")){
-
-            }
-            Microbot.doInvoke(new NewMenuEntry()
-                            .param0(param0)
-                            .param1(param1)
-                            .opcode(menuAction.getId())
-                            .identifier(identifiervalue)
-                            .itemId(-1)
-                            .option(subAction)
-                            .target(objComp.getName())
-                            .gameObject(object)
-                            .worldViewId(worldViewId)
-                    ,
-                    Rs2UiHelper.getObjectClickbox(object));
-// MenuEntryImpl(getOption=Use, getTarget=Barrier, getIdentifier=43700, getType=GAME_OBJECT_THIRD_OPTION, getParam0=53, getParam1=51, getItemId=-1, isForceLeftClick=true, getWorldViewId=-1, isDeprioritized=false)
-            //Rs2Reflection.invokeMenu(param0, param1, menuAction.getId(), object.getId(),-1, "", "", -1, -1);
-
+            java.awt.Rectangle bounds = Microbot.getClientThread().runOnClientThreadOptional(
+                    () -> Rs2UiHelper.getObjectClickbox(object)).orElse(null);
+            if (bounds == null) return false;
+            Microbot.doInvoke(entry, bounds);
+            return true;
         } catch (Exception ex) {
-            Microbot.log("Failed to interact with object " + ex.getMessage());
+            Microbot.log("Failed to interact with object submenu: " + ex.getMessage());
+            return false;
         }
-
-        return true;
     }
 
     public static boolean hasLineOfSight(TileObject tileObject) {

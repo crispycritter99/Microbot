@@ -135,6 +135,17 @@ public interface ShortestPathConfig extends Config {
     String sectionSettings = "sectionSettings";
 
     @ConfigItem(
+            keyName = "adjustCameraWhileWalking",
+            name = "Adjust camera while walking",
+            description = "Turn the camera toward the walking direction and vary its angle and tilt. Disable to keep manual camera control.",
+            position = 99,
+            section = sectionSettings
+    )
+    default boolean adjustCameraWhileWalking() {
+        return true;
+    }
+
+    @ConfigItem(
             keyName = "avoidWilderness",
             name = "Avoid wilderness",
             description = "Whether the wilderness should be avoided if possible<br>" +
