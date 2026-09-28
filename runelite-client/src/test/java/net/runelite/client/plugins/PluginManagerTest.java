@@ -139,9 +139,26 @@ public class PluginManagerTest
 	@Test
 	public void testLoadPlugins() throws Exception
 	{
-		var pluginManager = new PluginManager(false, null, null, null, null);
+		var pluginManager = new PluginManager(false, null, null, null, null, new PluginModuleFactory());
 		pluginManager.loadCorePlugins();
 		var plugins = pluginManager.getPlugins();
+		Plugin clueScrolls = plugins.stream()
+			.filter(plugin -> plugin instanceof net.runelite.client.plugins.cluescrolls.ClueScrollPlugin)
+			.findFirst().orElseThrow();
+		org.junit.Assert.assertSame(clueScrolls, RuneLite.getInjector()
+			.createChildInjector(clueScrolls.getPublicModule())
+			.getInstance(net.runelite.client.plugins.cluescrolls.ClueScrollPlugin.class));
+		Plugin bankTags = plugins.stream()
+			.filter(plugin -> plugin instanceof net.runelite.client.plugins.banktags.BankTagsPlugin)
+			.findFirst().orElseThrow();
+		Plugin inventorySetups = plugins.stream()
+			.filter(plugin -> plugin instanceof net.runelite.client.plugins.microbot.inventorysetups.MInventorySetupsPlugin)
+			.findFirst().orElseThrow();
+		org.junit.Assert.assertSame(bankTags, inventorySetups.getInjector()
+			.getInstance(net.runelite.client.plugins.banktags.BankTagsPlugin.class));
+		org.junit.Assert.assertSame(bankTags.getInjector()
+			.getInstance(net.runelite.client.plugins.banktags.TagManager.class), inventorySetups.getInjector()
+			.getInstance(net.runelite.client.plugins.banktags.TagManager.class));
 
 		// Check that the plugins register with the eventbus without errors
 		EventBus eventBus = new EventBus();
@@ -160,7 +177,7 @@ public class PluginManagerTest
 	@Ignore
 	public void dumpGraph() throws Exception
 	{
-		PluginManager pluginManager = new PluginManager(false, null, null, null, null);
+		PluginManager pluginManager = new PluginManager(false, null, null, null, null, new PluginModuleFactory());
 		pluginManager.loadCorePlugins();
 
 		Injector graphvizInjector = Guice.createInjector(new GraphvizModule());
