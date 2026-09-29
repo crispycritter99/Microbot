@@ -78,7 +78,7 @@ public class GroundItem
 		return haPrice * quantity;
 	}
 
-	long getGePrice()
+	public long getGePrice()
 	{
 		return gePrice * quantity;
 	}
