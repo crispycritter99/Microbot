@@ -388,3 +388,23 @@ Door and scene-object scans retain a lookback window for nearby ordinary doors. 
 **Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, `handleFirstRouteInteractionAtRange` transport-map construction, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
 
 **Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors. Test the production transport map used by both the pending-interaction predicate and the blocked-transport predicate, rather than filtering only the test predicates.
+
+## 21. Apply the shared energy policy before clicking the run orb
+
+Every run-enable caller must pass through `Rs2Player.toggleRunEnergy`: energy must exceed
+`Microbot.runEnergyThreshold` in hundredths of a percent (default 1000 = 10%). The
+walker previously checked whole percentages in one path while direct scene/bank calls
+bypassed the check. An already satisfied state and explicit disable do not require energy.
+
+**Why this matters:** At zero energy, repeated requests cannot enable run. The orb's
+canvas location is its bounding-box corner, outside its circular hit area. Read visibility
+and bounds on the client thread and target the center; perform mouse gestures off-thread.
+A click is only a request: the helper returns true only if the desired state is observed,
+and throttles retries while the update is pending. Normal script iterations can retry.
+
+**Where this applies:** `Rs2Player`, `Rs2Walker`, `Rs2WalkerMovement`, bank/deposit helpers,
+and the base `Script` auto-run policy. The shared threshold now consistently uses raw
+energy (>1000 by default), replacing the walker's rounded >10% (>=1100) check.
+
+**Defensive check:** `Rs2PlayerRunEnergyTest` covers threshold boundaries, explicit disable,
+missing/hidden orbs, interior geometry, pending updates, and client-thread requests.
