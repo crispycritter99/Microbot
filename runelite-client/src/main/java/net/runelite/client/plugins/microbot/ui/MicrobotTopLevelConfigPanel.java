@@ -5,6 +5,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.config.TopLevelConfigPanel;
 import net.runelite.client.plugins.microbot.diagnostics.DiagnosticReportCollector;
+import net.runelite.client.plugins.microbot.recovery.StartupRecovery;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -21,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
@@ -130,7 +133,11 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         versionLabel.setFont(FontManager.getRunescapeSmallFont());
         versionLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         footer.add(versionLabel);
+        if (StartupRecovery.mode().isSafeMode()) {
+            footer.add(buildSafeModeNotice());
+        }
         footer.add(buildDiagnosticsButton());
+        footer.add(buildRecoveryButton());
 
         String proxy = ClientUI.proxyMessage;
         if (proxy != null && !proxy.isBlank()) {
@@ -142,6 +149,53 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         }
 
         return footer;
+    }
+
+    private JLabel buildSafeModeNotice() {
+        String text = StartupRecovery.mode().isTemporary()
+                ? "<html><center>Safe mode: external plugins are off for this session. Your plugins and settings are kept. Restart to return to normal.</center></html>"
+                : "<html><center>Safe mode (--safe-mode): external plugins are off. Remove the launch option to return to normal.</center></html>";
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        label.setFont(FontManager.getRunescapeSmallFont());
+        label.setForeground(ColorScheme.PROGRESS_INPROGRESS_COLOR);
+        label.setBorder(new EmptyBorder(2, 6, 2, 6));
+        List<String> previous = StartupRecovery.previousSessionSummary();
+        if (!previous.isEmpty()) {
+            label.setToolTipText("<html>Previous session:<br>" + previous.stream()
+                    .map(line -> line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
+                    .collect(Collectors.joining("<br>")) + "</html>");
+        }
+        return label;
+    }
+
+    private JButton buildRecoveryButton() {
+        JButton button = new JButton();
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setFont(FontManager.getRunescapeSmallFont());
+        button.setFocusable(false);
+        button.setToolTipText("Start Microbot once without external (Hub or sideloaded) plugins and the GPU plugin, to recover from a plugin that freezes or crashes the client. Plugin files and settings are kept.");
+        updateRecoveryButton(button);
+        button.addActionListener(e -> {
+            boolean enable = !StartupRecovery.nextStartSafeMode();
+            if (!StartupRecovery.requestNextStartSafeMode(enable)) {
+                button.setText("Recovery unavailable");
+                button.setEnabled(false);
+                return;
+            }
+            updateRecoveryButton(button);
+            if (enable) {
+                JOptionPane.showMessageDialog(this,
+                        "The next start will use safe mode: external plugins and the GPU plugin stay off for that session only.\n"
+                                + "Close Microbot and start it again. Your plugins and settings are kept, and the start after that is normal.",
+                        "Safe mode on next start", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+        return button;
+    }
+
+    private static void updateRecoveryButton(JButton button) {
+        button.setText(StartupRecovery.nextStartSafeMode() ? "Cancel safe mode next start" : "Safe mode next start");
     }
 
     private JButton buildDiagnosticsButton() {

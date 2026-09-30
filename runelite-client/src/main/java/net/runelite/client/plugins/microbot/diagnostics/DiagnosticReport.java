@@ -92,7 +92,7 @@ public final class DiagnosticReport
 		return out.toString();
 	}
 
-	static String clean(String raw)
+	public static String clean(String raw)
 	{
 		if (raw == null)
 		{
