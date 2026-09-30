@@ -4,6 +4,7 @@ import net.runelite.client.RuneLiteProperties;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.config.TopLevelConfigPanel;
+import net.runelite.client.plugins.microbot.diagnostics.DiagnosticReportCollector;
 import net.runelite.client.ui.ClientUI;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -16,9 +17,12 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import lombok.extern.slf4j.Slf4j;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.image.BufferedImage;
 
+@Slf4j
 @Singleton
 public class MicrobotTopLevelConfigPanel extends PluginPanel {
     private final MaterialTabGroup tabGroup;
@@ -26,6 +30,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
     private final JPanel content;
 
     private final EventBus eventBus;
+    private final DiagnosticReportCollector diagnosticReportCollector;
     private final MicrobotPluginListPanel pluginListPanel;
     private final MaterialTab pluginListPanelTab;
     private final MaterialTab profilePanelTab;
@@ -80,11 +85,13 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
             EventBus eventBus,
             MicrobotPluginListPanel pluginListPanel,
             MicrobotProfilePanel profilePanel,
-            Provider<MicrobotPluginHubPanel> microbotPluginHubPanelProvider
+            Provider<MicrobotPluginHubPanel> microbotPluginHubPanelProvider,
+            DiagnosticReportCollector diagnosticReportCollector
     ) {
         super(false);
 
         this.eventBus = eventBus;
+        this.diagnosticReportCollector = diagnosticReportCollector;
 
         tabGroup = new MaterialTabGroup();
         tabGroup.setLayout(new GridLayout(1, 0, 7, 7));
@@ -123,6 +130,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         versionLabel.setFont(FontManager.getRunescapeSmallFont());
         versionLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
         footer.add(versionLabel);
+        footer.add(buildDiagnosticsButton());
 
         String proxy = ClientUI.proxyMessage;
         if (proxy != null && !proxy.isBlank()) {
@@ -134,6 +142,28 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         }
 
         return footer;
+    }
+
+    private JButton buildDiagnosticsButton() {
+        JButton button = new JButton("Copy diagnostics");
+        button.setAlignmentX(Component.CENTER_ALIGNMENT);
+        button.setFont(FontManager.getRunescapeSmallFont());
+        button.setFocusable(false);
+        button.setToolTipText("Copy client, build, walker and plugin details for bug reports. Excludes account names, chat, tokens and file paths.");
+        Timer reset = new Timer(2000, e -> button.setText("Copy diagnostics"));
+        reset.setRepeats(false);
+        button.addActionListener(e -> {
+            try {
+                String report = diagnosticReportCollector.collectReport();
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(report), null);
+                button.setText("Copied");
+            } catch (Exception ex) {
+                log.warn("Could not copy diagnostics: {}", ex.getMessage());
+                button.setText("Copy failed");
+            }
+            reset.restart();
+        });
+        return button;
     }
 
     private MaterialTab addTab(MicrobotPluginPanel panel, ImageIcon icon, String tooltip) {

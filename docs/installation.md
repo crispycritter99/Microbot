@@ -34,4 +34,10 @@ Replace the official `RuneLite.jar` with the Microbot jar and keep the filename 
 - For Jagex accounts, Bolt can launch a custom RuneLite jar: https://github.com/Adamcake/Bolt
 - You can also extract the RuneLite AppImage and replace `RuneLite.jar` with the Microbot jar.
 
+## Reporting A Problem
+
+Open the Microbot side panel (the Community Plugins button), then click **Copy diagnostics** below the version at the bottom. Paste the copied text into your Discord post or GitHub issue.
+
+The report lists the Microbot/RuneLite versions, commit, build origin, Java/OS, safe mode, GPU state, walker planner and settings, and loaded external plugin versions. Builds without official release metadata show `Build origin: unknown` or `custom`. It excludes account and player names, chat, credentials/tokens, and file paths.
+
 **Are you stuck? Join our [Discord](https://discord.gg/zaGrfqFEWE) server.**
