@@ -17,6 +17,8 @@ Ground-item pickup: [propagate dispatch failures](items.md#11-propagate-ground-i
 
 Run-orb energy, geometry, and pending-click semantics: [movement gotcha 21](movement.md#21-apply-the-shared-energy-policy-before-clicking-the-run-orb).
 
+Scene walk-click render validity and destination confirmation: [movement gotcha 22](movement.md#22-a-scene-walk-click-is-only-valid-on-a-tile-rendered-at-click-time).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:

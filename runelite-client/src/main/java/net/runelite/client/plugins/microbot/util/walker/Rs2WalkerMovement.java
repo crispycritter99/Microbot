@@ -62,6 +62,7 @@ import net.runelite.client.plugins.microbot.util.walker.door.Rs2DoorDetection;
 import net.runelite.client.plugins.microbot.util.walker.door.Rs2DoorProbe;
 import net.runelite.client.plugins.microbot.util.walker.door.Rs2DoorAheadResolver;
 import net.runelite.client.plugins.microbot.util.walker.door.Rs2DoorGeometry;
+import net.runelite.client.plugins.microbot.util.walker.geometry.SceneClickPolicy;
 import net.runelite.client.plugins.microbot.util.walker.geometry.WalkerPathGeometry;
 import net.runelite.client.plugins.microbot.util.walker.obstacle.MineableResolver;
 import net.runelite.client.plugins.microbot.util.walker.obstacle.ObstacleResolution;
@@ -121,6 +122,8 @@ final class Rs2WalkerMovement {
     private static WorldPoint routeClickSessionTarget;
     private static int routeClicksSinceMinimap;
     private static int nextMinimapClickAt = ThreadLocalRandom.current().nextInt(2, 8);
+    static final SceneClickPolicy SCENE_CLICKS = SceneClickPolicy.create();
+    static final int SCENE_WALK_CONFIRM_TIMEOUT_MS = 600;
 
     private Rs2WalkerMovement() {
     }
@@ -880,14 +883,31 @@ final class Rs2WalkerMovement {
     }
 
     static boolean walkFastCanvasOnScreenOnly(WorldPoint worldPoint, boolean toggleRun) {
+        if (worldPoint == null || SCENE_CLICKS.isSuppressed(System.currentTimeMillis())) {
+            return false;
+        }
+        Rs2Player.toggleRunEnergy(toggleRun);
+        if (!dispatchSceneWalk(worldPoint)) {
+            return false;
+        }
+        alignCameraTowardWalkTarget(worldPoint);
+        return true;
+    }
+
+    static boolean dispatchSceneWalk(WorldPoint worldPoint) {
+        if (Rs2Walker.isRouteCameraTurning()) {
+            WebWalkLog.spDebug("scene_click_skipped | reason=camera_turning to={}", compactWorldPoint(worldPoint));
+            return false;
+        }
         Point canvasPoint = sceneCanvasPoint(worldPoint);
         if (canvasPoint == null) {
             return false;
         }
+        Client client = Microbot.getClient();
+        LocalPoint before = client.isClientThread() ? null
+                : Microbot.getClientThread().runOnClientThreadOptional(client::getLocalDestinationLocation).orElse(null);
         int canvasX = canvasPoint.getX();
         int canvasY = canvasPoint.getY();
-
-        Rs2Player.toggleRunEnergy(toggleRun);
         NewMenuEntry entry = new NewMenuEntry()
                 .param0(canvasX)
                 .param1(canvasY)
@@ -897,9 +917,33 @@ final class Rs2WalkerMovement {
                 .option("Walk here");
 
         Microbot.doInvoke(entry,
-                new Rectangle(canvasX, canvasY, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
-        alignCameraTowardWalkTarget(worldPoint);
+                new Rectangle(canvasX, canvasY, client.getCanvasWidth(), client.getCanvasHeight()));
+        if (client.isClientThread()) {
+            return true;
+        }
+        LocalPoint[] observed = awaitSceneWalkDestination(worldPoint, before);
+        SceneClickPolicy.Outcome outcome = SceneClickPolicy.classify(before, observed[0], observed[1]);
+        if (SCENE_CLICKS.record(outcome, System.currentTimeMillis())) {
+            log.info("[Walker] Scene clicks failed repeatedly; using minimap for {}ms", SceneClickPolicy.SUPPRESSION_MS);
+        }
+        if (outcome != SceneClickPolicy.Outcome.CONFIRMED) {
+            WebWalkLog.spDebug("scene_click_unconfirmed | outcome={} errorTiles={} to={}", outcome,
+                    SceneClickPolicy.destinationErrorTiles(observed[0], observed[1]), compactWorldPoint(worldPoint));
+            return false;
+        }
         return true;
+    }
+
+    private static LocalPoint[] awaitSceneWalkDestination(WorldPoint worldPoint, LocalPoint before) {
+        Supplier<LocalPoint[]> snapshot = () -> Microbot.getClientThread().runOnClientThreadOptional(() ->
+                new LocalPoint[] {Microbot.getClient().getLocalDestinationLocation(), localPointForWorld(worldPoint)})
+                .orElse(new LocalPoint[2]);
+        LocalPoint[][] latest = {snapshot.get()};
+        sleepUntil(() -> {
+            latest[0] = snapshot.get();
+            return SceneClickPolicy.isSettled(before, latest[0][0], latest[0][1]);
+        }, SCENE_WALK_CONFIRM_TIMEOUT_MS);
+        return latest[0];
     }
 
     static boolean isSceneCanvasClickable(WorldPoint worldPoint) {
@@ -913,6 +957,12 @@ final class Rs2WalkerMovement {
         }
         LocalPoint localPoint = localPointForWorld(worldPoint);
         if (localPoint == null || !Rs2Camera.isTileOnScreen(localPoint)) {
+            return null;
+        }
+        Client client = Microbot.getClient();
+        int drawDistance = SceneClickPolicy.renderedDrawDistance(client.isGpu(),
+                client.getTopLevelWorldView().getScene().getDrawDistance());
+        if (!SceneClickPolicy.isWithinRenderedArea(client.getCameraX(), client.getCameraY(), localPoint, drawDistance)) {
             return null;
         }
         Point canvasPoint = Perspective.localToCanvas(

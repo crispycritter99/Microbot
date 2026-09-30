@@ -126,8 +126,8 @@ public class Rs2Walker {
     private static long nextRouteCameraVariationAtNanos;
     private static int routeCameraYawOffsetDegrees;
     private static int routeCameraPitch = 300;
-    private static int routeCameraYawKey;
-    private static int routeCameraPitchKey;
+    private static volatile int routeCameraYawKey;
+    private static volatile int routeCameraPitchKey;
 
     /** The active walk's configured finish distance — the goal-object guard needs it outside processWalk. */
     static volatile int currentWalkDistance;
@@ -3912,7 +3912,6 @@ public class Rs2Walker {
             return false;
         }
         Rs2Player.toggleRunEnergy(toggleRun);
-        Point canv;
         LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), worldPoint);
 
         if (Microbot.getClient().getTopLevelWorldView().isInstance() && localPoint == null) {
@@ -3930,33 +3929,17 @@ public class Rs2Walker {
             return false;
         }
 
-        canv = Perspective.localToCanvas(Microbot.getClient(), localPoint, Microbot.getClient().getTopLevelWorldView().getPlane());
-
-        int canvasX = canv != null ? canv.getX() : -1;
-        int canvasY = canv != null ? canv.getY() : -1;
-
-        //if the tile is not on screen, use minimap
-        if (!Rs2Camera.isTileOnScreen(localPoint) || canvasX < 0 || canvasY < 0) {
-            WorldPoint playerLoc = Rs2Player.getWorldLocation();
-            if (playerLoc != null
-                    && playerLoc.getPlane() == worldPoint.getPlane()
-                    && walkMiniMapToward(worldPoint, playerLoc, 13)) {
-                return true;
-            }
-            return Rs2Walker.walkMiniMap(worldPoint);
+        if (!Rs2WalkerMovement.SCENE_CLICKS.isSuppressed(System.currentTimeMillis())
+                && Rs2WalkerMovement.dispatchSceneWalk(worldPoint)) {
+            return true;
         }
-
-        NewMenuEntry entry = new NewMenuEntry()
-                .param0(canvasX)
-                .param1(canvasY)
-                .type(MenuAction.WALK)
-                .identifier(0)
-                .itemId(0)
-                .option("Walk here");
-
-        Microbot.doInvoke(entry,
-                new Rectangle(canvasX, canvasY, Microbot.getClient().getCanvasWidth(), Microbot.getClient().getCanvasHeight()));
-        return true;
+        WorldPoint playerLoc = Rs2Player.getWorldLocation();
+        if (playerLoc != null
+                && playerLoc.getPlane() == worldPoint.getPlane()
+                && walkMiniMapToward(worldPoint, playerLoc, 13)) {
+            return true;
+        }
+        return Rs2Walker.walkMiniMap(worldPoint);
     }
 
     public static WorldPoint walkCanvas(WorldPoint worldPoint) {
@@ -8061,6 +8044,10 @@ public class Rs2Walker {
 
     static boolean isMiniMapRecoveryClickable(WorldPoint worldPoint) {
         return isMiniMapClickable(worldPoint);
+    }
+
+    static boolean isRouteCameraTurning() {
+        return routeCameraYawKey != 0 || routeCameraPitchKey != 0;
     }
 
     private static void releaseRouteCameraKeys() {
