@@ -376,6 +376,7 @@ final class Rs2WalkerMovement {
         if (walkFastCanvasOnScreenOnly(fallback, true)) {
             WebWalkLog.spDebug("route_scene_click_fallback | to={} requested={} player={}",
                     compactWorldPoint(fallback), compactWorldPoint(target), compactWorldPoint(playerLoc));
+            alignCameraTowardWalkTarget(target);
             return fallback;
         }
         return null;

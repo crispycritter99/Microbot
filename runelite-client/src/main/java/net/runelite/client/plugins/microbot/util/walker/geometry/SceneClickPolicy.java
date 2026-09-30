@@ -18,6 +18,7 @@ public final class SceneClickPolicy {
 
     private int consecutiveFailures;
     private long suppressedUntilMs;
+    private long lastFailureAtMs = Long.MIN_VALUE;
 
     private SceneClickPolicy() {
     }
@@ -69,11 +70,16 @@ public final class SceneClickPolicy {
         return nowMs < suppressedUntilMs;
     }
 
+    public synchronized boolean failedWithin(long nowMs, long windowMs) {
+        return lastFailureAtMs != Long.MIN_VALUE && nowMs - lastFailureAtMs < windowMs;
+    }
+
     public synchronized boolean record(Outcome outcome, long nowMs) {
         if (outcome == Outcome.CONFIRMED) {
             consecutiveFailures = 0;
             return false;
         }
+        lastFailureAtMs = nowMs;
         consecutiveFailures++;
         if (consecutiveFailures < FAILURES_BEFORE_SUPPRESSION) {
             return false;
@@ -86,5 +92,6 @@ public final class SceneClickPolicy {
     public synchronized void reset() {
         consecutiveFailures = 0;
         suppressedUntilMs = 0L;
+        lastFailureAtMs = Long.MIN_VALUE;
     }
 }

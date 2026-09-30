@@ -19,6 +19,8 @@ Run-orb energy, geometry, and pending-click semantics: [movement gotcha 21](move
 
 Scene walk-click render validity and destination confirmation: [movement gotcha 22](movement.md#22-a-scene-walk-click-is-only-valid-on-a-tile-rendered-at-click-time).
 
+Route camera turns only for unreachable targets: [movement gotcha 23](movement.md#23-route-camera-turns-are-for-targets-the-scene-cannot-reach).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:

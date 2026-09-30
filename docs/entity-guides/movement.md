@@ -431,3 +431,23 @@ consecutive failures, scene clicks pause for 3 seconds.
 
 **Defensive check:** `SceneClickPolicyTest` covers draw-distance selection, camera-relative
 bounds, destination classification, and bounded suppression.
+
+## 23. Route camera turns are for targets the scene cannot reach
+
+`Rs2Walker.alignCameraTowardWalkTarget` runs after every scene and minimap walk click. A
+visible, rendered click target gains nothing from a turn. The turn only moves the view the
+user is watching, and while its arrow keys are held, scene clicks are skipped.
+
+**Why this matters:** The old alignment re-randomised yaw offset and pitch every 5–10 seconds
+and turned even when the target was on screen. On five fixed routes, 22 of 29 turns started
+while the destination was already clickable.
+
+**Where this applies:** `RouteCameraPolicy.decide`. Turn only when the target is at least
+4 tiles away, 1.2 seconds have passed since the last turn, and one of two conditions holds:
+the target is not scene-clickable, or a scene click failed within the last 2 seconds. When
+the heading is within 20 degrees, turn only if a view variation is due. View variation
+(yaw offset and pitch) is applied only to turns that are already needed. After a scene
+fallback click toward a nearer visible tile, the walker aligns toward the requested target.
+
+**Defensive check:** `RouteCameraPolicyTest` covers visible, hidden, aligned, recently
+failed, near, and throttled cases.
