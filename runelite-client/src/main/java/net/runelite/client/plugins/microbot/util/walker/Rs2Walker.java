@@ -4539,6 +4539,9 @@ public class Rs2Walker {
                 break;
             }
             if (shouldDeferDoorHandlingToTransport(rawPath, ri)) {
+                if (!FirstRouteInteractionSelector.isTransportAtOrAhead(ri, rawStart)) {
+                    continue;
+                }
                 break;
             }
             if (!hasDoorLikeSceneObjectOnSegment(a, b, playerLoc, HANDLER_RANGE)) {
@@ -4583,6 +4586,9 @@ public class Rs2Walker {
                 break;
             }
             if (shouldDeferDoorHandlingToTransport(rawPath, ri)) {
+                if (!FirstRouteInteractionSelector.isTransportAtOrAhead(ri, rawEdgeStart)) {
+                    continue;
+                }
                 break;
             }
             if (!hasUnresolvedDoorLikeSceneObjectOnSegment(from, to, playerLoc, radiusTiles)) {
@@ -4734,6 +4740,9 @@ public class Rs2Walker {
                 scannedIdx++;
 
                 if (allowTransportHandlers && hasExplicitTransportStep(rawPath, i)) {
+                    if (!FirstRouteInteractionSelector.isTransportAtOrAhead(i, rawStart)) {
+                        continue;
+                    }
                     WorldPoint routeOrigin = rawPath.get(i);
                     WorldPoint expectedDest = i + 1 < rawPath.size() ? rawPath.get(i + 1) : null;
                     int originDistance = routeOrigin != null && routeOrigin.getPlane() == playerLoc.getPlane()

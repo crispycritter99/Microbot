@@ -38,6 +38,11 @@ public final class FirstRouteInteractionSelector {
         }
     }
 
+    /** Backtracked transports must not block or redispatch before the player's raw anchor. */
+    public static boolean isTransportAtOrAhead(int edgeIndex, int rawAnchor) {
+        return edgeIndex >= rawAnchor;
+    }
+
     /**
      * Include the two raw edges before the forward anchor: a reachable tile beyond a gate does
      * not prove the edge to it has opened. Only a recently handled, exact transport edge with

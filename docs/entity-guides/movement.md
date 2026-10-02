@@ -379,12 +379,12 @@ A minimap target legitimately stops on the near side of a closed door or object 
 
 **Defensive check:** With two visible doors, a closed first door must remain selected after a failed click; opening it allows the second. An earlier wall or non-object transport must stop the ranged scan. A cross-plane object transport can be selected from a reachable adjacent approach tile even when its origin is absent from collision reachability.
 
-## 20. Require crossing evidence before skipping a backtracked transport
+## 20. Skip backtracked transport edges below the player's raw anchor
 
-The closest raw-route index can move beyond a transport before the player crosses it, especially on a detour. Door and scene-object scans may look back across nearby edges, but should advance past an exact transport edge only when a recent handled transport and the player's landing position show that it was crossed. Keep an unhandled transport in route order so a visible door beyond it cannot be clicked first.
+Door and scene-object scans retain a lookback window for nearby ordinary doors. Skip transport edges below the player's raw anchor rather than stopping the scan or dispatching them again. Only transports at or ahead of the anchor block later interactions. The recent handled-transport window expires after eight seconds and does not record crossings made by plain walking.
 
-**Why this matters:** A completed gate transport left its edge inside four backtrack windows, causing scans to stop before the next door. Skipping every edge below the closest index would fix that case while allowing an untraversed detour transport to be bypassed.
+**Why this matters:** A player paused just beyond a same-plane gate could never handle a door ahead after recent-transport suppression expired.
 
-**Where this applies:** `FirstRouteInteractionSelector.scanStartEdge`, `Rs2Walker` raw-route scene and pending-door scans, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
+**Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
 
-**Defensive check:** With a gate followed by a door, verify the gate blocks the door before crossing and the door becomes the first candidate after observed landing, including when the transport is the route's final backtracked edge.
+**Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors.

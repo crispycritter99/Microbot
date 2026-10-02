@@ -243,4 +243,37 @@ public class FirstRouteInteractionSelectorTest {
         assertEquals(2, FirstRouteInteractionSelector.firstInteractionEdge(route, start, 4,
                 PLAYER, null, 10, edge -> edge == 2 || edge == 3, edge -> edge == 2));
     }
+
+    @Test
+    public void expiredTransportBehindPlayerAllowsDoorAhead() {
+        assertDoorAfterCrossedTransport(point(3), point(4));
+    }
+
+    @Test
+    public void transportCrossedByPlainWalkingAllowsDoorAhead() {
+        assertDoorAfterCrossedTransport(null, null);
+    }
+
+    private static void assertDoorAfterCrossedTransport(WorldPoint origin, WorldPoint destination) {
+        int anchor = 4;
+        int start = FirstRouteInteractionSelector.scanStartEdge(ROUTE, anchor, point(4),
+                origin, destination, false);
+        assertEquals(2, start);
+        assertEquals(5, FirstRouteInteractionSelector.firstInteractionEdge(ROUTE, start, 6,
+                point(4), reachableThrough(10), 10, edge -> edge == 5,
+                edge -> edge == 3 && FirstRouteInteractionSelector.isTransportAtOrAhead(edge, anchor)));
+        assertEquals(false, FirstRouteInteractionSelector.isTransportAtOrAhead(3, anchor));
+    }
+
+    @Test
+    public void transportAtOrAheadOfAnchorStillBlocksDoor() {
+        for (int transport : new int[]{4, 5}) {
+            FirstRouteInteractionSelector.Selection selection = FirstRouteInteractionSelector.selectFirst(
+                    ROUTE, 2, 8, point(4), reachableThrough(10), 10, edge -> edge == 7,
+                    edge -> edge == transport && FirstRouteInteractionSelector.isTransportAtOrAhead(edge, 4));
+            assertEquals(FirstRouteInteractionSelector.Kind.BLOCKED_TRANSPORT, selection.kind());
+            assertEquals(transport, selection.edgeIndex());
+        }
+    }
+
 }

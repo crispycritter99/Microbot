@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.util.walker;
 
+import net.runelite.client.plugins.microbot.util.walker.door.FirstRouteInteractionSelector;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -423,6 +424,9 @@ final class Rs2WalkerDoors {
                 break;
             }
             if (shouldDeferDoorHandlingToTransport(rawPath, ri)) {
+                if (!FirstRouteInteractionSelector.isTransportAtOrAhead(ri, rawStart)) {
+                    continue;
+                }
                 break;
             }
             if (!hasDoorLikeSceneObjectOnSegment(a, b, playerLoc, HANDLER_RANGE)) {
