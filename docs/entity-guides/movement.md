@@ -385,6 +385,6 @@ Door and scene-object scans retain a lookback window for nearby ordinary doors. 
 
 **Why this matters:** A player paused just beyond a same-plane gate could never handle a door ahead after recent-transport suppression expired.
 
-**Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
+**Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, `handleFirstRouteInteractionAtRange` transport-map construction, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
 
-**Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors.
+**Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors. Test the production transport map used by both the pending-interaction predicate and the blocked-transport predicate, rather than filtering only the test predicates.

@@ -8191,6 +8191,20 @@ public class Rs2Walker {
                 obstaclePolicyForCurrentPhase().segmentDoorTimeoutMs());
     }
 
+    /** Keep the scene-door lookback while restricting transport ownership to the remaining route. */
+    static Map<Integer, Rs2TransportEdge> collectRouteTransportsForInteractionScan(
+            List<Rs2RouteStep> routeSteps, int startEdge, int rawAnchor, int maxEdges) {
+        Map<Integer, Rs2TransportEdge> selectedTransports = new HashMap<>();
+        int endEdge = Math.min(routeSteps.size(), startEdge + maxEdges);
+        for (int edge = startEdge; edge < endEdge; edge++) {
+            Rs2RouteStep step = routeSteps.get(edge);
+            if (step.isTransport() && FirstRouteInteractionSelector.isTransportAtOrAhead(edge, rawAnchor)) {
+                selectedTransports.put(edge, step.getTransport().orElseThrow());
+            }
+        }
+        return selectedTransports;
+    }
+
     /**
      * Check the first route interaction before an active minimap interim yields the pass. The
      * smoothed-segment loop cannot establish route order: an empty segment consumed its old ranged
@@ -8223,15 +8237,8 @@ public class Rs2Walker {
         int startEdge = FirstRouteInteractionSelector.scanStartEdge(rawPath, anchor, playerLoc,
                 routeState.lastTransportOriginLocation, routeState.lastTransportDestinationLocation,
                 isRecentTransportEdgeWindow());
-        List<Rs2RouteStep> routeSteps = activeRoute.get().getSteps();
-        Map<Integer, Rs2TransportEdge> selectedTransports = new HashMap<>();
-        int endEdge = Math.min(routeSteps.size(), startEdge + HANDLER_RANGE + 4);
-        for (int edge = startEdge; edge < endEdge; edge++) {
-            Rs2RouteStep step = routeSteps.get(edge);
-            if (step.isTransport()) {
-                selectedTransports.put(edge, step.getTransport().orElseThrow());
-            }
-        }
+        Map<Integer, Rs2TransportEdge> selectedTransports = collectRouteTransportsForInteractionScan(
+                activeRoute.get().getSteps(), startEdge, anchor, HANDLER_RANGE + 4);
         long sceneCaptureStartedAtMs = System.currentTimeMillis();
         List<RouteSceneObjectSnapshot.Entry> sceneObjects = RouteSceneObjectSnapshot.capture(
                 rawPath, startEdge, HANDLER_RANGE + 4, playerLoc, HANDLER_RANGE);
