@@ -912,7 +912,8 @@ final class Rs2WalkerMovement {
             return false;
         }
         Client client = Microbot.getClient();
-        LocalPoint before = client.isClientThread() ? null
+        boolean onClientThread = Microbot.getClientThread().isClientThread();
+        LocalPoint before = onClientThread ? null
                 : Microbot.getClientThread().runOnClientThreadOptional(client::getLocalDestinationLocation).orElse(null);
         int canvasX = canvasPoint.getX();
         int canvasY = canvasPoint.getY();
@@ -926,7 +927,7 @@ final class Rs2WalkerMovement {
 
         Microbot.doInvoke(entry,
                 new Rectangle(canvasX, canvasY, client.getCanvasWidth(), client.getCanvasHeight()));
-        if (client.isClientThread()) {
+        if (onClientThread) {
             return true;
         }
         LocalPoint[] observed = awaitSceneWalkDestination(worldPoint, before);
@@ -967,10 +968,13 @@ final class Rs2WalkerMovement {
         if (localPoint == null || !Rs2Camera.isTileOnScreen(localPoint)) {
             return null;
         }
-        Client client = Microbot.getClient();
-        int drawDistance = SceneClickPolicy.renderedDrawDistance(client.isGpu(),
-                client.getTopLevelWorldView().getScene().getDrawDistance());
-        if (!SceneClickPolicy.isWithinRenderedArea(client.getCameraX(), client.getCameraY(), localPoint, drawDistance)) {
+        boolean rendered = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Client client = Microbot.getClient();
+            int drawDistance = SceneClickPolicy.renderedDrawDistance(client.isGpu(),
+                    client.getTopLevelWorldView().getScene().getDrawDistance());
+            return SceneClickPolicy.isWithinRenderedArea(client.getCameraX(), client.getCameraY(), localPoint, drawDistance);
+        }).orElse(false);
+        if (!rendered) {
             return null;
         }
         Point canvasPoint = Perspective.localToCanvas(
