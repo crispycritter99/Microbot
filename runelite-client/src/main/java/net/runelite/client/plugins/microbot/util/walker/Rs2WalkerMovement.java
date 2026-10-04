@@ -124,6 +124,7 @@ final class Rs2WalkerMovement {
     private static int nextMinimapClickAt = ThreadLocalRandom.current().nextInt(2, 8);
     static final SceneClickPolicy SCENE_CLICKS = SceneClickPolicy.create();
     static final int SCENE_WALK_CONFIRM_TIMEOUT_MS = 600;
+    static final int SCENE_WALK_CONFIRM_POLL_MS = 25;
 
     private Rs2WalkerMovement() {
     }
@@ -373,7 +374,7 @@ final class Rs2WalkerMovement {
         if (fallback == null || fallback.equals(playerLoc) || fallback.equals(target)) {
             return null;
         }
-        if (walkFastCanvasOnScreenOnly(fallback, true)) {
+        if (walkFastCanvasOnScreenOnly(fallback, true, false)) {
             WebWalkLog.spDebug("route_scene_click_fallback | to={} requested={} player={}",
                     compactWorldPoint(fallback), compactWorldPoint(target), compactWorldPoint(playerLoc));
             alignCameraTowardWalkTarget(target);
@@ -884,6 +885,10 @@ final class Rs2WalkerMovement {
     }
 
     static boolean walkFastCanvasOnScreenOnly(WorldPoint worldPoint, boolean toggleRun) {
+        return walkFastCanvasOnScreenOnly(worldPoint, toggleRun, true);
+    }
+
+    private static boolean walkFastCanvasOnScreenOnly(WorldPoint worldPoint, boolean toggleRun, boolean alignCamera) {
         if (worldPoint == null || SCENE_CLICKS.isSuppressed(System.currentTimeMillis())) {
             return false;
         }
@@ -891,7 +896,9 @@ final class Rs2WalkerMovement {
         if (!dispatchSceneWalk(worldPoint)) {
             return false;
         }
-        alignCameraTowardWalkTarget(worldPoint);
+        if (alignCamera) {
+            alignCameraTowardWalkTarget(worldPoint);
+        }
         return true;
     }
 
@@ -943,7 +950,7 @@ final class Rs2WalkerMovement {
         sleepUntil(() -> {
             latest[0] = snapshot.get();
             return SceneClickPolicy.isSettled(before, latest[0][0], latest[0][1]);
-        }, SCENE_WALK_CONFIRM_TIMEOUT_MS);
+        }, () -> { }, SCENE_WALK_CONFIRM_TIMEOUT_MS, SCENE_WALK_CONFIRM_POLL_MS);
         return latest[0];
     }
 
