@@ -7,6 +7,7 @@ import net.runelite.client.config.ConfigProfile;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.breakhandler.BreakPreparation;
 import net.runelite.client.plugins.microbot.util.discord.Rs2Discord;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
@@ -247,6 +248,9 @@ public class BreakHandlerV2Script extends Script {
      * Initiates break based on configuration
      */
     private void handleBreakRequested() {
+        if (cancelFailedPreparation()) {
+            return;
+        }
         if (shouldDeferRequestedBreak(breakEndTime)) {
             long now = System.currentTimeMillis();
             if (now - lastLockDeferralLogAt >= LOCK_DEFERRAL_LOG_INTERVAL_MS) {
@@ -293,7 +297,11 @@ public class BreakHandlerV2Script extends Script {
      * no-logout break whose completion must continue to be processed.
      */
     static boolean shouldDeferRequestedBreak(Instant activeBreakEndTime) {
-        return activeBreakEndTime == null && BreakHandlerScript.isLockState();
+        if (activeBreakEndTime != null) {
+            return false;
+        }
+        boolean preparing = BreakPreparation.shouldDeferBreak();
+        return preparing || BreakHandlerScript.isLockState();
     }
 
     static boolean shouldContinueWhenScriptGuardBlocks(boolean scriptsPaused, BreakHandlerV2State state, boolean pluginStopTriggered) {
@@ -318,6 +326,9 @@ public class BreakHandlerV2Script extends Script {
      * Performs safety checks before logout with backoff retry
      */
     private void handleInitiatingBreak() {
+        if (cancelFailedPreparation() || BreakPreparation.shouldDeferBreak()) {
+            return;
+        }
         stopConfiguredPluginIfNeeded();
 
         if (!Microbot.isLoggedIn()) {
@@ -1040,6 +1051,11 @@ public class BreakHandlerV2Script extends Script {
      * Stops a configured Microbot plugin once per break cycle.
      */
     private void stopConfiguredPluginIfNeeded() {
+        if (BreakPreparation.hasParticipants()
+                && (BreakHandlerV2State.getCurrentState() == BreakHandlerV2State.WAITING_FOR_BREAK
+                || BreakPreparation.shouldDeferBreak())) {
+            return;
+        }
         if (pluginStopTriggered || config == null) {
             return;
         }
@@ -1150,6 +1166,9 @@ public class BreakHandlerV2Script extends Script {
      * Transition to a new state
      */
     private void transitionToState(BreakHandlerV2State newState) {
+        if (newState == BreakHandlerV2State.WAITING_FOR_BREAK) {
+            BreakPreparation.finishBreak();
+        }
         BreakHandlerV2State oldState = BreakHandlerV2State.getCurrentState();
         log.info("[BreakHandlerV2] State transition: {} -> {}", oldState, newState);
         BreakHandlerV2State.setState(newState);
@@ -1264,6 +1283,7 @@ public class BreakHandlerV2Script extends Script {
 
     @Override
     public void shutdown() {
+        BreakPreparation.finishBreak();
         super.shutdown();
         log.info("[BreakHandlerV2] Shutting down");
 
@@ -1348,6 +1368,11 @@ public class BreakHandlerV2Script extends Script {
             return;
         }
 
+        if (Microbot.isLoggedIn() && BreakPreparation.hasParticipants()) {
+            transitionToState(BreakHandlerV2State.BREAK_REQUESTED);
+            return;
+        }
+
         setBreakTimer(true);
         recordBreakActivated();
         stopConfiguredPluginIfNeeded();
@@ -1389,6 +1414,18 @@ public class BreakHandlerV2Script extends Script {
         recordBreakActivated();
         sendBreakStartedNotification(false);
         Microbot.pauseAllScripts.set(true);
+    }
+
+    private boolean cancelFailedPreparation() {
+        if (!BreakPreparation.isAborted()) {
+            return false;
+        }
+        log.warn("[BreakHandlerV2] Break preparation failed or timed out; cancelling this request");
+        breakEndTime = null;
+        clearPersistedBreakState();
+        scheduleNextBreak(true, true);
+        transitionToState(BreakHandlerV2State.WAITING_FOR_BREAK);
+        return true;
     }
 
     private void beginLogoutBreak() {
