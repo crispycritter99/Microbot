@@ -276,6 +276,47 @@ public class BankedTransportItemPlanningTest {
 		assertTrue(loadout.isEmpty());
 	}
 
+	@Test
+	public void consecutiveSourceAwareSpellsWithdrawSharedRuneDeficit() {
+		Rs2TransportEdge spell = sourceAwareSpellEdge();
+		Rs2TransportLoadout loadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+			List.of(spell, spell),
+			itemId -> itemId == ItemID.LAWRUNE ? 2 : 0,
+			itemId -> itemId == ItemID.TWINFLAME_STAFF ? 1
+				: itemId == ItemID.LAWRUNE ? 2
+				: itemId == ItemID.BANANA ? 2 : 0,
+			itemId -> itemId == ItemID.LAWRUNE ? 2
+				: itemId == ItemID.BANANA ? 2 : 0,
+			itemId -> itemId == ItemID.LAWRUNE ? 2 : 0,
+			itemId -> itemId == ItemID.TWINFLAME_STAFF);
+
+		assertTrue(loadout.isSatisfiable());
+		assertEquals(Map.of(ItemID.LAWRUNE, 2), loadout.getWithdrawals());
+		assertFalse(loadout.getWithdrawals().containsKey(ItemID.FIRERUNE));
+		assertFalse(loadout.getWithdrawals().containsKey(ItemID.WATERRUNE));
+	}
+
+	@Test
+	public void sourceAwareSpellToBankSpendsRunesBeforeBankLeg() {
+		Rs2TransportEdge spell = sourceAwareSpellEdge();
+		Rs2TransportLoadout loadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+			List.of(spell), List.of(spell),
+			itemId -> itemId == ItemID.LAWRUNE ? 2 : 0,
+			itemId -> itemId == ItemID.TWINFLAME_STAFF ? 1
+				: itemId == ItemID.LAWRUNE ? 2
+				: itemId == ItemID.BANANA ? 2 : 0,
+			itemId -> itemId == ItemID.FIRERUNE || itemId == ItemID.WATERRUNE
+				? Integer.MAX_VALUE : itemId == ItemID.LAWRUNE ? 2
+				: itemId == ItemID.BANANA ? 2 : 0,
+			itemId -> itemId == ItemID.LAWRUNE ? 2 : 0,
+			itemId -> itemId == ItemID.TWINFLAME_STAFF);
+
+		assertTrue(loadout.isSatisfiable());
+		assertEquals(Map.of(ItemID.LAWRUNE, 2), loadout.getWithdrawals());
+		assertFalse(loadout.getWithdrawals().containsKey(ItemID.FIRERUNE));
+		assertFalse(loadout.getWithdrawals().containsKey(ItemID.WATERRUNE));
+	}
+
     @Test
     public void itemGatedPlainTransportsNowQualifyForPlanning() {
         List<Transport> itemGated = all.stream()
@@ -363,7 +404,10 @@ public class BankedTransportItemPlanningTest {
 		Rs2TransportEdge edge = owned(one);
 		java.util.Map<Integer, Integer> edgeSummed =
 				Rs2WalkerBankingPlanner.getMissingTransportEdgeItemIdsWithQuantities(
-						List.of(edge, edge), ignored -> 0, ignored -> 0);
+						List.of(edge, edge),
+						itemId -> itemId == net.runelite.api.gameval.ItemID.COINS
+								? one.getCurrencyAmount() * 2 : 0,
+						ignored -> 0);
 		assertEquals("immutable selected edges must sum the same fares",
 				one.getCurrencyAmount() * 2,
 				edgeSummed.getOrDefault(net.runelite.api.gameval.ItemID.COINS, 0).intValue());
@@ -395,11 +439,95 @@ public class BankedTransportItemPlanningTest {
 		Rs2TransportEdge edge = owned(ticketRow);
 		java.util.Map<Integer, Integer> edgeMap =
 				Rs2WalkerBankingPlanner.getMissingTransportEdgeItemIdsWithQuantities(
-						List.of(edge), ignored -> 0, ignored -> 0);
+						List.of(edge),
+						itemId -> itemId == net.runelite.api.gameval.ItemID.COINS ? 5 : 0,
+						ignored -> 0);
 		assertEquals("the immutable selected edge must preserve the purchasable fallback",
 				5, edgeMap.getOrDefault(net.runelite.api.gameval.ItemID.COINS, 0).intValue());
 		assertFalse(edgeMap.containsKey(1854));
     }
+
+	@Test
+	public void accumulatedFareMustExistInBankBeforeBankRouteIsSelected() {
+		Transport fare = all.stream()
+				.filter(t -> t.getCurrencyAmount() > 1)
+				.filter(t -> "Coins".equalsIgnoreCase(t.getCurrencyName()))
+				.filter(t -> t.getItemIdRequirements() == null || t.getItemIdRequirements().isEmpty())
+				.filter(t -> Rs2WalkerBankingPlanner.isCurrencyBasedTransport(t.getType()))
+				.findFirst()
+				.orElseThrow(() -> new AssertionError("catalog should contain a coin-fare transport"));
+		int totalFare = fare.getCurrencyAmount() * 2;
+		Rs2TransportLoadout loadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+				List.of(owned(fare), owned(fare)),
+				itemId -> itemId == net.runelite.api.gameval.ItemID.COINS ? totalFare - 1 : 0,
+				ignored -> 0,
+				ignored -> 0,
+				itemId -> itemId == net.runelite.api.gameval.ItemID.COINS ? totalFare - 1 : 0,
+				ignored -> false);
+
+		assertFalse("a route must not claim an unaffordable accumulated fare is satisfiable",
+				loadout.isSatisfiable());
+		assertTrue(loadout.isEmpty());
+	}
+
+	@Test
+	public void carriedCoinsCoverOnlyTheirShareOfMultipleFares() {
+		Transport fare = all.stream()
+				.filter(t -> t.getCurrencyAmount() > 1)
+				.filter(t -> "Coins".equalsIgnoreCase(t.getCurrencyName()))
+				.filter(t -> t.getItemIdRequirements().isEmpty())
+				.filter(t -> Rs2WalkerBankingPlanner.isCurrencyBasedTransport(t.getType()))
+				.findFirst().orElseThrow(AssertionError::new);
+		int coins = ItemID.COINS;
+		int oneFare = fare.getCurrencyAmount();
+		List<Rs2TransportEdge> route = List.of(owned(fare), owned(fare));
+
+		assertFalse("each fare is affordable, but the direct route is not",
+				Rs2WalkerBankingPlanner.hasCarriedCurrencyForRoute(route,
+						itemId -> itemId == coins ? oneFare : 0));
+		assertTrue(Rs2WalkerBankingPlanner.hasCarriedCurrencyForRoute(route,
+						itemId -> itemId == coins ? oneFare * 2 : 0));
+
+		Rs2TransportLoadout loadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+				route,
+				itemId -> itemId == coins ? oneFare : 0,
+				itemId -> itemId == coins ? oneFare : 0,
+				itemId -> itemId == coins ? oneFare : 0,
+				itemId -> itemId == coins ? oneFare : 0,
+				ignored -> false);
+		assertTrue(loadout.isSatisfiable());
+		assertEquals(Map.of(coins, oneFare), loadout.getWithdrawals());
+
+		Rs2TransportLoadout shortBank = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+				route,
+				itemId -> itemId == coins ? oneFare - 1 : 0,
+				itemId -> itemId == coins ? oneFare : 0,
+				itemId -> itemId == coins ? oneFare : 0,
+				itemId -> itemId == coins ? oneFare - 1 : 0,
+				ignored -> false);
+		assertFalse(shortBank.isSatisfiable());
+	}
+
+	@Test
+	public void fareSpentReachingBankIsNotCountedAgainForBankLeg() {
+		Transport fare = all.stream()
+				.filter(t -> t.getCurrencyAmount() > 1)
+				.filter(t -> "Coins".equalsIgnoreCase(t.getCurrencyName()))
+				.filter(t -> t.getItemIdRequirements().isEmpty())
+				.filter(t -> Rs2WalkerBankingPlanner.isCurrencyBasedTransport(t.getType()))
+				.findFirst().orElseThrow(AssertionError::new);
+		Rs2TransportEdge edge = owned(fare);
+		int oneFare = fare.getCurrencyAmount();
+		Rs2TransportLoadout loadout = Rs2WalkerBankingPlanner.getMissingTransportEdgeLoadout(
+				List.of(edge), List.of(edge),
+				itemId -> itemId == ItemID.COINS ? oneFare : 0,
+				itemId -> itemId == ItemID.COINS ? oneFare : 0,
+				itemId -> itemId == ItemID.COINS ? oneFare : 0,
+				itemId -> itemId == ItemID.COINS ? oneFare : 0,
+				ignored -> false);
+		assertTrue(loadout.isSatisfiable());
+		assertEquals(Map.of(ItemID.COINS, oneFare), loadout.getWithdrawals());
+	}
 
     @Test
     public void legacyChargedItemVariantsRequestOnlyOneAlternative() {

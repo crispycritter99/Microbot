@@ -320,3 +320,71 @@ if (mapComponent < 0) {
 **Where this applies:** `Rs2Walker.handleTransports`, specialized transport handlers, and shortest-path transport resource additions.
 
 **Defensive check:** Add pure unit tests for exact item-action recognition and for every supported origin-object-to-interface mapping, plus a loader test proving required item and unlock fields survive TSV parsing.
+
+## 15. Apply the same click guards to every route entry point
+
+Direct and fallback scene clicks must validate the projected click area against the viewport on the client thread. Reuse the validated canvas point when dispatching the click. An on-screen tile check alone can still produce a point outside the usable viewport.
+
+Checkpoint handoffs in the main click branch must use the same close/expiry policy as the start-of-pass check. In particular, entering the preclick distance while moving does not bypass the retarget cooldown.
+
+## 16. Scope global interaction recovery across nested door dispatch
+
+When an object or NPC interaction reacts to the global can't-reach flag by starting a walker approach, keep ownership of that recovery on the current thread until the approach returns. Door interactions issued by that nested walk must bypass the outer can't-reach trigger while leaving the global flag and retry counter intact for the original interaction.
+
+**Why this matters:** The legacy walker lock is reentrant. Without scoped ownership, opening a closed door during an object or NPC recovery starts another recovery walk from inside the first one, replaces the route target, and spends the shared retry budget instead of clicking the door.
+
+**Pattern to follow:**
+
+```java
+if (CantReachTargetRecovery.shouldStart(detectionEnabled, cantReachTarget)) {
+    if (CantReachTargetRecovery.walkTo(originalTarget, 2)) {
+        clearCantReachState();
+    }
+}
+```
+
+**Where this applies:** `Rs2GameObject.clickObject`, `Rs2Npc.interact`, `Rs2NpcModel.interact`, legacy walker door dispatch, and any future interaction helper that starts `Rs2Walker.walkTo` in response to the global can't-reach flag.
+
+**Defensive check:** During a recovery route through a closed door, assert that the door click occurs once, the original object or NPC target is passed unchanged to the walker, nested recovery is suppressed, and retry exhaustion still returns failure.
+
+## 17. Give catalogued opening doors a handler when search selects WALK
+
+Live collision can mark an openable door edge passable so search routes through it. The resulting route may select an ordinary walking edge instead of the parallel catalog transport. Suppress generic door detection only when that opening door has a selected object transport; keep catalog ownership while the route is unavailable and for moves-you objects such as ladders and stiles.
+
+**Why this matters:** Fishing Guild door `20925` stalled in both directions: generic door detection rejected catalog membership, while transport execution required a selected transport and the route contained only walking edges.
+
+**Where this applies:** `Rs2DoorProbe.isCatalogTransportObject`, live collision door masking, and route-selected transport execution.
+
+**Defensive check:** Verify the same catalog door is eligible for generic handling on a WALK edge and excluded on a selected TRANSPORT edge; test entry and exit on the live client.
+
+## 18. Clear successful door crossings at the start of a new walk
+
+The recently-opened suppression window belongs to the route that crossed the door. Clear it when a new walk starts, while retaining the separate per-edge attempt cooldown. Self-closing doors can require another interaction immediately on a return route.
+
+**Why this matters:** Returning into the Fishing Guild within ten seconds of leaving hid entrance door `20925` from detection. A route through both doors selected the inner door first, failed to reach it, and only tried the entrance after the old suppression expired.
+
+**Where this applies:** `Rs2Walker.resetWalkSessionState` and `DoorAttemptLedger`.
+
+**Defensive check:** Exit the guild and immediately route back through both doors. The entrance must be selected before the inner door, with the anti-hammer cooldown still intact.
+
+## 19. Select the first reachable route interaction before an approach click
+
+A minimap target legitimately stops on the near side of a closed door or object transport. Before yielding to an active minimap interim or choosing another approach tile, inspect raw route edges in order and dispatch only the first unresolved interaction whose near-side approach is reachable. A transport origin may itself be blocked by the object, so a reachable adjacent predecessor is sufficient for that selected edge. Check selected transports before same-plane door geometry so ladders and trapdoors that change plane are not skipped. Keep the existing transport executor for its action, variant, and landing rules.
+
+**Why this matters:** Smoothed segments can put an empty approach segment before a visible door or staircase. Treating the first processed segment as the first obstacle delays interaction until the player stops beside it. Continuing a scan after the first door is throttled or fails can click a second door through the first one. A nearby route endpoint also does not make a distant door object reachable.
+
+**Pattern to follow:** Select one raw edge using reachable route tiles and the exact active transport selection; if its action is deferred or fails, keep that edge pending while the walker approaches or retries it. Use the object location for interaction range, not a smoothed segment endpoint.
+
+**Where this applies:** `Rs2Walker` pre-click and active-interim handling, `Rs2WalkerDoors` segment and pending-door scans, and `Rs2DoorGeometry` range checks.
+
+**Defensive check:** With two visible doors, a closed first door must remain selected after a failed click; opening it allows the second. An earlier wall or non-object transport must stop the ranged scan. A cross-plane object transport can be selected from a reachable adjacent approach tile even when its origin is absent from collision reachability.
+
+## 20. Skip backtracked transport edges below the player's raw anchor
+
+Door and scene-object scans retain a lookback window for nearby ordinary doors. Skip transport edges below the player's raw anchor rather than stopping the scan or dispatching them again. Only transports at or ahead of the anchor block later interactions. The recent handled-transport window expires after eight seconds and does not record crossings made by plain walking.
+
+**Why this matters:** A player paused just beyond a same-plane gate could never handle a door ahead after recent-transport suppression expired.
+
+**Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, `handleFirstRouteInteractionAtRange` transport-map construction, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
+
+**Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors. Test the production transport map used by both the pending-interaction predicate and the blocked-transport predicate, rather than filtering only the test predicates.
