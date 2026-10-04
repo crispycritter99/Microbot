@@ -830,6 +830,9 @@ public class WalkerRouteCorpusTest {
 
         assertTrue(shed.getQuests().containsKey(Quest.LOST_CITY));
         assertTrue(shed.isMembers());
+        assertEquals(1, shed.getItemRequirements().size());
+        assertTrue(shed.getItemRequirements().get(0).getAlternatives().containsKey(ItemID.DRAMEN_STAFF));
+        assertTrue(shed.getItemRequirements().get(0).getAlternatives().containsKey(ItemID.LUNAR_MOONCLAN_LIMINAL_STAFF));
         assertFalse(unrestricted(shed));
     }
 
