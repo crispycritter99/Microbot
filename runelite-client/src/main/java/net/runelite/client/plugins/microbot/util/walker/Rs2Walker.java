@@ -79,6 +79,7 @@ import net.runelite.client.plugins.microbot.util.walker.door.Rs2WalkerAwaits;
 import net.runelite.client.plugins.microbot.util.walker.door.model.AwaitTicket;
 import net.runelite.client.plugins.microbot.util.walker.door.model.DoorResolution;
 import net.runelite.client.plugins.microbot.util.walker.banking.Rs2WalkerBankingPlanner;
+import net.runelite.client.plugins.microbot.util.walker.banking.TransportWithdrawalConfirmation;
 import net.runelite.client.plugins.microbot.util.walker.awaits.Rs2WalkerRuntimeAwaits;
 import net.runelite.client.plugins.microbot.util.walker.puzzles.DraynorBasementSolver;
 import net.runelite.client.plugins.microbot.util.walker.stall.Rs2WalkerStallPolicy;
@@ -7851,29 +7852,37 @@ public class Rs2Walker {
                     }
                 }
 
+                if (!Rs2Bank.hasWithdrawAsItem() && !Rs2Bank.setWithdrawAsItem()) {
+                    log.warn("Failed to switch bank to item withdraw mode — falling back direct");
+                    return fallbackDirectFromBank(finalTarget, distance, "withdraw-note-mode");
+                }
+
                 // Withdraw the correct amount of each unique item
                 for (Map.Entry<Integer, Integer> entry : missingItemsWithQuantities.entrySet()) {
                     int itemId = entry.getKey();
-                    int amountNeeded = entry.getValue();
-                    int currentQuantity = Rs2Inventory.itemQuantity(itemId);
-                    int amountToWithdraw = Math.max(0, amountNeeded );
-
-                    if (amountToWithdraw > 0) {
-                        log.debug("Withdrawing {} x {} (item ID: {})", amountToWithdraw, itemId, itemId);
-                        if (!Rs2Bank.withdrawX(itemId, amountToWithdraw)
-                                || !sleepUntil(() -> Rs2Inventory.itemQuantity(itemId)
-                                        >= currentQuantity + amountToWithdraw, 3000)) {
-                            log.warn("Failed to withdraw required transport item {} x{} — falling back direct",
-                                    itemId, amountToWithdraw);
-                            return fallbackDirectFromBank(finalTarget, distance, "withdraw-failed");
-                        }
-                    } else {
-                        log.debug("Already have enough of item {}: {} (need {})", itemId, currentQuantity, amountNeeded);
+                    int amountToWithdraw = Math.max(0, entry.getValue());
+                    if (amountToWithdraw == 0) {
+                        continue;
+                    }
+                    Rs2ItemModel bankRow = Rs2Bank.getBankItemForSavedId(itemId);
+                    TransportWithdrawalConfirmation confirmation = TransportWithdrawalConfirmation.start(
+                            itemId, bankRow == null ? -1 : bankRow.getId(), amountToWithdraw,
+                            Rs2Inventory::itemQuantity);
+                    log.debug("Withdrawing {} x {} (target quantity {})",
+                            amountToWithdraw, confirmation.getItemIds(), confirmation.getTargetQuantity());
+                    if (Rs2Bank.withdrawX(itemId, amountToWithdraw)) {
+                        sleepUntil(() -> confirmation.evaluate(Rs2Inventory::itemQuantity, Rs2Bank.isOpen())
+                                        != TransportWithdrawalConfirmation.State.PENDING,
+                                TransportWithdrawalConfirmation.TIMEOUT_MS);
+                    }
+                    if (confirmation.evaluate(Rs2Inventory::itemQuantity, true)
+                            != TransportWithdrawalConfirmation.State.CONFIRMED) {
+                        log.warn("Failed to withdraw required transport item {} x{} (carried {} of {}) — falling back direct",
+                                itemId, amountToWithdraw, confirmation.carriedQuantity(Rs2Inventory::itemQuantity),
+                                confirmation.getTargetQuantity());
+                        return fallbackDirectFromBank(finalTarget, distance, "withdraw-failed");
                     }
                 }
-
-                // Wait a bit for all withdrawals to complete
-                sleepTickJitter(1);
             }
 
             for (Integer equipmentItemId : transportLoadout.getEquipmentItemIds()) {

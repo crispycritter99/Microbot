@@ -770,6 +770,10 @@ public class Rs2Bank {
         return bankItem == null ? 0 : bankItem.getQuantity();
     }
 
+    public static Rs2ItemModel getBankItemForSavedId(int id) {
+        return id <= 0 ? null : findBankStackRowForSavedId(id);
+    }
+
     /**
      * Query count of item inside of bank
      */
@@ -2792,8 +2796,7 @@ public class Rs2Bank {
 
     public static boolean setWithdrawAs(boolean noted) {
         if (isWithdrawAs(noted)) return true;
-        int target = noted ? InterfaceID.Bankmain.NOTE : InterfaceID.Bankmain.QUANTITY1_TEXT;
-        boolean clicked = Rs2Widget.clickWidget(target);
+        boolean clicked = Rs2Widget.clickWidget(InterfaceID.Bankmain.NOTE);
         if (!clicked) return false;
         return sleepUntil(() -> isWithdrawAs(noted));
     }
