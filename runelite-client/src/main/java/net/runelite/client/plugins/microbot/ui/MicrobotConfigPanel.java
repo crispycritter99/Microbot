@@ -252,6 +252,11 @@ class MicrobotConfigPanel extends MicrobotPluginPanel {
         if (pluginConfig.getPlugin() != null) {
             pluginToggle.setConflicts(pluginConfig.getConflicts());
             pluginToggle.setSelected(pluginManager.isPluginEnabled(pluginConfig.getPlugin()));
+            if (pluginManager.isPluginAlwaysOn(pluginConfig.getPlugin())) {
+                pluginToggle.setSelected(true);
+                pluginToggle.setEnabled(false);
+                pluginToggle.setToolTipText(PluginManager.ALWAYS_ON_TOOLTIP);
+            }
             pluginToggle.addItemListener(i ->
             {
                 if (pluginToggle.isSelected()) {
