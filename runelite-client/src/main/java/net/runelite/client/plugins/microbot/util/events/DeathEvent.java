@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.util.events;
 
 import net.runelite.api.ObjectID;
 import net.runelite.api.annotations.Varp;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.BlockingEvent;
 import net.runelite.client.plugins.microbot.BlockingEventPriority;
@@ -24,8 +25,10 @@ public class DeathEvent implements BlockingEvent {
 
     @Override
     public boolean validate() {
-        return Microbot.getVarbitPlayerValue(DEATH_COUNTER_VARP) == 1
-                && Rs2Player.getWorldLocation().getRegionID() == DEATH_DOMAIN_REGION_ID;
+        if (!Microbot.isLoggedIn()) return false;
+        if (Microbot.getVarbitPlayerValue(DEATH_COUNTER_VARP) != 1) return false;
+        WorldPoint location = Rs2Player.getWorldLocation();
+        return location != null && location.getRegionID() == DEATH_DOMAIN_REGION_ID;
     }
 
     @Override
