@@ -44,6 +44,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PluginChanged;
 import net.runelite.client.events.ProfileChanged;
+import net.runelite.client.plugins.microbot.AlwaysOnPlugins;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.task.Schedule;
 import net.runelite.client.task.ScheduledMethod;
@@ -75,8 +76,6 @@ public class PluginManager {
      */
     private static final String PLUGIN_PACKAGE = "net.runelite.client.plugins";
     private static final File SIDELOADED_PLUGINS = new File(RuneLite.RUNELITE_DIR, "sideloaded-plugins");
-
-    public static final String ALWAYS_ON_TOOLTIP = "Always on: required by Microbot";
 
     private final boolean safeMode;
     private final EventBus eventBus;
@@ -495,8 +494,7 @@ public class PluginManager {
     }
 
     public boolean isPluginAlwaysOn(Plugin plugin) {
-        final PluginDescriptor pluginDescriptor = plugin.getClass().getAnnotation(PluginDescriptor.class);
-        return pluginDescriptor != null && pluginDescriptor.alwaysOn();
+        return AlwaysOnPlugins.isLocked(plugin.getClass().getAnnotation(PluginDescriptor.class));
     }
 
     /**
