@@ -101,6 +101,8 @@ public class MicrobotPluginManager {
 
     private final Map<String, URLClassLoader> loaders = new ConcurrentHashMap<>();
 
+    private final Map<String, String> healthBlockedPlugins = new ConcurrentHashMap<>();
+
     @Inject
     @Named("safeMode")
     private boolean safeMode;
@@ -351,7 +353,9 @@ public class MicrobotPluginManager {
                     log.error("Incompatible plugin found: " + internalName);
                 }
             }
-            loadPlugins(plugins, null);
+            if (loadPlugins(plugins, null).isEmpty() && loaders.remove(internalName, classLoader)) {
+                classLoader.close();
+            }
         } catch (PluginInstantiationException | IOException e) {
             log.trace("Error loading side-loaded plugin!", e);
         }
@@ -463,6 +467,14 @@ public class MicrobotPluginManager {
                 continue;
             }
 
+            if (pluginDescriptor.isExternal() && isConfirmedBroken(clazz.getSimpleName(), pluginDescriptor.version())) {
+                log.error("Plugin {} version {} is confirmed broken upstream. Skipping plugin loading; install an unaffected version from the Microbot Plugin Hub.",
+                        clazz.getSimpleName(), pluginDescriptor.version());
+                healthBlockedPlugins.put(clazz.getSimpleName(), pluginDescriptor.version());
+                continue;
+            }
+
+            healthBlockedPlugins.remove(clazz.getSimpleName());
             graph.addNode((Class<Plugin>) clazz);
         }
 
@@ -1032,6 +1044,13 @@ public class MicrobotPluginManager {
             return;
         }
 
+        MicrobotPluginHealth health = getPluginHealth(manifest, versionOverride);
+        if (health.getState() == MicrobotPluginHealth.State.BROKEN) {
+            log.warn("Cannot install plugin '{}' ({}) version {}: this version is confirmed broken upstream.",
+                    manifest.getDisplayName(), internalName, health.getVersion());
+            return;
+        }
+
         var result = downloadPlugin(internalName, versionOverride);
         if (result) {
             //verifiy hash inside loadSidePlugin doesn't work
@@ -1060,13 +1079,7 @@ public class MicrobotPluginManager {
             return;
         }
 
-        if (manifest.isDisable()) {
-            log.warn("Cannot install plugin '{}' ({}): This plugin has been disabled upstream by the developers. " +
-                            "This usually means the plugin is no longer functional, has security issues, or has been deprecated.",
-                    manifest.getDisplayName(), internalName);
-            return;
-        }
-
+        healthBlockedPlugins.remove(internalName);
         File jar = getPluginJarFile(internalName);
         var pluginToRemove = pluginManager.getPlugins().stream().filter(x -> x.getClass().getSimpleName().equalsIgnoreCase(internalName)).findFirst();
         if (pluginToRemove.isPresent()) {
@@ -1266,7 +1279,8 @@ public class MicrobotPluginManager {
         if (Strings.isNullOrEmpty(internalName)
                 || Strings.isNullOrEmpty(installedVersion)
                 || Strings.isNullOrEmpty(latestVersion)
-                || latestVersion.equals(installedVersion)) {
+                || latestVersion.equals(installedVersion)
+                || getPluginHealth(manifest, latestVersion).isBlocking()) {
             return Optional.empty();
         }
 
@@ -1282,6 +1296,24 @@ public class MicrobotPluginManager {
                 installedVersion,
                 latestVersion
         ));
+    }
+
+    public MicrobotPluginHealth getPluginHealth(MicrobotPluginManifest manifest, @Nullable String version) {
+        return MicrobotPluginHealth.evaluate(manifest, version,
+                Rs2UiHelper.isClientVersionCompatible(manifest.getMinClientVersion()));
+    }
+
+    public Map<String, String> getHealthBlockedPlugins() {
+        return Collections.unmodifiableMap(healthBlockedPlugins);
+    }
+
+    private boolean isConfirmedBroken(String internalName, String version) {
+        MicrobotPluginManifest manifest = manifestMap.get(internalName);
+        if (manifest == null || Strings.isNullOrEmpty(version)) {
+            return false;
+        }
+        MicrobotPluginHealth health = getPluginHealth(manifest, version);
+        return health.getState() == MicrobotPluginHealth.State.BROKEN || health.isAffected(version);
     }
 
     public void rememberOutdatedPluginUpdateNotification(OutdatedPluginUpdate outdatedPluginUpdate) {
