@@ -184,8 +184,11 @@ public final class MicrobotPluginHealth {
         if (url == null) {
             return null;
         }
-        String lower = url.toLowerCase(Locale.ROOT);
-        return lower.startsWith("https://") || lower.startsWith("http://") ? url : null;
+        return url.toLowerCase(Locale.ROOT).startsWith("https://") ? url : null;
+    }
+
+    public String getReason() {
+        return metadata == null ? null : trimToNull(metadata.getReason());
     }
 
     public List<String> getDetails(String currentClientVersion) {

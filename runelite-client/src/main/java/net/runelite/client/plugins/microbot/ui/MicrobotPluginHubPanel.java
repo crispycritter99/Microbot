@@ -940,7 +940,7 @@ public class MicrobotPluginHubPanel extends MicrobotPluginPanel {
 
     private void reloadPluginList(Collection<MicrobotPluginManifest> manifest, Map<String, Integer> pluginCounts) {
 
-        Set<String> healthBlocked = microbotPluginManager.getHealthBlockedPlugins().keySet().stream()
+        Set<String> healthBlocked = microbotPluginManager.getBlockedPlugins().keySet().stream()
                 .map(name -> name.toLowerCase(Locale.ROOT))
                 .collect(Collectors.toSet());
         Set<String> installedExternal = microbotPluginManager.getInstalledPlugins().stream()

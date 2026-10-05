@@ -155,6 +155,8 @@ public class MicrobotPluginHealthTest {
         assertEquals(MicrobotPluginHealth.State.UNKNOWN, health.getState());
         assertNull(health.getTrackingUrl());
         assertTrue(health.getDetails(null).contains("Tracking: none"));
+        assertNull(MicrobotPluginHealth.evaluate(
+                withHealth("1.0.0", "{\"status\":\"unverified\",\"trackingUrl\":\"http://example.com/issue\"}"), null, true).getTrackingUrl());
     }
 
     @Test
