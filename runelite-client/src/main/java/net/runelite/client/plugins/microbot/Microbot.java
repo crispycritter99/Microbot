@@ -602,11 +602,15 @@ public class Microbot {
     }
 
     public static void doInvoke(NewMenuEntry entry, Rectangle rectangle) {
+        doInvoke(entry, rectangle, false);
+    }
+
+    public static void doInvoke(NewMenuEntry entry, Rectangle rectangle, boolean reuseMouseIfInsideTarget) {
         try {
             if (Rs2UiHelper.isRectangleWithinCanvas(rectangle)) {
-                click(rectangle, entry);
+                click(rectangle, entry, reuseMouseIfInsideTarget);
             } else {
-                click(new Rectangle(1, 1), entry);
+                click(new Rectangle(1, 1), entry, reuseMouseIfInsideTarget);
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
             log.error("Error during doInvoke", ex);
@@ -630,10 +634,20 @@ public class Microbot {
     }
 
     public static void click(Rectangle rectangle, NewMenuEntry entry) {
+        click(rectangle, entry, false);
+    }
+
+    public static void click(Rectangle rectangle, NewMenuEntry entry, boolean reuseMouseIfInsideTarget) {
         if (entry.getType() == MenuAction.WALK) {
             mouse.click(new Point(entry.getParam0(), entry.getParam1()), entry);
         } else {
-            Point point = Rs2UiHelper.getClickingPoint(rectangle, true);
+            Point point;
+            if (reuseMouseIfInsideTarget && Rs2UiHelper.isMouseWithinRectangle(rectangle)) {
+                java.awt.Point mousePosition = mouse.getMousePosition();
+                point = new Point(mousePosition.x, mousePosition.y);
+            } else {
+                point = Rs2UiHelper.getClickingPoint(rectangle, true);
+            }
             mouse.click(point, entry);
         }
 
