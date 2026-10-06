@@ -722,7 +722,7 @@ public class Rs2Npc {
                 Rs2Camera.turnTo(npc);
             }
 
-            Microbot.doInvoke(new NewMenuEntry()
+            NewMenuEntry menuEntry = new NewMenuEntry()
                     .param0(0)
                     .param1(0)
                     .opcode(menuAction.getId())
@@ -730,9 +730,17 @@ public class Rs2Npc {
                     .itemId(-1)
                     .target(npc.getName())
                     .actor(npc)
-                    .option(action)
-                    ,
-                Rs2UiHelper.getActorClickbox(npc));
+                    .option(action);
+
+            boolean reuseMouseIfInsideTarget =
+                    "pickpocket".equalsIgnoreCase(action)
+                            && "Knight of Ardougne".equalsIgnoreCase(npc.getName());
+
+            Microbot.doInvoke(
+                    menuEntry,
+                    Rs2UiHelper.getActorClickbox(npc),
+                    reuseMouseIfInsideTarget
+            );
             return true;
 
         } catch (Exception ex) {
