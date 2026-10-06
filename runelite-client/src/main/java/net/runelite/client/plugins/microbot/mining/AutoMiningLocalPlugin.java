@@ -2,7 +2,9 @@ package net.runelite.client.plugins.microbot.mining;
 
 import com.google.inject.Provides;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.events.GameTick;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
@@ -24,7 +26,7 @@ import java.awt.*;
 )
 @Slf4j
 public class AutoMiningLocalPlugin extends Plugin {
-    public static final String version = "1.0.10";
+    public static final String version = "1.0.11";
     @Inject
     private AutoMiningConfig config;
     @Provides
@@ -52,5 +54,10 @@ public class AutoMiningLocalPlugin extends Plugin {
     protected void shutDown() {
         autoMiningScript.shutdown();
         overlayManager.remove(autoMiningOverlay);
+    }
+
+    @Subscribe
+    public void onGameTick(GameTick tick) {
+        autoMiningScript.updateRockTargetOnGameTick(config);
     }
 }

@@ -117,6 +117,22 @@ public class CanvasBoundaryTest
 	}
 
 	@Test
+	public void disabledYieldingReentersAtBotPositionAfterRealExit()
+	{
+		InputArbiter.setDisabled(true);
+		PointerState.setFromBot(100, 100);
+		realExit(765, 318);
+		received.clear();
+
+		AwtEmitter.moved(110, 105);
+
+		assertEquals(ids(MouseEvent.MOUSE_ENTERED, MouseEvent.MOUSE_MOVED), receivedIds());
+		assertEquals(100, received.get(0).getX());
+		assertEquals(100, received.get(0).getY());
+		assertEquals(new Point(110, 105), PointerState.lastBotPoint());
+	}
+
+	@Test
 	public void aRealExitIsRecordedWithoutClaimingATakeover()
 	{
 		PointerState.setFromBot(100, 100);

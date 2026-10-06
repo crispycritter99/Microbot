@@ -107,11 +107,15 @@ public final class AwtEmitter
 		// Cleared first: the ENTERED below must not re-enter this method.
 		PointerState.markInside();
 
-		Point at = PointerState.get();
+		boolean keepBotPosition = InputArbiter.isDisabled() && PointerState.hasBotPoint();
+		Point at = keepBotPosition ? PointerState.lastBotPoint() : PointerState.get();
 		int exitX = at.getX() < 0 ? fallbackX : at.getX();
 		int exitY = at.getY() < 0 ? fallbackY : at.getY();
 
-		Point entry = reentryPoint(exitX, exitY, canvasWidth(), canvasHeight(), ThreadLocalRandom.current());
+		// A real boundary event must not teleport the independent bot cursor to that edge.
+		Point entry = keepBotPosition
+			? new Point(clamp(exitX, canvasWidth()), clamp(exitY, canvasHeight()))
+			: reentryPoint(exitX, exitY, canvasWidth(), canvasHeight(), ThreadLocalRandom.current());
 		Point component = StretchMapper.toComponent(entry.getX(), entry.getY());
 		// Recorded too, or the next click presses where the pointer never travelled.
 		recordPosition(entry.getX(), entry.getY());

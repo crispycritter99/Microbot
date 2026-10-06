@@ -45,6 +45,7 @@ import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.reflection.Rs2Reflection;
 import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
+import net.runelite.client.plugins.microbot.util.skills.slayer.Rs2Slayer;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
@@ -111,7 +112,16 @@ public class FastAIOFighterScript extends Script {
 
 
                 if (Rs2Player.isInteracting())return;
-                Rs2NpcModel npc = attackableNpcs.stream()
+                List<String> targetNames = new ArrayList<>(attackableNpcs);
+                if (config.includeSlayerTask() && Rs2Slayer.hasSlayerTask()) {
+                    List<String> slayerNames = Rs2Slayer.getSlayerMonsters();
+                    if (slayerNames != null) targetNames.addAll(slayerNames);
+                }
+                Rs2NpcModel npc = targetNames.stream()
+                        .filter(Objects::nonNull)
+                        .map(String::trim)
+                        .filter(name -> !name.isEmpty())
+                        .distinct()
                         .flatMap(name -> Rs2Npc.getAttackableNpcs(name))
 
                         .findFirst()

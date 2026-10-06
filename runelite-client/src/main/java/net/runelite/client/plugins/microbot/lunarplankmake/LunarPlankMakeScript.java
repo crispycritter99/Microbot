@@ -17,7 +17,7 @@ public class LunarPlankMakeScript extends Script {
 
     public static String combinedMessage = "";
     public static long plankMade = 0;
-    private int profitPerPlank = 0;
+    private long profitPerPlank = 0;
     private long startTime;
     private boolean useSetDelay;
     private int setDelay;
@@ -35,8 +35,8 @@ public class LunarPlankMakeScript extends Script {
 
     public boolean run(LunarPlankMakeConfig config) {
         startTime = System.currentTimeMillis();
-        int unprocessedItemPrice = Microbot.getItemManager().search(config.ITEM().getName()).get(0).getPrice();
-        int processedItemPrice = Microbot.getItemManager().search(config.ITEM().getFinished()).get(0).getPrice();
+        long unprocessedItemPrice = Microbot.getItemManager().search(config.ITEM().getName()).get(0).getPrice();
+        long processedItemPrice = Microbot.getItemManager().search(config.ITEM().getFinished()).get(0).getPrice();
         profitPerPlank = processedItemPrice - unprocessedItemPrice;
 
         useSetDelay = config.useSetDelay();
@@ -131,14 +131,14 @@ public class LunarPlankMakeScript extends Script {
     private void calculateProfitAndDisplay(LunarPlankMakeConfig config) {
         double elapsedHours = (System.currentTimeMillis() - startTime) / 3600000.0;
         int plankPerHour = (int) (plankMade / elapsedHours);
-        int totalProfit = profitPerPlank * (int) plankMade;
-        int profitPerHour = profitPerPlank * plankPerHour;
+        long totalProfit = profitPerPlank * plankMade;
+        long profitPerHour = profitPerPlank * plankPerHour;
 
         combinedMessage = config.ITEM().getFinished() + ": " +
                 QuantityFormatter.quantityToRSDecimalStack((int) plankMade) + " (" +
                 QuantityFormatter.quantityToRSDecimalStack(plankPerHour) + "/hr) | " +
-                "Profit: " + QuantityFormatter.quantityToRSDecimalStack(totalProfit) + " (" +
-                QuantityFormatter.quantityToRSDecimalStack(profitPerHour) + "/hr)";
+                "Profit: " + QuantityFormatter.quantityToStackSize(totalProfit) + " (" +
+                QuantityFormatter.quantityToStackSize(profitPerHour) + "/hr)";
     }
 
     private void addDelay() {

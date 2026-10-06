@@ -49,7 +49,7 @@ public class ColossalWyrmAdvancedCourse implements AgilityCourseHandler
 	public boolean waitForCompletion(final int agilityExp, final int plane)
 	{
 		double initialHealth = Rs2Player.getHealthPercentage();
-		int timeoutMs = 15000;
+		int timeoutMs = 25000;
 		long startTime = System.currentTimeMillis();
 		long lastMovingTime = System.currentTimeMillis();
 		int waitDelay = 2000; // Colossal Wyrm needs longer wait after movement stops

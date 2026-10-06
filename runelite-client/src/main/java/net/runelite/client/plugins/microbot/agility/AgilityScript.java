@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -215,6 +216,10 @@ public class AgilityScript extends Script
 				}
 
 				// Normal obstacle interaction
+				double LOG_MEAN = 0.25; double LOG_STD = 0.34;
+				Random r = new Random();double gaussian = r.nextGaussian();
+				double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
+				sleep((int) value * 400);
 				if (Rs2GameObject.interact(gameObject)) {
 					// Wait for completion - this now returns quickly on XP drop
 					boolean completed = plugin.getCourseHandler().waitForCompletion(agilityExp,

@@ -204,7 +204,10 @@ public class VirtualMouse extends Mouse {
 
     @Override
     public java.awt.Point getMousePosition() {
-        Point point = PointerState.get();
+        // With yielding disabled, real input must not relocate the bot's next trajectory.
+        // Before the first bot movement, seed it from the observed pointer position.
+        Point point = InputArbiter.isDisabled() && PointerState.hasBotPoint()
+                ? PointerState.lastBotPoint() : PointerState.get();
         return new java.awt.Point(point.getX(), point.getY());
     }
 

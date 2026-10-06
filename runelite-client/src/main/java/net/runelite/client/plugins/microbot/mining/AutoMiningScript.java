@@ -1,14 +1,13 @@
 package net.runelite.client.plugins.microbot.mining;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.GameObject;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.NpcID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectCache;
+import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.mining.data.LocationOption;
 import net.runelite.client.plugins.microbot.mining.data.MiningRockLocations;
 import net.runelite.client.plugins.microbot.mining.data.Rocks;
@@ -25,7 +24,6 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.security.Login;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
-import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -41,10 +39,9 @@ public class AutoMiningScript extends Script {
     private static final int GEM_MINE_UNDERGROUND = 11410;
     State state = State.MINING;
     private static final List<Rocks> PROGRESSIVE_ROCKS = buildProgressiveRocks();
-    private Rocks activeRock;
+    private volatile Rocks activeRock;
     private LocationOption activeLocation;
-    @Inject
-    Rs2TileObjectCache rs2TileObjectCache;
+    private volatile RockTarget rockTarget;
 
     public boolean run(AutoMiningConfig config) {
         initialPlayerLocation = null;
@@ -120,17 +117,13 @@ public class AutoMiningScript extends Script {
                             return;
                         }
 
-                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), Rs2Player.getWorldLocation());
-//                        GameObject rock = Rs2GameObject.findReachableObject(activeRock.getName(), true, config.distanceToStray(), initialPlayerLocation);
-//                        if (1>2) {
-//                            var roock = rs2TileObjectCache.query().where(x -> x.getName() != null && x.getName().equalsIgnoreCase(activeRock.getName()) && x.getWorldLocation().distanceTo(Rs2Player.getWorldLocation()) < config.distanceToStray()).nearest();
-//                        }
+                        Rs2TileObjectModel rock = resolveRockTarget();
                         if (rock != null) {
                             double LOG_MEAN = 0.25; double LOG_STD = 0.34;
                             Random r = new Random();double gaussian = r.nextGaussian();
                             double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
                             sleep((int) value * 200);
-                            if (Rs2GameObject.interact(rock)) {
+                            if (rock.click("Mine")) {
 //                                sleepTicks(2);
                                 Rs2Player.waitForXpDrop(Skill.MINING, true);
 //                                Rs2Antiban.actionCooldown();
@@ -202,8 +195,40 @@ public class AutoMiningScript extends Script {
 
     @Override
     public void shutdown() {
+        rockTarget = null;
         super.shutdown();
         Rs2Antiban.resetAntibanSettings();
+    }
+
+    /**
+     * Refreshes the next rock once per game tick. This method is called on the client thread, so it
+     * only searches and publishes an immutable key; the script thread owns interaction and waits.
+     */
+    public void updateRockTargetOnGameTick(AutoMiningConfig config) {
+        Rocks rock = activeRock;
+        if (!Microbot.isLoggedIn() || rock == null || !rock.hasRequiredLevel()) {
+            rockTarget = null;
+            return;
+        }
+
+        Rs2TileObjectModel candidate = Microbot.getRs2TileObjectCache().query()
+                .withName(rock.getName())
+                .nearestReachable(Math.max(0, config.distanceToStray()));
+        rockTarget = candidate == null || candidate.getWorldLocation() == null
+                ? null
+                : new RockTarget(rock, candidate.getId(), candidate.getWorldLocation());
+    }
+
+    private Rs2TileObjectModel resolveRockTarget() {
+        RockTarget target = rockTarget;
+        if (target == null || target.rock != activeRock) {
+            return null;
+        }
+
+        return Microbot.getRs2TileObjectCache().query()
+                .withId(target.objectId)
+                .where(object -> target.worldPoint.equals(object.getWorldLocation()))
+                .first();
     }
 
     private static List<Rocks> buildProgressiveRocks() {
@@ -277,5 +302,17 @@ public class AutoMiningScript extends Script {
                 ? activeLocation.getName()
                 : "current area";
         Microbot.status = "Mining " + oreName + " @ " + locationName;
+    }
+
+    private static final class RockTarget {
+        private final Rocks rock;
+        private final int objectId;
+        private final WorldPoint worldPoint;
+
+        private RockTarget(Rocks rock, int objectId, WorldPoint worldPoint) {
+            this.rock = rock;
+            this.objectId = objectId;
+            this.worldPoint = worldPoint;
+        }
     }
 }

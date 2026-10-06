@@ -88,17 +88,17 @@ public class MongooseBlastFurnaceScript extends Script {
                     return;
                 }
 
-                if (!init) {
-                    int inCoffer = Microbot.getVarbitValue(BLAST_FURNACE_COFFER);
-                    int req = evaluateCofferDeposit();
-                    if (inCoffer >= req) {
-                        init = true;
-                        return;
-                    }
-                    checkAndTopOffCoffer();
-                    init = true;
-                    return;
-                }
+//                if (!init) {
+//                    int inCoffer = Microbot.getVarbitValue(BLAST_FURNACE_COFFER);
+//                    int req = evaluateCofferDeposit();
+//                    if (inCoffer >= req) {
+//                        init = true;
+//                        return;
+//                    }
+//                    checkAndTopOffCoffer();
+//                    init = true;
+//                    return;
+//                }
 
                 if (!fullCoffer()) {
                     checkAndTopOffCoffer();
@@ -277,15 +277,17 @@ public class MongooseBlastFurnaceScript extends Script {
 
     private void retrieveCoalAndPrimary() {
         int ore = config.getBars().getPrimaryOre();
-        if (!Rs2Inventory.hasItem(ore)) {
-            Rs2Bank.withdrawAll(ore);
-            sleep(500, 1200);
-            return;
-        }
         if (!Rs2Inventory.interact(coalBag, "Fill"))
             return;
+        if (!Rs2Inventory.hasItem(ore)) {
+            Rs2Bank.withdrawAll(ore);
+//            sleep(500, 1200);
+            return;
+        }
 
-        sleep(500, 1200);
+
+//        sleep(500, 1200);
+        Rs2Inventory.waitForInventoryChanges(1800);
         Rs2Bank.closeBank();
         sleepUntil(() -> !Rs2Bank.isOpen());
         depositOre();
@@ -496,15 +498,7 @@ public class MongooseBlastFurnaceScript extends Script {
             return false;
         }
         sleepUntil(() -> Rs2Dialogue.isInDialogue() || getInventoryOreCount() < oreCount, 10_000);
-        if (Rs2Widget.hasWidget("You must ask the foreman's")) {
-            log.info("Need to pay the noob tax");
-            if(timerStarted && !timeIsUp){
-                return putOreOnConveyorBelt();
-            }
 
-            handleTax();
-            return putOreOnConveyorBelt();
-        }
         return true;
     }
 

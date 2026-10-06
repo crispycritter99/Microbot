@@ -28,6 +28,7 @@ import java.util.Locale;
 @PluginDescriptor(
         name = "<html>[<font color=#93652a>K</font>] FastAIOFighter",
         description = "Fast configurable AIO fighter",
+        version = "1.0.1",
         tags = {"combat", "fighter", "microbot"},
         enabledByDefault = false
 )

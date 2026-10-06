@@ -18,4 +18,14 @@ public interface FastAIOFighterConfig extends Config {
     default String attackableNpcs() {
         return "kalphite worker";
     }
+
+    @ConfigItem(
+            keyName = "includeSlayerTask",
+            name = "Include current Slayer task",
+            description = "Also attack monsters matching your active Slayer task, alongside the manual NPC list.",
+            position = 1
+    )
+    default boolean includeSlayerTask() {
+        return false;
+    }
 }
