@@ -316,16 +316,28 @@ public class Rs2GameObject {
     @Deprecated
     public static GameObject findReachableObject(String objectName, boolean exact, int distance, WorldPoint anchorPoint, boolean checkAction, String action) {
         Predicate<TileObject> namePred = nameMatches(objectName, exact);
-        Rs2WorldPoint playerLocation = Rs2Player.getRs2WorldPoint();
 
-        return getGameObjects(namePred::test, anchorPoint, distance)
-                .stream()
-                .filter(o -> !checkAction || hasAction(convertToObjectComposition(o), action))
-                .sorted(Comparator.comparingInt(o ->
-                        Rs2WorldPoint.quickDistance(playerLocation.getWorldPoint(), o.getWorldLocation())))
-                .filter(Rs2GameObject::isReachable)
-                .findFirst()
-                .orElse(null);
+        Predicate<GameObject> filter = o -> {
+            if (!namePred.test(o)) {
+                return false;
+            }
+
+            if (checkAction) {
+                ObjectComposition comp = convertToObjectComposition(o);
+                return hasAction(comp, action);
+            }
+
+            return true;
+        };
+
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            List<GameObject> candidates = getGameObjects(filter, anchorPoint, distance);
+            if (candidates.isEmpty()) {
+                return null;
+            }
+            WorldPoint playerLocation = Rs2Player.getRs2WorldPoint().getWorldPoint();
+            return findNearestReachable(candidates, GameObject::getWorldLocation, playerLocation, Rs2GameObject::isReachable);
+        }).orElse(null);
     }
 
     /**
@@ -351,14 +363,6 @@ public class Rs2GameObject {
     }
 
     public static boolean hasAction(ObjectComposition objComp, String action, boolean exact) {
-        if (objComp == null) return false;
-
-        return Arrays.stream(objComp.getActions())
-                .filter(Objects::nonNull)
-                .anyMatch(a -> exact ? a.equalsIgnoreCase(action) : a.toLowerCase().contains(action.toLowerCase()));
-    }
-
-    public static boolean hasSubAction(ObjectComposition objComp, String action, boolean exact) {
         if (objComp == null) return false;
 
         return Arrays.stream(objComp.getActions())
@@ -1523,8 +1527,6 @@ public class Rs2GameObject {
 
     // private methods
     private static <T extends TileObject> Stream<T> getSceneObjects(Function<Tile, Collection<? extends T>> extractor) {
-        long startTime = System.currentTimeMillis();
-
         var triple = Microbot.getClientThread().invoke(() -> {
             Player player = Microbot.getClient().getLocalPlayer();
             if (player == null || player.getWorldView() == null) {
@@ -1543,19 +1545,14 @@ public class Rs2GameObject {
             return Triple.of(scene, tiles, z);
         });
 
-        long invokeEnd = System.currentTimeMillis();
-//        System.out.println("[getSceneObjects] Client thread invoke took: " + (invokeEnd - startTime) + "ms");
-
         var result = new ArrayList<T>();
         Tile[][][] tiles = (Tile[][][]) triple.getMiddle();
         int z = triple.getRight();
         if (tiles == null) {
-//            System.out.println("[getSceneObjects] Tiles null, returning early. Total time: " + (System.currentTimeMillis() - startTime) + "ms");
             return result.stream();
         }
 
         int sceneSize = Constants.SCENE_SIZE;
-        long loopStart = System.currentTimeMillis();
 
         for (int x = 0; x < sceneSize; x++) {
             for (int y = 0; y < sceneSize; y++) {
@@ -1583,11 +1580,6 @@ public class Rs2GameObject {
                 }
             }
         }
-
-        long loopEnd = System.currentTimeMillis();
-//        System.out.println("[getSceneObjects] Scene tile loop took: " + (loopEnd - loopStart) + "ms");
-//        System.out.println("[getSceneObjects] Total time: " + (loopEnd - startTime) + "ms | Objects found: " + result.size());
-
         return result.stream();
     }
 
@@ -1884,11 +1876,7 @@ public class Rs2GameObject {
                 if (index == actions.length)
                     index = 0;
             }
-            if (action.contains("Last-destination"))
-                index = 2;
-            if (index == -1) {
-                Microbot.log("Failed to interact with object " + object.getId() + " " + action);
-            }
+
             if (index == -1) {
                 Microbot.log("Failed to interact with object " + object.getId() + " " + action);
             }
@@ -1958,83 +1946,6 @@ public class Rs2GameObject {
         }
 
         return true;
-    }
-
-    // Resolve the parent from static labels: getNumOps() can exclude a submenu-only parent.
-    static int[] resolveSubmenuAction(String[] actions, EntityOps ops, String action, String subAction) {
-        if (actions == null || ops == null || action == null || subAction == null) return null;
-        for (int parent = 0; parent < Math.min(actions.length, EntityOps.MAX_OPS); parent++) {
-            if (actions[parent] == null
-                    || !action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[parent]))) continue;
-            EntityOps submenu = ops.getSubOps(parent);
-            if (submenu == null) continue;
-            for (int sub = 0; sub < submenu.getNumOps(); sub++) {
-                String label = submenu.getOp(sub);
-                if (label != null && subAction.equalsIgnoreCase(Rs2UiHelper.stripColTags(label))) {
-                    return new int[]{parent, sub};
-                }
-            }
-        }
-        return null;
-    }
-
-    static int objectSubmenuIdentifier(int objectId, int subIndex) {
-        return (objectId & 0xFFFF) | (subIndex << 16);
-    }
-
-    public static boolean clickObject(TileObject object, String action, String subAction) {
-        if (object == null || action == null || subAction == null) return false;
-        try {
-            NewMenuEntry entry = Microbot.getClientThread().runOnClientThreadOptional(() -> {
-                ObjectComposition composition = convertToObjectComposition(object);
-                if (composition == null || Microbot.getClient().isWidgetSelected()) return null;
-                int[] indices = resolveSubmenuAction(composition.getActions(), composition.getOps(), action, subAction);
-                if (indices == null) return null;
-                MenuAction[] menuActions = {
-                        MenuAction.GAME_OBJECT_FIRST_OPTION, MenuAction.GAME_OBJECT_SECOND_OPTION,
-                        MenuAction.GAME_OBJECT_THIRD_OPTION, MenuAction.GAME_OBJECT_FOURTH_OPTION,
-                        MenuAction.GAME_OBJECT_FIFTH_OPTION
-                };
-                int x = object.getLocalLocation().getSceneX();
-                int y = object.getLocalLocation().getSceneY();
-                if (object instanceof GameObject) {
-                    GameObject gameObject = (GameObject) object;
-                    x = gameObject.getSceneMinLocation().getX();
-                    y = gameObject.getSceneMinLocation().getY();
-                }
-                return new NewMenuEntry()
-                        .param0(x).param1(y)
-                        .opcode(menuActions[indices[0]].getId())
-                        .identifier(objectSubmenuIdentifier(object.getId(), indices[1]))
-                        .itemId(-1).option(subAction).target(composition.getName())
-                        .gameObject(object).worldViewId(object.getWorldView().getId());
-            }).orElse(null);
-            if (entry == null) return false;
-            WorldPoint playerLocation = Rs2Player.getWorldLocation();
-            if (playerLocation == null) return false;
-            if (playerLocation.distanceTo(object.getWorldLocation()) > 51) {
-                Rs2Walker.walkTo(object.getWorldLocation());
-                return false;
-            }
-            if (!Microbot.getClientThread().runOnClientThreadOptional(
-                    () -> Rs2Camera.isTileOnScreen(object.getLocalLocation())).orElse(false)) {
-                Rs2Camera.turnTo(object);
-            }
-            if (entry.getTarget().toLowerCase().contains("train cart")) {
-                Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
-                Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
-                if (!sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null
-                        && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null)) return false;
-            }
-            java.awt.Rectangle bounds = Microbot.getClientThread().runOnClientThreadOptional(
-                    () -> Rs2UiHelper.getObjectClickbox(object)).orElse(null);
-            if (bounds == null) return false;
-            Microbot.doInvoke(entry, bounds);
-            return true;
-        } catch (Exception ex) {
-            Microbot.log("Failed to interact with object submenu: " + ex.getMessage());
-            return false;
-        }
     }
 
     public static boolean hasLineOfSight(TileObject tileObject) {
@@ -2140,11 +2051,10 @@ public class Rs2GameObject {
      * @return boolean
      */
     public static boolean isReachable(GameObject tileObject) {
-        long start = System.currentTimeMillis();
-
         WorldArea worldArea = getWorldArea(tileObject);
-        if (worldArea == null) return false;
-
+        if (worldArea == null) {
+            return false;
+        }
         Rs2WorldArea gameObjectArea = new Rs2WorldArea(worldArea);
         List<WorldPoint> interactablePoints = gameObjectArea.getInteractable();
 
@@ -2153,18 +2063,11 @@ public class Rs2GameObject {
             interactablePoints.removeIf(gameObjectArea::contains);
         }
 
-        long filterStart = System.currentTimeMillis();
         WorldPoint walkableInteractPoint = interactablePoints.stream()
                 .filter(Rs2Tile::isWalkable)
-                .filter(Rs2Tile::isTileReachable)  // log how long this takes
+                .filter(Rs2Tile::isTileReachable)
                 .findFirst()
                 .orElse(null);
-
-        System.out.println("[isReachable] id=" + tileObject.getId()
-                + " interactPoints=" + interactablePoints.size()
-                + " filterMs=" + (System.currentTimeMillis() - filterStart)
-                + " totalMs=" + (System.currentTimeMillis() - start));
-
         return walkableInteractPoint != null;
     }
 
@@ -2209,5 +2112,16 @@ public class Rs2GameObject {
         }
         Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
         return true;
+    }
+
+    static <T> T findNearestReachable(List<T> candidates, Function<? super T, WorldPoint> location, WorldPoint from, Predicate<? super T> reachable) {
+        List<T> sorted = new ArrayList<>(candidates);
+        sorted.sort(Comparator.comparingInt(c -> Rs2WorldPoint.quickDistance(from, location.apply(c))));
+        for (T candidate : sorted) {
+            if (reachable.test(candidate)) {
+                return candidate;
+            }
+        }
+        return null;
     }
 }

@@ -347,32 +347,107 @@ if (CantReachTargetRecovery.shouldStart(detectionEnabled, cantReachTarget)) {
 
 **Defensive check:** During a recovery route through a closed door, assert that the door click occurs once, the original object or NPC target is passed unchanged to the walker, nested recovery is suppressed, and retry exhaustion still returns failure.
 
-## Early arrival must inspect the remaining raw route
+## 17. Give catalogued opening doors a handler when search selects WALK
 
-When finishing within the caller's arrival distance, check the unsmoothed route from the player's current tile through its endpoint. Reject early arrival if a planned transport remains, including an adjacent same-plane door or gate, or if the remaining walking distance exceeds the allowance. Do not infer completion from straight-line proximity or the smoothed endpoint alone. Partial paths are intermediate segments, not arrival.
+Live collision can mark an openable door edge passable so search routes through it. The resulting route may select an ordinary walking edge instead of the parallel catalog transport. Suppress generic door detection only when that opening door has a selected object transport; keep catalog ownership while the route is unavailable and for moves-you objects such as ladders and stiles.
 
-**Why this matters:** A nearby endpoint can be on the other side of a required transport. Conversely, waiting for a sticky minimap target to clear can add unnecessary clicks after an unobstructed route is already within the caller's finish distance.
+**Why this matters:** Fishing Guild door `20925` stalled in both directions: generic door detection rejected catalog membership, while transport execution required a selected transport and the route contained only walking edges.
 
-**Where this applies:** `Rs2Walker.processWalk` and `canFinishRouteEarly`.
+**Where this applies:** `Rs2DoorProbe.isCatalogTransportObject`, live collision door masking, and route-selected transport execution.
 
-**Defensive check:** Cover pending and completed adjacent transports, detours, off-route positions, different planes, and exact-tile requests.
+**Defensive check:** Verify the same catalog door is eligible for generic handling on a WALK edge and excluded on a selected TRANSPORT edge; test entry and exit on the live client.
 
-## Match fairy-ring destination codes against live operations
+## 18. Clear successful door crossings at the start of a new walk
 
-`ObjectComposition.getActions()` can expose only `Last-destination`, while `getOps().getOp(i)` exposes `Last-destination (DKP)`. Read the live operations on the client thread and verify the requested code case-insensitively before using the static `Last-destination` interaction label. Check this direct option before scanning favourites. A missing or different code must not activate last destination.
+The recently-opened suppression window belongs to the route that crossed the door. Clear it when a new walk starts, while retaining the separate per-edge attempt cooldown. Self-closing doors can require another interaction immediately on a return route.
 
-**Why this matters:** Comparing the dynamic label case-sensitively missed DKP and opened Configure on repeat trips. Passing the full dynamic label to a helper that resolves static action names can also select the wrong slot.
+**Why this matters:** Returning into the Fishing Guild within ten seconds of leaving hid entrance door `20925` from detection. A route through both doors selected the inner door first, failed to reach it, and only tried the entrance after the old suppression expired.
 
-**Where this applies:** `Rs2WalkerTransports.handleFairyRing` and object interaction helpers.
+**Where this applies:** `Rs2Walker.resetWalkSessionState` and `DoorAttemptLedger`.
 
-**Defensive check:** Test the captured DKP option, a different requested code, null slots, and the `Ring-last-destination` variant.
+**Defensive check:** Exit the guild and immediately route back through both doors. The entrance must be selected before the inner door, with the anti-hammer cooldown still intact.
 
-## Resolve object submenu parents from static actions
+## 19. Select the first reachable route interaction before an approach click
 
-A fairy ring can report three live parent operations while Favourites exists at parent index 3. Locate the parent in the static action labels, enter it with `getSubOps(parentIndex)`, then scan `getOp(subIndex)` up to the submenu count, skipping nulls. Read operations on the client thread. Select the object menu action from the parent index and pack the identifier as `(objectId & 0xFFFF) | (subIndex << 16)`; never hardcode the ring ID or renumber sparse submenu slots.
+A minimap target legitimately stops on the near side of a closed door or object transport. Before yielding to an active minimap interim or choosing another approach tile, inspect raw route edges in order and dispatch only the first unresolved interaction whose near-side approach is reachable. A transport origin may itself be blocked by the object, so a reachable adjacent predecessor is sufficient for that selected edge. Check selected transports before same-plane door geometry so ladders and trapdoors that change plane are not skipped. Keep the existing transport executor for its action, variant, and landing rules.
 
-**Why this matters:** Nested `getSubOps()` calls and a hardcoded identifier missed favourites or sent the wrong action. Missing parent/submenu labels must return false without dispatching a default option.
+**Why this matters:** Smoothed segments can put an empty approach segment before a visible door or staircase. Treating the first processed segment as the first obstacle delays interaction until the player stops beside it. Continuing a scan after the first door is throttled or fails can click a second door through the first one. A nearby route endpoint also does not make a distant door object reachable.
 
-**Where this applies:** `Rs2GameObject.clickObject(object, action, subAction)` and both fairy-ring handler entry points.
+**Pattern to follow:** Select one raw edge using reachable route tiles and the exact active transport selection; if its action is deferred or fails, keep that edge pending while the walker approaches or retries it. Use the object location for interaction range, not a smoothed segment endpoint.
 
-**Defensive check:** Cover the captured sparse submenu (DKP at 1, DJR at 2), a parent beyond the reported live count, index zero, another object ID, and absent labels.
+**Where this applies:** `Rs2Walker` pre-click and active-interim handling, `Rs2WalkerDoors` segment and pending-door scans, and `Rs2DoorGeometry` range checks.
+
+**Defensive check:** With two visible doors, a closed first door must remain selected after a failed click; opening it allows the second. An earlier wall or non-object transport must stop the ranged scan. A cross-plane object transport can be selected from a reachable adjacent approach tile even when its origin is absent from collision reachability.
+
+## 20. Skip backtracked transport edges below the player's raw anchor
+
+Door and scene-object scans retain a lookback window for nearby ordinary doors. Skip transport edges below the player's raw anchor rather than stopping the scan or dispatching them again. Only transports at or ahead of the anchor block later interactions. The recent handled-transport window expires after eight seconds and does not record crossings made by plain walking.
+
+**Why this matters:** A player paused just beyond a same-plane gate could never handle a door ahead after recent-transport suppression expired.
+
+**Where this applies:** `Rs2Walker` raw-route scene and pending-door scans, `handleFirstRouteInteractionAtRange` transport-map construction, and `Rs2WalkerDoors.handlePendingDoorNearRawPath`.
+
+**Defensive check:** With a transport behind the raw anchor and a door ahead, select the door outside the suppression window and after plain walking. Transports at or ahead of the anchor must still block later doors. Test the production transport map used by both the pending-interaction predicate and the blocked-transport predicate, rather than filtering only the test predicates.
+
+## 21. Apply the shared energy policy before clicking the run orb
+
+Every run-enable caller must pass through `Rs2Player.toggleRunEnergy`: energy must exceed
+`Microbot.runEnergyThreshold` in hundredths of a percent (default 1000 = 10%). The
+walker previously checked whole percentages in one path while direct scene/bank calls
+bypassed the check. An already satisfied state and explicit disable do not require energy.
+
+**Why this matters:** At zero energy, repeated requests cannot enable run. The orb's
+canvas location is its bounding-box corner, outside its circular hit area. Read visibility
+and bounds on the client thread and target the center; perform mouse gestures off-thread.
+A click is only a request: the helper returns true only if the desired state is observed,
+and throttles retries while the update is pending. Normal script iterations can retry.
+
+**Where this applies:** `Rs2Player`, `Rs2Walker`, `Rs2WalkerMovement`, bank/deposit helpers,
+and the base `Script` auto-run policy. The shared threshold now consistently uses raw
+energy (>1000 by default), replacing the walker's rounded >10% (>=1100) check.
+
+**Defensive check:** `Rs2PlayerRunEnergyTest` covers threshold boundaries, explicit disable,
+missing/hidden orbs, interior geometry, pending updates, and client-thread requests.
+
+## 22. A scene walk click is only valid on a tile rendered at click time
+
+`MenuAction.WALK` carries canvas coordinates. The client resolves the destination from the
+tile under that point during the next rendered frame. A point over an unrendered tile selects
+nothing. If the camera or player moved after the point was computed, it selects a different
+tile. Checking that the projection lies inside the viewport proves neither condition.
+
+**Why this matters:** Software rendering (GPU off) draws only 25 tiles around the camera eye,
+not around the player. `Scene.getDrawDistance()` keeps reporting the GPU value after GPU is
+disabled, so read `client.isGpu()` first. Tiles beyond that square still project into the
+viewport, and the old helper reported success for clicks that set no destination. Route
+camera turns held by arrow keys can also move the view during the natural-mouse gesture.
+
+**Where this applies:** `Rs2WalkerMovement.walkFastCanvasOnScreenOnly`, `dispatchSceneWalk`,
+and the public `Rs2Walker.walkFastCanvas`. Toggle run before computing the point. Reject tiles
+within 2 of the rendered edge, and skip scene clicks while the walker is turning the camera.
+After dispatch, report success only once the client destination lies within 2 tiles of the
+target. Otherwise return false so the caller's minimap fallback runs once. After two
+consecutive failures, scene clicks pause for 3 seconds.
+
+**Defensive check:** `SceneClickPolicyTest` covers draw-distance selection, camera-relative
+bounds, destination classification, and bounded suppression.
+
+## 23. Route camera turns are for targets the scene cannot reach
+
+`Rs2Walker.alignCameraTowardWalkTarget` runs after every scene and minimap walk click. A
+visible, rendered click target gains nothing from a turn. The turn only moves the view the
+user is watching, and while its arrow keys are held, scene clicks are skipped.
+
+**Why this matters:** The old alignment re-randomised yaw offset and pitch every 5–10 seconds
+and turned even when the target was on screen. On five fixed routes, 22 of 29 turns started
+while the destination was already clickable.
+
+**Where this applies:** `RouteCameraPolicy.decide`. Turn only when the target is at least
+4 tiles away, 1.2 seconds have passed since the last turn, and one of two conditions holds:
+the target is not scene-clickable, or a scene click failed within the last 2 seconds. When
+the heading is within 20 degrees, turn only if a view variation is due. View variation
+(yaw offset and pitch) is applied only to turns that are already needed. After a scene
+fallback click toward a nearer visible tile, the walker aligns toward the requested target.
+
+**Defensive check:** `RouteCameraPolicyTest` covers visible, hidden, aligned, recently
+failed, near, and throttled cases.
