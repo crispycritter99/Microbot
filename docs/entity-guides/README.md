@@ -21,6 +21,13 @@ Scene walk-click render validity and destination confirmation: [movement gotcha 
 
 Route camera turns only for unreachable targets: [movement gotcha 23](movement.md#23-route-camera-turns-are-for-targets-the-scene-cannot-reach).
 
+Object submenus: resolve the parent from the composition's action slots, then inspect
+`getOps().getSubOps(parentIndex)`. A fairy ring can expose Favourites at slot 3 even when
+the live parent reports only 3 ops. Preserve the actual child index (including zero)
+in `(objectId & 0xFFFF) | (childIndex << 16)`, using the parent's object menu action.
+Keep the three-argument `Rs2GameObject.clickObject` helper with its walker callers when
+merging updates; `ObjectSubmenuActionTest` covers the captured menu layout.
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:

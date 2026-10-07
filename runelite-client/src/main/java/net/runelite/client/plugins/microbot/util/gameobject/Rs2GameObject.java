@@ -1775,6 +1775,32 @@ public class Rs2GameObject {
     }
 
     public static boolean clickObject(TileObject object, String action) {
+        return clickObject(object, action, null);
+    }
+
+    static int[] resolveSubmenuAction(String[] actions, EntityOps ops, String action, String subAction) {
+        if (actions == null || ops == null || action == null || subAction == null) return null;
+        // Static actions can include Favourites beyond the live parent op count.
+        for (int parent = 0; parent < Math.min(actions.length, 5); parent++) {
+            if (actions[parent] == null || !action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[parent]))) continue;
+            EntityOps subOps = ops.getSubOps(parent);
+            if (subOps == null) continue;
+            for (int sub = 0; sub < subOps.getNumOps(); sub++) {
+                String option = subOps.getOp(sub);
+                if (option != null && subAction.equalsIgnoreCase(Rs2UiHelper.stripColTags(option))) {
+                    return new int[]{parent, sub};
+                }
+            }
+        }
+        return null;
+    }
+
+    static int objectSubmenuIdentifier(int objectId, int subIndex) {
+        return (objectId & 0xFFFF) | (subIndex << 16);
+    }
+
+    /** Click a named child of an object's submenu, or return false when it is unavailable. */
+    public static boolean clickObject(TileObject object, String action, String subAction) {
         if (object == null) return false;
         if (CantReachTargetRecovery.shouldStart(
                 Microbot.isCantReachTargetDetectionEnabled, Microbot.cantReachTarget)) {
@@ -1857,7 +1883,16 @@ public class Rs2GameObject {
             }
 
             int index = 0;
-            if (action != null) {
+            int identifier = object.getId();
+            if (subAction != null) {
+                int[] submenu = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+                    ObjectComposition live = convertToObjectComposition(object);
+                    return live == null ? null : resolveSubmenuAction(live.getActions(), live.getOps(), action, subAction);
+                }).orElse(null);
+                if (submenu == null) return false;
+                index = submenu[0];
+                identifier = objectSubmenuIdentifier(object.getId(), submenu[1]);
+            } else if (action != null) {
                 String[] actions;
                 if (objComp.getImpostorIds() != null && objComp.getImpostor() != null) {
                     actions = objComp.getImpostor().getActions();
@@ -1882,7 +1917,7 @@ public class Rs2GameObject {
             }
 
 
-            if (Microbot.getClient().isWidgetSelected()) {
+            if (subAction == null && Microbot.getClient().isWidgetSelected()) {
                 menuAction = MenuAction.WIDGET_TARGET_ON_GAME_OBJECT;
             } else if (index == 0) {
                 menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
@@ -1930,9 +1965,9 @@ public class Rs2GameObject {
                     .param0(param0)
                     .param1(param1)
                     .opcode(menuAction.getId())
-                    .identifier(object.getId())
+                    .identifier(identifier)
                     .itemId(-1)
-                    .option(action)
+                    .option(subAction == null ? action : subAction)
                     .target(objComp.getName())
                     .gameObject(object)
                     .worldViewId(worldViewId)
@@ -1943,6 +1978,7 @@ public class Rs2GameObject {
 
         } catch (Exception ex) {
             Microbot.log("Failed to interact with object " + ex.getMessage());
+            return false;
         }
 
         return true;
