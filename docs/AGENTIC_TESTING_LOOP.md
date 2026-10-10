@@ -70,6 +70,7 @@ java -jar microbot.jar \
 | `microbot.test.script` | Plugin descriptor name to auto-enable | required |
 | `microbot.test.timeout` | Max runtime in ms before forced exit | `120000` |
 | `microbot.test.output` | Directory for results/screenshots | `~/.runelite/test-results` |
+| `microbot.test.world` | Log in to this world with the active profile instead of enabling AutoLogin | unset |
 
 ### Components
 

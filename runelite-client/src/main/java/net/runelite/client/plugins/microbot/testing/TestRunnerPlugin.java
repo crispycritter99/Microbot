@@ -12,6 +12,7 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginInstantiationException;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.accountselector.AutoLoginPlugin;
+import net.runelite.client.plugins.microbot.util.security.LoginManager;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -31,6 +32,7 @@ public class TestRunnerPlugin extends Plugin {
     private static final String PROP_TEST_MODE = "microbot.test.mode";
     private static final String PROP_TEST_SCRIPT = "microbot.test.script";
     private static final String PROP_TEST_TIMEOUT = "microbot.test.timeout";
+    private static final String PROP_TEST_WORLD = "microbot.test.world";
 
     @Inject
     private PluginManager pluginManager;
@@ -39,7 +41,7 @@ public class TestRunnerPlugin extends Plugin {
     private Client client;
 
     private ScheduledExecutorService executor;
-    private boolean testStarted = false;
+    private volatile boolean testStarted = false;
 
     @Override
     protected void startUp() {
@@ -49,7 +51,12 @@ public class TestRunnerPlugin extends Plugin {
         executor = Executors.newSingleThreadScheduledExecutor();
 
         prepareTargetPlugin();
-        enableAutoLogin();
+        int world = getTestWorld();
+        if (world > 0) {
+            scheduleWorldLogin(world);
+        } else {
+            enableAutoLogin();
+        }
 
         long timeout = getTimeout();
         executor.schedule(() -> {
@@ -77,6 +84,35 @@ public class TestRunnerPlugin extends Plugin {
         } catch (PluginInstantiationException e) {
             throw new IllegalStateException("Unable to prepare target plugin " + getTargetPluginName(), e);
         }
+    }
+
+    private void scheduleWorldLogin(int world) {
+        log.info("[TestRunner] Logging in to world {} with the active profile", world);
+        executor.scheduleWithFixedDelay(() -> {
+            if (testStarted || client.getGameState() != GameState.LOGIN_SCREEN) {
+                return;
+            }
+            try {
+                LoginManager.login(world);
+            } catch (Exception e) {
+                log.warn("[TestRunner] Login attempt to world {} failed: {}", world, e.getMessage());
+            }
+        }, 5, 20, TimeUnit.SECONDS);
+    }
+
+    static int parseWorld(String value) {
+        if (value == null || value.isBlank()) {
+            return -1;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private static int getTestWorld() {
+        return parseWorld(System.getProperty(PROP_TEST_WORLD));
     }
 
     private void enableAutoLogin() {
