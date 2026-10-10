@@ -99,6 +99,9 @@ public class ReleaseSmokeHarnessPlugin extends Plugin {
 
             if (!sleepUntil(() -> ReleaseSmokeLive.location() != null, 60_000)) {
                 result.addError("Player location never became available after login");
+                result.finish("login_failure");
+                writeAndExit(result, outputDir);
+                return;
             }
             result.world = Microbot.getClient().getWorld();
 

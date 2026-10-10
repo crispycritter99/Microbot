@@ -12,7 +12,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginInstantiationException;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.accountselector.AutoLoginPlugin;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.security.LoginManager;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
 import javax.inject.Inject;
 import javax.swing.*;
@@ -89,15 +91,33 @@ public class TestRunnerPlugin extends Plugin {
     private void scheduleWorldLogin(int world) {
         log.info("[TestRunner] Logging in to world {} with the active profile", world);
         executor.scheduleWithFixedDelay(() -> {
-            if (testStarted || client.getGameState() != GameState.LOGIN_SCREEN) {
+            if (testStarted) {
                 return;
             }
             try {
+                if (client.getGameState() == GameState.LOGGED_IN) {
+                    dismissWelcomeScreen();
+                    return;
+                }
+                if (client.getGameState() != GameState.LOGIN_SCREEN) {
+                    return;
+                }
                 LoginManager.login(world);
             } catch (Exception e) {
                 log.warn("[TestRunner] Login attempt to world {} failed: {}", world, e.getMessage());
             }
-        }, 5, 20, TimeUnit.SECONDS);
+        }, 5, 10, TimeUnit.SECONDS);
+    }
+
+    private void dismissWelcomeScreen() {
+        boolean playVisible = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Widget play = client.getWidget(InterfaceID.WelcomeScreen.PLAY);
+            return play != null && !play.isHidden();
+        }).orElse(false);
+        if (playVisible) {
+            log.info("[TestRunner] Dismissing the welcome screen");
+            Rs2Widget.clickWidget(InterfaceID.WelcomeScreen.PLAY);
+        }
     }
 
     static int parseWorld(String value) {
