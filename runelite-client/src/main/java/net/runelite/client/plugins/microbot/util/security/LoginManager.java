@@ -239,6 +239,7 @@ public final class LoginManager {
     public static boolean checkLoginLockout() {
         LoginLockout lockout = LoginLockout.getInstance();
         if (!isLoginLockoutScreen()) {
+            lockout.recordScreenCleared();
             return lockout.isActive();
         }
         if (lockout.recordLockout()) {
