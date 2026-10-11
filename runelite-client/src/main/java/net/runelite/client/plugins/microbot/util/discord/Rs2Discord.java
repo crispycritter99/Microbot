@@ -94,7 +94,7 @@ public class Rs2Discord {
             Microbot.log("Invalid Discord webhook URL format");
             return false;
         } catch (IOException e) {
-            Microbot.log("Error while sending Discord notification - Error: " + e.getMessage());
+            Microbot.log("Error while sending Discord notification: " + e.getClass().getSimpleName());
             return false;
         }
     }
