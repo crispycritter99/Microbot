@@ -172,6 +172,7 @@ public class Microbot {
     private static ScheduledFuture<?> xpSchedulorFuture;
     private static net.runelite.api.World quickHopTargetWorld;
     private static final int WORLD_SWITCHER_LOAD_TIMEOUT_MS = 5000;
+    private static final int WORLD_SWITCHER_REOPEN_INTERVAL_MS = 600;
     /**
      * PouchScript is injected in the main MicrobotPlugin as it's being used in multiple scripts
      */
@@ -464,14 +465,9 @@ public class Microbot {
     }
 
     static boolean hopViaWorldSwitcher(net.runelite.api.World rsWorld, int loadTimeoutMs) {
-        if (!isWorldSwitcherLoaded()) {
-            Microbot.getClientThread().runOnClientThreadOptional(() -> {
-                Microbot.getClient().openWorldHopper();
-                return true;
-            });
-            if (!sleepUntil(Microbot::isWorldSwitcherLoaded, loadTimeoutMs)) {
-                return false;
-            }
+        if (!isWorldSwitcherLoaded()
+                && !sleepUntil(Microbot::isWorldSwitcherLoaded, Microbot::openWorldSwitcher, loadTimeoutMs, WORLD_SWITCHER_REOPEN_INTERVAL_MS)) {
+            return false;
         }
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             if (Microbot.getClient().getWidget(InterfaceID.Worldswitcher.BUTTONS) == null) {
@@ -480,6 +476,13 @@ public class Microbot {
             Microbot.getClient().hopToWorld(rsWorld);
             return true;
         }).orElse(false);
+    }
+
+    private static void openWorldSwitcher() {
+        Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Microbot.getClient().openWorldHopper();
+            return true;
+        });
     }
 
     private static boolean isWorldSwitcherLoaded() {
