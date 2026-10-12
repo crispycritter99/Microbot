@@ -184,8 +184,8 @@ public class QuestScript extends Script {
                     }
                 }
 
-                if (getQuestHelperPlugin().getSelectedQuest() != null && !Microbot.getClientThread().runOnClientThreadOptional(() ->
-                        getQuestHelperPlugin().getSelectedQuest().isCompleted()).orElse(null)) {
+                QuestHelper selectedQuest = getQuestHelperPlugin().getSelectedQuest();
+                if (selectedQuest != null && !Microbot.getClientThread().runOnClientThreadOptional(selectedQuest::isCompleted).orElse(true)) {
                     if (Rs2Widget.isWidgetVisible(ComponentID.DIALOG_OPTION_OPTIONS) && getQuestHelperPlugin().getSelectedQuest().getQuest().getId() != Quest.COOKS_ASSISTANT.getId() && !Rs2Bank.isOpen()) {
                         boolean hasOption = Rs2Dialogue.handleQuestOptionDialogueSelection();
                         //if there is no quest option in the dialogue, just click player location to remove

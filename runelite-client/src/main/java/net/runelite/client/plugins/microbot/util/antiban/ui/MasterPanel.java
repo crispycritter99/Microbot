@@ -52,7 +52,8 @@ public class MasterPanel extends PluginPanel {
     private final JLabel profileLabel = new JLabel("Category: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().getName() : "null"));
     private final JLabel activityLabel = new JLabel("Activity: " + (Rs2Antiban.getActivity() != null ? Rs2Antiban.getActivity().getMethod() : "null"));
     private final JLabel activityIntensityLabel = new JLabel("Activity Intensity: " + (Rs2Antiban.getActivityIntensity() != null ? Rs2Antiban.getActivityIntensity().getName() : "null"));
-    private final JLabel busyLabel = new JLabel("Busy: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().isBusy() : "null"));
+    private final JLabel busyLabel = new JLabel("Busy: null");
+    private volatile String busyText = "Busy: null";
     private final boolean isFlipped = false; // Track if the image is flipped
     private final FlippableLabel label;
     private final JLayeredPane layeredPane; // Use a layered pane for positioning the GIF
@@ -203,7 +204,11 @@ public class MasterPanel extends PluginPanel {
         profileLabel.setText("Category: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().getName() : "null"));
         activityLabel.setText("Activity: " + (Rs2Antiban.getActivity() != null ? Rs2Antiban.getActivity().getMethod() : "null"));
         activityIntensityLabel.setText("Activity Intensity: " + (Rs2Antiban.getActivityIntensity() != null ? Rs2Antiban.getActivityIntensity().getName() : "null"));
-        busyLabel.setText("Busy: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().isBusy() : "null"));
+        busyLabel.setText(busyText);
+    }
+
+    public void refreshBusyState() {
+        busyText = "Busy: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().isBusy() : "null");
     }
 
     private JPanel createInfoPanel() {
