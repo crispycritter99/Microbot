@@ -4,6 +4,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.util.antiban.AntibanPlugin;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
+import net.runelite.client.plugins.microbot.util.antiban.enums.Category;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.util.ImageUtil;
@@ -208,7 +209,8 @@ public class MasterPanel extends PluginPanel {
     }
 
     public void refreshBusyState() {
-        busyText = "Busy: " + (Rs2Antiban.getCategory() != null ? Rs2Antiban.getCategory().isBusy() : "null");
+        Category category = Rs2Antiban.getCategory();
+        busyText = "Busy: " + (category != null ? category.isBusy() : "null");
     }
 
     private JPanel createInfoPanel() {
