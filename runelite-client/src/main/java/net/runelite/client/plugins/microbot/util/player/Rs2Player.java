@@ -476,6 +476,13 @@ public class Rs2Player {
 
     public enum TerminalLogoutState { BANK_CLOSING, LOGOUT_REQUESTED, LOGGED_OUT, INPUT_BLOCKED }
 
+    /** One off-client-thread terminal logout step with AutoLogin suppression. */
+    public static TerminalLogoutState logoutWithoutAutoLoginStep() {
+        if (Microbot.getClient().isClientThread()) return TerminalLogoutState.INPUT_BLOCKED;
+        Microbot.getEventBus().post(new AutoLoginSuppressionRequest());
+        return terminalLogoutInputStep();
+    }
+
     private static TerminalLogoutState terminalLogoutInputStep() {
         if (!Microbot.isLoggedIn()) return TerminalLogoutState.LOGGED_OUT;
         if (Rs2Bank.isOpen()) {

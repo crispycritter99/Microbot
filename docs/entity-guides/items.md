@@ -272,3 +272,8 @@ An ordinary logout can be a break or world hop, so it must keep normal AutoLogin
 **Pattern to follow:** The helper arms suppression before closing the bank and reports whether logout was observed or only requested. Uncompleted requests expire after 15 seconds using a monotonic clock, including when no game-state event occurs; observed terminal logouts do not expire. Ordinary `logout()` is unchanged; scripts that use it for terminal failure must explicitly adopt the new API.
 
 **Defensive check:** Run `AutoLoginSuppressionTest`, `AutoLoginPluginSupplyStopTest`, `ScriptStartedTest`, `TerminalSupplyLogoutTest`, and `InventorySetupSupplyLogoutTest`. Verify live that a shortage stays logged out and restarting a gameplay script permits login.
+
+
+## Terminal supply stops need observed logout
+
+An owning script can set `withMissingSupplyHandler` on its Inventory Setup loader to keep its scheduled loop alive while `TerminalLogoutPrompt` closes the bank and requests logout. Do not show a blocking shortage notification or cancel that loop until `LOGGED_OUT` is observed. The default loader policy stays unchanged when no handler is supplied; ordinary breaks and world hops do not arm terminal Auto Login suppression.
