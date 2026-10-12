@@ -42,6 +42,7 @@ import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.shop.Rs2Shop;
 import net.runelite.client.plugins.microbot.util.item.Rs2ItemManager;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
@@ -70,6 +71,7 @@ import javax.inject.Inject;
 import javax.swing.Timer;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -174,6 +176,8 @@ public class Microbot {
     private static net.runelite.api.World quickHopTargetWorld;
     private static final int WORLD_SWITCHER_LOAD_TIMEOUT_MS = 5000;
     private static final int WORLD_SWITCHER_REOPEN_INTERVAL_MS = 600;
+    private static final int HOP_WAIT_MIN_IDLE_TICKS = 5000;
+    private static final int HOP_WAIT_MAX_IDLE_TICKS = 10000;
     /**
      * PouchScript is injected in the main MicrobotPlugin as it's being used in multiple scripts
      */
@@ -470,20 +474,34 @@ public class Microbot {
 
     static boolean awaitHopBudget(int worldNumber) {
         HopBudget budget = HopBudget.getInstance();
-        long waitMs = budget.millisUntilHopAllowed();
-        if (waitMs <= 0) {
-            return true;
-        }
         if (Microbot.getClient().isClientThread() || SwingUtilities.isEventDispatchThread()) {
+            long waitMs = budget.cachedMillisUntilHopAllowed();
+            if (waitMs <= 0) {
+                return true;
+            }
             log.warn("Hop limit reached - not hopping to world {}, next hop allowed in {}s",
                     worldNumber, TimeUnit.MILLISECONDS.toSeconds(waitMs));
             return false;
         }
+        long waitMs = budget.millisUntilHopAllowed();
+        if (waitMs <= 0) {
+            return true;
+        }
         log.info("Hop limit reached - waiting {}s before hopping to world {}",
                 TimeUnit.MILLISECONDS.toSeconds(waitMs), worldNumber);
         String previousStatus = status;
+        int idleLimit = Rs2Random.between(HOP_WAIT_MIN_IDLE_TICKS, HOP_WAIT_MAX_IDLE_TICKS);
         try {
             while (waitMs > 0) {
+                if (!isLoggedIn()) {
+                    log.info("Logged out while waiting for the hop limit - not hopping to world {}", worldNumber);
+                    return false;
+                }
+                Client client = Microbot.getClient();
+                if (Math.min(client.getKeyboardIdleTicks(), client.getMouseIdleTicks()) > idleLimit) {
+                    Rs2Keyboard.keyPress(KeyEvent.VK_BACK_SPACE);
+                    idleLimit = Rs2Random.between(HOP_WAIT_MIN_IDLE_TICKS, HOP_WAIT_MAX_IDLE_TICKS);
+                }
                 status = "Hop limit - next hop in " + TimeUnit.MILLISECONDS.toSeconds(waitMs + 999) + "s";
                 Thread.sleep(Math.min(waitMs, 1000L));
                 waitMs = budget.millisUntilHopAllowed();
