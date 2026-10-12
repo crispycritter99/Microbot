@@ -478,7 +478,7 @@ public class Rs2Player {
 
     /** One off-client-thread terminal logout step with AutoLogin suppression. */
     public static TerminalLogoutState logoutWithoutAutoLoginStep() {
-        if (Microbot.getClient().isClientThread()) return TerminalLogoutState.INPUT_BLOCKED;
+        if (Microbot.getClientThread().isClientThread()) return TerminalLogoutState.INPUT_BLOCKED;
         Microbot.getEventBus().post(new AutoLoginSuppressionRequest());
         return terminalLogoutInputStep();
     }
