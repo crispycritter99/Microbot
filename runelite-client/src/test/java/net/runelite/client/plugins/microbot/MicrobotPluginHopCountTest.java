@@ -14,6 +14,8 @@ public class MicrobotPluginHopCountTest
 		assertTrue(MicrobotPlugin.isLoginServerRequest(GameState.LOGGED_IN, GameState.HOPPING));
 		assertTrue(MicrobotPlugin.isLoginServerRequest(GameState.LOGIN_SCREEN, GameState.LOGGING_IN));
 		assertTrue(MicrobotPlugin.isLoginServerRequest(GameState.LOGIN_SCREEN_AUTHENTICATOR, GameState.LOGGING_IN));
+		assertTrue(MicrobotPlugin.isLoginServerRequest(GameState.UNKNOWN, GameState.LOGGING_IN));
+		assertTrue(MicrobotPlugin.isLoginServerRequest(GameState.CONNECTION_LOST, GameState.LOGGING_IN));
 	}
 
 	@Test

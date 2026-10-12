@@ -378,7 +378,8 @@ public class MicrobotPlugin extends Plugin
 			return previous != GameState.HOPPING;
 		}
 		return next == GameState.LOGGING_IN
-				&& (previous == GameState.LOGIN_SCREEN || previous == GameState.LOGIN_SCREEN_AUTHENTICATOR);
+				&& previous != GameState.HOPPING
+				&& previous != GameState.LOGGING_IN;
 	}
 
 	private void applyHopBudgetConfig()
