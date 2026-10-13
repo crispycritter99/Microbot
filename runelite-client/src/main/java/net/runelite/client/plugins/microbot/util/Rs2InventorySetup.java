@@ -886,12 +886,13 @@ public class Rs2InventorySetup {
 			if (!inInventory && !inBank) {
 				int bankGear = bankQtyForPresetRow(item, lowerCaseName, isFuzzy);
 				int invGear = isFuzzy ? Rs2Inventory.itemQuantity((String) identifier) : Rs2Inventory.itemQuantity((int) identifier);
+				boolean stopLoad = missingSupplyHandler != null || missingSupplyPolicy == MissingSupplyPolicy.LOGOUT_AND_STOP;
 				logSetup(Level.WARN,
 						"missing gear %s | bank=%d | inv=%d | need=%d — %s",
 						item.getName(), bankGear, invGear, item.getQuantity(),
-						missingSupplyPolicy == MissingSupplyPolicy.LOGOUT_AND_STOP ? "stopping" : "pausing");
+						stopLoad ? "stopping" : "pausing");
 				stopForMissingRequiredSupply(item.getName());
-				if (missingSupplyPolicy == MissingSupplyPolicy.LOGOUT_AND_STOP) return false;
+				if (stopLoad) return false;
 				continue;
 			}
 
