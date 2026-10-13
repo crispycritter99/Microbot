@@ -467,5 +467,17 @@ interactions click right after `turnTo`, so they could land on a stale position.
 pitch read the same on two samples taken on different client ticks. Each sample is read on
 the client thread. Callers should not add their own sleeps after `turnTo`.
 
+The settle check cannot tell our own coasting apart from anything else that moves the camera.
+While `NpcTracker` is steering the yaw with `setCameraYawTarget`, the QoL plugin's smooth camera
+tracking is on, or the user is dragging the camera, the yaw never holds still for two ticks
+and every turn waits the full 600 ms cap before returning. That is the bound working, not a
+hang; the view is still moving when the call returns, so a canvas point taken right after it
+can still be stale.
+
+If the client-thread read fails (thread interrupted or the client-thread timeout), `getYaw` and
+`getPitch` fall back to reading the camera directly instead of returning 0. A yaw of 0 is
+north and a pitch of 0 sends `adjustPitch` holding UP, so a fake 0 looked like a real angle.
+`adjustPitch` returns without pressing a key when the pitch is already at the target.
+
 **Defensive check:** `Rs2CameraSettleTest` simulates a camera that coasts after release. It
 also covers the timeout bound and the client-thread no-op.
