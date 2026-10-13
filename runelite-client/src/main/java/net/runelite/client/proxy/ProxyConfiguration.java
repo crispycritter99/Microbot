@@ -50,9 +50,9 @@ public class ProxyConfiguration {
         String pass = credentials[1];
 
         configureProxy(host, port);
+        username = user;
 
         if (user != null) {
-            username = user;
             setupAuthenticator(user, pass);
         }
     }

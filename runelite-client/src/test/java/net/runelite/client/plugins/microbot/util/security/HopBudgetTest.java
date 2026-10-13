@@ -230,6 +230,22 @@ public class HopBudgetTest {
         assertTrue(first.matches("[A-Za-z0-9._-]+"));
     }
 
+    @Test public void networkKeyUsernamesWithEqualHashCodesGetSeparateKeys() {
+        assertEquals("Aa".hashCode(), "BB".hashCode());
+        assertNotEquals(HopBudget.networkKey("gate.example.com", "7000", "Aa"),
+                HopBudget.networkKey("gate.example.com", "7000", "BB"));
+    }
+
+    @Test public void freshClientReadsTheSharedFileBeforeAnsweringFromCache() throws Exception {
+        Path file = folder.getRoot().toPath().resolve(HopBudget.FILE_NAME);
+        HopBudget first = budget(30, 5);
+        first.persistTo(file, "direct");
+        hop(first, 25);
+        HopBudget fresh = budget(30, 5);
+        fresh.persistTo(file, "direct");
+        assertTrue(fresh.cachedMillisUntilHopAllowed() > 0);
+    }
+
     private static void restore(String property, String value) {
         if (value == null) {
             System.clearProperty(property);

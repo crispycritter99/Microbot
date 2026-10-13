@@ -16,6 +16,8 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.function.LongSupplier;
@@ -60,9 +62,22 @@ public final class HopBudget {
             key.append('_').append(sanitize(port));
         }
         if (username != null && !username.isEmpty()) {
-            key.append('.').append(Integer.toHexString(username.hashCode()));
+            key.append('.').append(digest(username));
         }
         return key.toString();
+    }
+
+    private static String digest(String value) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (int i = 0; i < 8; i++) {
+                hex.append(String.format("%02x", hash[i]));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static String sanitize(String value) {
@@ -71,6 +86,7 @@ public final class HopBudget {
 
     public void persistTo(Path file, String networkKey) {
         store = new FileStore(file, networkKey, store);
+        store.update(UnaryOperator.identity());
     }
 
     public void configure(boolean enabled, int capacity, int refillPerHour, int reserve) {

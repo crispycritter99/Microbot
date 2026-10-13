@@ -14,6 +14,7 @@ import net.runelite.api.annotations.Varbit;
 import net.runelite.api.annotations.Varp;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.gameval.InterfaceID;
+import net.runelite.api.gameval.VarClientID;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetModalMode;
 import net.runelite.client.Notifier;
@@ -47,6 +48,7 @@ import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.mouse.Mouse;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.mouse.VirtualMouse;
 import net.runelite.client.plugins.microbot.util.mouse.naturalmouse.NaturalMouse;
 import net.runelite.client.plugins.microbot.api.boat.Rs2BoatCache;
@@ -176,8 +178,8 @@ public class Microbot {
     private static net.runelite.api.World quickHopTargetWorld;
     private static final int WORLD_SWITCHER_LOAD_TIMEOUT_MS = 5000;
     private static final int WORLD_SWITCHER_REOPEN_INTERVAL_MS = 600;
-    private static final int HOP_WAIT_MIN_IDLE_TICKS = 5000;
-    private static final int HOP_WAIT_MAX_IDLE_TICKS = 10000;
+    private static final int HOP_WAIT_MIN_IDLE_MARGIN_TICKS = 3000;
+    private static final int HOP_WAIT_MAX_IDLE_MARGIN_TICKS = 10000;
     /**
      * PouchScript is injected in the main MicrobotPlugin as it's being used in multiple scripts
      */
@@ -490,17 +492,16 @@ public class Microbot {
         log.info("Hop limit reached - waiting {}s before hopping to world {}",
                 TimeUnit.MILLISECONDS.toSeconds(waitMs), worldNumber);
         String previousStatus = status;
-        int idleLimit = Rs2Random.between(HOP_WAIT_MIN_IDLE_TICKS, HOP_WAIT_MAX_IDLE_TICKS);
+        int idleMargin = Rs2Random.between(HOP_WAIT_MIN_IDLE_MARGIN_TICKS, HOP_WAIT_MAX_IDLE_MARGIN_TICKS);
         try {
             while (waitMs > 0) {
                 if (!isLoggedIn()) {
                     log.info("Logged out while waiting for the hop limit - not hopping to world {}", worldNumber);
                     return false;
                 }
-                Client client = Microbot.getClient();
-                if (Math.min(client.getKeyboardIdleTicks(), client.getMouseIdleTicks()) > idleLimit) {
+                if (shouldPreventIdleLogout(idleMargin)) {
                     Rs2Keyboard.keyPress(KeyEvent.VK_BACK_SPACE);
-                    idleLimit = Rs2Random.between(HOP_WAIT_MIN_IDLE_TICKS, HOP_WAIT_MAX_IDLE_TICKS);
+                    idleMargin = Rs2Random.between(HOP_WAIT_MIN_IDLE_MARGIN_TICKS, HOP_WAIT_MAX_IDLE_MARGIN_TICKS);
                 }
                 status = "Hop limit - next hop in " + TimeUnit.MILLISECONDS.toSeconds(waitMs + 999) + "s";
                 Thread.sleep(Math.min(waitMs, 1000L));
@@ -513,6 +514,19 @@ public class Microbot {
         } finally {
             status = previousStatus;
         }
+    }
+
+    private static boolean shouldPreventIdleLogout(int idleMargin) {
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Client client = Microbot.getClient();
+            return Rs2Player.checkIdleLogout(idleMargin)
+                    && isNullOrEmpty(client.getVarcStrValue(VarClientID.CHATINPUT))
+                    && isNullOrEmpty(client.getVarcStrValue(VarClientID.MESLAYERINPUT));
+        }).orElse(false);
+    }
+
+    private static boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 
     static boolean hopViaWorldSwitcher(net.runelite.api.World rsWorld, int loadTimeoutMs) {
