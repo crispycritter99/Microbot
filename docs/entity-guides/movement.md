@@ -481,3 +481,22 @@ north and a pitch of 0 sends `adjustPitch` holding UP, so a fake 0 looked like a
 
 **Defensive check:** `Rs2CameraSettleTest` simulates a camera that coasts after release. It
 also covers the timeout bound and the client-thread no-op.
+
+## 25. Bound scene tile loops by the tile array, not `Constants.SCENE_SIZE`
+
+The local player's worldview is not always the 104x104 top-level scene. On a sailing boat
+the player stands in a sub-worldview whose `Scene.getTiles()` is only 8 or 16 tiles wide.
+A loop that runs `x, y < Constants.SCENE_SIZE` over that array throws
+`ArrayIndexOutOfBoundsException` at the boat's width.
+
+**Why this matters:** `Rs2GameObject.getSceneObjects` read tiles from
+`player.getWorldView().getScene()` and looped to `SCENE_SIZE`. Every scene-object query made
+from a boat threw `Index 8 out of bounds for length 8`, which aborted the walker inside
+`handleNearbyRawPathSceneObjects` and crashed banking in scripts that called `findBank`.
+
+**Pattern to follow:** take the loop bounds from the array you index (`tiles[z].length`,
+`tiles[z][0].length`), or from `worldView.getSizeX()` / `getSizeY()`, whenever the tiles come
+from a worldview that is not guaranteed to be the top-level one.
+
+**Defensive check:** `Rs2GameObjectSmallWorldViewTest` queries wall objects on an 8x8
+worldview and expects the object on the last tile.

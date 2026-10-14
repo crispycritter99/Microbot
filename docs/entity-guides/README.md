@@ -23,6 +23,8 @@ Route camera turns only for unreachable targets: [movement gotcha 23](movement.m
 
 Camera turns wait for the yaw to settle before returning: [movement gotcha 24](movement.md#24-a-camera-turn-is-finished-only-when-the-yaw-stops-changing).
 
+Scene tile loops on a boat worldview must use the tile array bounds: [movement gotcha 25](movement.md#25-bound-scene-tile-loops-by-the-tile-array-not-constantsscene_size).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:
