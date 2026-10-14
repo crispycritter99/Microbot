@@ -503,7 +503,7 @@ worldview and expects the object on the last tile.
 
 ## 26. Null-check `LocalPoint.fromWorld` before converting instance coordinates
 
-`LocalPoint.fromWorld(worldView, worldPoint)` returns `null` when the plane differs from the world view's plane or the tile is outside that scene, which happens in instances while the player is on a boat sub-worldview or the scene is still loading. `WorldPoint.fromLocalInstance` dereferences its `LocalPoint` immediately, so the result must be checked first.
+`LocalPoint.fromWorld(worldView, worldPoint)` returns `null` when the plane differs from the world view's plane or the tile is outside that scene, for example in an instance while the scene is still loading. The fallback below only prevents the crash: if the player is on a boat sub-worldview, `player.getLocalLocation()` is in boat space and does not give the real sea position. `WorldPoint.fromLocalInstance` dereferences its `LocalPoint` immediately, so the result must be checked first.
 
 **Why this matters:** `Rs2Player.getWorldLocation_Internal()` passed the `fromWorld` result straight into `fromLocalInstance`. Telemetry for 2.6.30 and 2.6.31 recorded about 585 NullPointerExceptions, most from `KourendLibraryOverlay.render` calling `Rs2Player.getWorldLocation()` every frame.
 
