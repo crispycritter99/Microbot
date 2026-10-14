@@ -500,3 +500,27 @@ from a worldview that is not guaranteed to be the top-level one.
 
 **Defensive check:** `Rs2GameObjectSmallWorldViewTest` queries wall objects on an 8x8
 worldview and expects the object on the last tile.
+
+## 26. Null-check `LocalPoint.fromWorld` before converting instance coordinates
+
+`LocalPoint.fromWorld(worldView, worldPoint)` returns `null` when the plane differs from the world view's plane or the tile is outside that scene, which happens in instances while the player is on a boat sub-worldview or the scene is still loading. `WorldPoint.fromLocalInstance` dereferences its `LocalPoint` immediately, so the result must be checked first.
+
+**Why this matters:** `Rs2Player.getWorldLocation_Internal()` passed the `fromWorld` result straight into `fromLocalInstance`. Telemetry for 2.6.30 and 2.6.31 recorded about 585 NullPointerExceptions, most from `KourendLibraryOverlay.render` calling `Rs2Player.getWorldLocation()` every frame.
+
+**Pattern to follow:**
+
+```java
+// Wrong: NPE when the world point does not resolve in the top-level scene.
+LocalPoint l = LocalPoint.fromWorld(client.getTopLevelWorldView(), player.getWorldLocation());
+return WorldPoint.fromLocalInstance(client, l);
+
+// Right: fall back to the player's own local point, then to the raw world point.
+LocalPoint l = LocalPoint.fromWorld(client.getTopLevelWorldView(), player.getWorldLocation());
+if (l == null) l = player.getLocalLocation();
+if (l == null) return player.getWorldLocation();
+return WorldPoint.fromLocalInstance(client, l);
+```
+
+**Where this applies:** `Rs2Player.getWorldLocation_Internal()` and any helper that converts an actor's world point to an instance template point.
+
+**Defensive check:** Mock a world view whose plane differs from the player's world point and assert the helper returns a fallback point, as in `Rs2PlayerInstanceWorldLocationTest`.

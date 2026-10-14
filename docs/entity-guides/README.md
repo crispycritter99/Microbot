@@ -25,6 +25,8 @@ Camera turns wait for the yaw to settle before returning: [movement gotcha 24](m
 
 Scene tile loops on a boat worldview must use the tile array bounds: [movement gotcha 25](movement.md#25-bound-scene-tile-loops-by-the-tile-array-not-constantsscene_size).
 
+Instance location conversions must null-check `LocalPoint.fromWorld`: [movement gotcha 26](movement.md#26-null-check-localpointfromworld-before-converting-instance-coordinates).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:
