@@ -538,6 +538,7 @@ return WorldPoint.fromLocalInstance(client, l);
 Polygon poly = Perspective.getCanvasTilePoly(client, localPoint);
 
 // Right: treat a point outside its worldview's scene as off screen.
+if (localPoint == null) return false;
 WorldView wv = client.getWorldView(localPoint.getWorldView());
 if (wv == null || localPoint.getSceneX() < 0 || localPoint.getSceneY() < 0
         || localPoint.getSceneX() >= wv.getSizeX() || localPoint.getSceneY() >= wv.getSizeY()) return false;
