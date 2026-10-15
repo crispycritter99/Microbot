@@ -27,6 +27,8 @@ Scene tile loops on a boat worldview must use the tile array bounds: [movement g
 
 Instance location conversions must null-check `LocalPoint.fromWorld`: [movement gotcha 26](movement.md#26-null-check-localpointfromworld-before-converting-instance-coordinates).
 
+Bounds-check a `LocalPoint` against its worldview before projecting it to the canvas: [movement gotcha 27](movement.md#27-bounds-check-a-localpoint-against-its-own-worldview-before-projecting-it).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:
