@@ -524,3 +524,27 @@ return WorldPoint.fromLocalInstance(client, l);
 **Where this applies:** `Rs2Player.getWorldLocation_Internal()` and any helper that converts an actor's world point to an instance template point.
 
 **Defensive check:** Mock a world view whose plane differs from the player's world point and assert the helper returns a fallback point, as in `Rs2PlayerInstanceWorldLocationTest`.
+
+## 27. Bounds-check a `LocalPoint` against its own worldview before projecting it
+
+`Perspective.getCanvasTilePoly` only rejects points outside the extended scene (`getSizeX() + 2 * ESCENE_OFFSET` on the top-level view). A tile with scene X/Y in 104..143, or a negative one, still reaches `WorldView.getTileHeight`, which indexes the normal scene height array and throws `ArrayIndexOutOfBoundsException`. Resolve the worldview from `localPoint.getWorldView()` and check the scene X/Y against `0..getSizeX()-1` / `0..getSizeY()-1` before projecting.
+
+**Why this matters:** `Rs2Camera.isTileOnScreen` passed NPC and tile-object local points straight to `getCanvasTilePoly`. Telemetry for 2.6.30 to 2.6.32 recorded `Index 109/111/126 out of bounds for length 105` from `Rs2NpcModel.click` and `Rs2TileObjectModel.click`, which aborted the interaction instead of turning the camera.
+
+**Pattern to follow:**
+
+```java
+// Wrong: out-of-scene points throw inside Perspective.
+Polygon poly = Perspective.getCanvasTilePoly(client, localPoint);
+
+// Right: treat a point outside its worldview's scene as off screen.
+if (localPoint == null) return false;
+WorldView wv = client.getWorldView(localPoint.getWorldView());
+if (wv == null || localPoint.getSceneX() < 0 || localPoint.getSceneY() < 0
+        || localPoint.getSceneX() >= wv.getSizeX() || localPoint.getSceneY() >= wv.getSizeY()) return false;
+Polygon poly = Perspective.getCanvasTilePoly(client, localPoint);
+```
+
+**Where this applies:** `Rs2Camera.isTileOnScreen(LocalPoint)`, `Rs2Camera.isTileOnScreen(TileObject)`, and any helper that projects an entity's local point to the canvas.
+
+**Defensive check:** Mock a worldview whose `getTileHeight` throws and assert out-of-scene points return false without calling it, as in `Rs2CameraTileOnScreenTest`.
