@@ -79,12 +79,16 @@ public class AgentHandlerBodyFieldTest {
 	}
 
 	private HttpExchange exchangeWithBody(String body) {
+		return exchangeWithBody("/quantity", body);
+	}
+
+	private HttpExchange exchangeWithBody(String path, String body) {
 		HttpExchange exchange = mock(HttpExchange.class);
 		Headers requestHeaders = new Headers();
 		requestHeaders.add("Host", "127.0.0.1:8081");
 		when(exchange.getRequestHeaders()).thenReturn(requestHeaders);
 		when(exchange.getResponseHeaders()).thenReturn(new Headers());
-		when(exchange.getRequestURI()).thenReturn(URI.create("/quantity"));
+		when(exchange.getRequestURI()).thenReturn(URI.create(path));
 		when(exchange.getRequestMethod()).thenReturn("POST");
 		when(exchange.getRequestBody()).thenReturn(new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
 		when(exchange.getResponseBody()).thenReturn(responseBody);
@@ -127,13 +131,24 @@ public class AgentHandlerBodyFieldTest {
 	}
 
 	@Test
-	public void rawCastMismatchReturnsBadRequest() throws Exception {
+	public void bankWithdrawWithNonNumericQuantityReturnsBadRequest() throws Exception {
+		HttpExchange exchange = exchangeWithBody("/bank/withdraw", "{\"quantity\":\"x\",\"name\":\"y\"}");
+
+		new BankHandler(new Gson()).handle(exchange);
+
+		verify(exchange).sendResponseHeaders(eq(400), anyLong());
+		verify(exchange, never()).sendResponseHeaders(eq(500), anyLong());
+		assertEquals("Field 'quantity' must be a number", new Gson().fromJson(response(), Map.class).get("error"));
+	}
+
+	@Test
+	public void internalClassCastExceptionStillReturnsServerError() throws Exception {
 		HttpExchange exchange = exchangeWithBody("{\"quantity\":\"28\"}");
 
 		new RawCastHandler().handle(exchange);
 
-		verify(exchange).sendResponseHeaders(eq(400), anyLong());
-		verify(exchange, never()).sendResponseHeaders(eq(500), anyLong());
+		verify(exchange).sendResponseHeaders(eq(500), anyLong());
+		verify(exchange, never()).sendResponseHeaders(eq(400), anyLong());
 	}
 
 	@Test

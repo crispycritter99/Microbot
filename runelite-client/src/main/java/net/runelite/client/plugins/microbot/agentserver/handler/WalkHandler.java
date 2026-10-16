@@ -72,17 +72,19 @@ public class WalkHandler extends AgentHandler {
 		Integer planeNum = getIntField(body, "plane");
 		int plane = planeNum != null ? planeNum.intValue() : 0;
 
-		boolean wait = Boolean.TRUE.equals(body.get("wait"));
+		boolean wait = Boolean.TRUE.equals(getBooleanField(body, "wait"));
 		int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
-		if (body.get("timeout") instanceof Number) {
-			timeoutSeconds = ((Number) body.get("timeout")).intValue();
+		Integer timeoutNum = getIntField(body, "timeout");
+		if (timeoutNum != null) {
+			timeoutSeconds = timeoutNum;
 			if (timeoutSeconds <= 0) timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
 			if (timeoutSeconds > MAX_TIMEOUT_SECONDS) timeoutSeconds = MAX_TIMEOUT_SECONDS;
 		}
 
 		int reachedDistance = DEFAULT_REACHED_DISTANCE;
-		if (body.get("distance") instanceof Number) {
-			reachedDistance = ((Number) body.get("distance")).intValue();
+		Integer distanceNum = getIntField(body, "distance");
+		if (distanceNum != null) {
+			reachedDistance = distanceNum;
 			if (reachedDistance < 0) reachedDistance = DEFAULT_REACHED_DISTANCE;
 			if (reachedDistance > MAX_REACHED_DISTANCE) reachedDistance = MAX_REACHED_DISTANCE;
 		}

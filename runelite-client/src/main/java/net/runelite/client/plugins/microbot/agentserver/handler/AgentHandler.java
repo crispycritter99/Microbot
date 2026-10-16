@@ -69,9 +69,6 @@ public abstract class AgentHandler implements HttpHandler {
 		} catch (BadRequestException e) {
 			log.debug("Bad request for {}: {}", exchange.getRequestURI(), e.getMessage());
 			sendErrorResponse(exchange, 400, e.getMessage());
-		} catch (ClassCastException e) {
-			log.debug("Invalid field type for {}: {}", exchange.getRequestURI(), e.getMessage());
-			sendErrorResponse(exchange, 400, "Invalid field type in request body");
 		} catch (Exception e) {
 			if (isClientDisconnect(e)) {
 				log.debug("Client disconnected before {} response could be sent", exchange.getRequestURI());

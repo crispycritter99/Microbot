@@ -145,7 +145,7 @@ public class LoginHandler extends AgentHandler {
 				targetWorld = world;
 			}
 			if (body.containsKey("wait")) {
-				wait = Boolean.TRUE.equals(body.get("wait"));
+				wait = Boolean.TRUE.equals(getBooleanField(body, "wait"));
 			}
 			Integer timeout = getIntField(body, "timeout");
 			if (timeout != null) {
