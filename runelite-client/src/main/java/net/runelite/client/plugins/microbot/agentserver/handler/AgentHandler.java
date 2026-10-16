@@ -69,6 +69,9 @@ public abstract class AgentHandler implements HttpHandler {
 		} catch (BadRequestException e) {
 			log.debug("Bad request for {}: {}", exchange.getRequestURI(), e.getMessage());
 			sendErrorResponse(exchange, 400, e.getMessage());
+		} catch (ClassCastException e) {
+			log.debug("Invalid field type for {}: {}", exchange.getRequestURI(), e.getMessage());
+			sendErrorResponse(exchange, 400, "Invalid field type in request body");
 		} catch (Exception e) {
 			if (isClientDisconnect(e)) {
 				log.debug("Client disconnected before {} response could be sent", exchange.getRequestURI());
@@ -221,6 +224,38 @@ public abstract class AgentHandler implements HttpHandler {
 			throw new BadRequestException("Invalid JSON body");
 		}
 		return parsed != null ? parsed : new LinkedHashMap<>();
+	}
+
+	protected static Integer getIntField(Map<String, Object> body, String key) {
+		Object val = body.get(key);
+		if (val == null) return null;
+		if (val instanceof Number) return ((Number) val).intValue();
+		if (val instanceof String) {
+			try {
+				return Integer.parseInt(((String) val).trim());
+			} catch (NumberFormatException ignored) {
+			}
+		}
+		throw new BadRequestException("Field '" + key + "' must be a number");
+	}
+
+	protected static String getStringField(Map<String, Object> body, String key) {
+		Object val = body.get(key);
+		if (val == null) return null;
+		if (val instanceof String) return (String) val;
+		throw new BadRequestException("Field '" + key + "' must be a string");
+	}
+
+	protected static Boolean getBooleanField(Map<String, Object> body, String key) {
+		Object val = body.get(key);
+		if (val == null) return null;
+		if (val instanceof Boolean) return (Boolean) val;
+		if (val instanceof String) {
+			String s = ((String) val).trim();
+			if ("true".equalsIgnoreCase(s)) return Boolean.TRUE;
+			if ("false".equalsIgnoreCase(s)) return Boolean.FALSE;
+		}
+		throw new BadRequestException("Field '" + key + "' must be a boolean");
 	}
 
 	protected int getIntParam(Map<String, String> params, String key, int defaultValue) {

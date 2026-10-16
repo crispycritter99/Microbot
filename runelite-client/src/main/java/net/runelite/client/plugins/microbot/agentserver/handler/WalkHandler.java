@@ -62,14 +62,14 @@ public class WalkHandler extends AgentHandler {
 			return;
 		}
 
-		Number xNum = (Number) body.get("x");
-		Number yNum = (Number) body.get("y");
+		Integer xNum = getIntField(body, "x");
+		Integer yNum = getIntField(body, "y");
 		if (xNum == null || yNum == null) {
 			sendJson(exchange, 400, errorResponse("Missing required fields: x, y"));
 			return;
 		}
 
-		Number planeNum = (Number) body.get("plane");
+		Integer planeNum = getIntField(body, "plane");
 		int plane = planeNum != null ? planeNum.intValue() : 0;
 
 		boolean wait = Boolean.TRUE.equals(body.get("wait"));
