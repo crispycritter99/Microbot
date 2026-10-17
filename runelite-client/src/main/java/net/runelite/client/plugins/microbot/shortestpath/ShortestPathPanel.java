@@ -1006,6 +1006,13 @@ public class ShortestPathPanel extends PluginPanel
 			return null;
 		}
 
+		return Microbot.getClientThread()
+			.runOnClientThreadOptional(() -> resolveClueLocation(clue, cluePlugin))
+			.orElse(null);
+	}
+
+	private static WorldPoint resolveClueLocation(ClueScroll clue, ClueScrollPlugin cluePlugin)
+	{
 		// Check if clue implements LocationClueScroll (single location)
 		if (clue instanceof LocationClueScroll)
 		{
