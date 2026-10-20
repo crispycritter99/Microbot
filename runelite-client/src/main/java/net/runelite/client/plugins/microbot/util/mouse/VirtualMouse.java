@@ -27,6 +27,8 @@ public class VirtualMouse extends Mouse {
     public static final int CLICK_HOLD_MAX_MS = 140;
     public static final int QUICK_CLICK_HOLD_MIN_MS = 30;
     public static final int QUICK_CLICK_HOLD_MAX_MS = 65;
+    public static final int QUICK_CLICK_SETTLE_MIN_MS = 10;
+    public static final int QUICK_CLICK_SETTLE_MAX_MS = 25;
 
     private final ScheduledExecutorService scheduledExecutorService;
 
@@ -50,17 +52,21 @@ public class VirtualMouse extends Mouse {
     }
 
     private void handleClick(InputLoop.Emit emit, Point point, boolean rightClick) {
-        handleClick(emit, point, rightClick, false);
+        handleClick(emit, point, rightClick, false, () -> { });
     }
 
-    private void handleClick(InputLoop.Emit emit, Point point, boolean rightClick, boolean quick) {
+    private void handleClick(InputLoop.Emit emit, Point point, boolean rightClick, boolean quick, Runnable beforePress) {
         int button = rightClick ? MouseEvent.BUTTON3 : MouseEvent.BUTTON1;
         // A human clicking where the pointer already is sends no fresh MOVED, so emit one only
         // when it is not there, which happens when NaturalMouse was skipped. No ENTERED/EXITED:
         // no human click sends those, and the EXITED wrote (-1,-1) into the tracked position.
         if (!PointerState.isAt(point.getX(), point.getY())) {
             emit.move(point.getX(), point.getY());
+            if (quick) {
+                sleep(Rs2Random.logNormalBounded(QUICK_CLICK_SETTLE_MIN_MS, QUICK_CLICK_SETTLE_MAX_MS));
+            }
         }
+        beforePress.run();
         emit.press(point.getX(), point.getY(), button);
         sleep(quick
                 ? Rs2Random.logNormalBounded(QUICK_CLICK_HOLD_MIN_MS, QUICK_CLICK_HOLD_MAX_MS)
@@ -128,8 +134,7 @@ public class VirtualMouse extends Mouse {
                 }
             }
 
-            Microbot.targetMenu = entry;
-            handleClick(emit, newPoint, rightClick, quick);
+            handleClick(emit, newPoint, rightClick, quick, () -> Microbot.targetMenu = entry);
         }));
 
         return this;

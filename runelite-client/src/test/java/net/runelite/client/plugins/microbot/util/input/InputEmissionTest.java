@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -39,6 +41,7 @@ public class InputEmissionTest
 	private final List<MouseEvent> received = new ArrayList<>();
 	private final List<Long> receivedAt = new ArrayList<>();
 	private final List<Boolean> syntheticDuringDispatch = new ArrayList<>();
+	private final List<Object> targetMenuAtDispatch = new ArrayList<>();
 
 	private Object previousClient;
 	private Object previousNaturalMouse;
@@ -185,8 +188,35 @@ public class InputEmissionTest
 		verify(naturalMouse, never()).moveTo(anyInt(), anyInt());
 		assertEquals(ids(MouseEvent.MOUSE_MOVED, MouseEvent.MOUSE_PRESSED, MouseEvent.MOUSE_RELEASED, MouseEvent.MOUSE_CLICKED),
 			receivedIds());
+		long settle = receivedAt.get(1) - receivedAt.get(0);
+		assertTrue("settled " + settle + "ms", settle >= VirtualMouse.QUICK_CLICK_SETTLE_MIN_MS - 3);
 		long held = receivedAt.get(2) - receivedAt.get(1);
 		assertTrue("held " + held + "ms", held >= VirtualMouse.QUICK_CLICK_HOLD_MIN_MS - 5);
+	}
+
+	@Test
+	public void theEntryIsArmedOnlyAfterTheSettleSoAHumanClickInItIsNotHijacked()
+	{
+		Microbot.targetMenu = null;
+		PointerState.setFromBot(10, 10);
+		NewMenuEntry entry = new NewMenuEntry();
+
+		new VirtualMouse().quickClick(new Point(100, 50), entry);
+
+		assertEquals(MouseEvent.MOUSE_MOVED, received.get(0).getID());
+		assertNull(targetMenuAtDispatch.get(0));
+		assertSame(entry, targetMenuAtDispatch.get(1));
+	}
+
+	@Test
+	public void aQuickClickAlreadyOnTheTargetSendsNoMove()
+	{
+		PointerState.setFromBot(100, 50);
+
+		new VirtualMouse().quickClick(new Point(100, 50), new NewMenuEntry());
+
+		assertEquals(ids(MouseEvent.MOUSE_PRESSED, MouseEvent.MOUSE_RELEASED, MouseEvent.MOUSE_CLICKED),
+			receivedIds());
 	}
 
 	@Test
@@ -346,6 +376,7 @@ public class InputEmissionTest
 		received.add(event);
 		receivedAt.add(System.currentTimeMillis());
 		syntheticDuringDispatch.add(BotEventGuard.isSynthetic());
+		targetMenuAtDispatch.add(Microbot.targetMenu);
 	}
 
 	private List<Integer> receivedIds()
