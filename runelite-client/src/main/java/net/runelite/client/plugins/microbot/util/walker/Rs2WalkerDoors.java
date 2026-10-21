@@ -1590,15 +1590,17 @@ final class Rs2WalkerDoors {
         if (after.equals(toWp) || afterTo == 0) {
             return true;
         }
-        if (afterTo <= 1 && afterTo < beforeTo) {
+        boolean diagonalEdge = fromWp.getX() != toWp.getX() && fromWp.getY() != toWp.getY();
+        if (diagonalEdge && afterTo <= 1 && afterTo < beforeTo) {
             return true;
         }
-        // The near-toWp rule alone cannot see a crossing that keeps going, and with the nudge now
+        // The near-toWp rule cannot see a crossing that keeps going, and with the nudge now
         // clicking a route point PAST the door, keeping going is the intended outcome. It also has a
         // blind spot the live log caught even for short hops: a nudge starts on fromWp (beforeTo=1),
         // so afterTo < beforeTo only fires on exactly toWp — and a RUNNING player covers two tiles a
         // tick and skips that tile entirely (observed 3369 -> 3367 -> 3365, reported unresolved).
-        // Crossing the door's axis is the fact being tested, so test it directly.
+        // It also passed a nudge that started two tiles out and stopped on fromWp, so on a cardinal
+        // edge crossing the door's axis is the fact being tested, and it is tested directly.
         return hasCrossedDoorAxis(fromWp, toWp, after);
     }
 
@@ -1755,7 +1757,12 @@ final class Rs2WalkerDoors {
      */
     static boolean isConclusiveRefusedOpenSample(WorldPoint posAfter, WorldPoint fromWp) {
         return posAfter != null && fromWp != null
-                && !Rs2Player.isMoving()
+                && isConclusiveRefusedOpenSample(posAfter, fromWp, Rs2Player.isMoving());
+    }
+
+    static boolean isConclusiveRefusedOpenSample(WorldPoint posAfter, WorldPoint fromWp, boolean moving) {
+        return posAfter != null && fromWp != null
+                && !moving
                 && posAfter.getPlane() == fromWp.getPlane()
                 && posAfter.distanceTo2D(fromWp) <= 1;
     }

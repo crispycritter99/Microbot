@@ -70,40 +70,69 @@ public class LockedDoorStrikeOutTest
 	}
 
 	@Test
+	public void crossNudgeThatStopsOnTheNearSideIsNotResolved()
+	{
+		assertFalse("a nudge starting two tiles out that stops on fromWp has not crossed the edge",
+			Rs2WalkerDoors.isDoorEdgeNudgeResolved(ATTEMPT_START, NEAR_SIDE, NEAR_SIDE, FAR_SIDE));
+		assertFalse(Rs2WalkerDoors.isDoorEdgeNudgeResolved(OPEN_STOP, NEAR_SIDE, NEAR_SIDE, FAR_SIDE));
+		assertTrue(Rs2WalkerDoors.isDoorEdgeNudgeResolved(ATTEMPT_START, FAR_SIDE, NEAR_SIDE, FAR_SIDE));
+	}
+
+	@Test
+	public void diagonalEdgesKeepTheNearTargetNudgeReading()
+	{
+		assertTrue(Rs2WalkerDoors.isDoorEdgeNudgeResolved(
+			new WorldPoint(3238, 3300, 0), new WorldPoint(3240, 3302, 0),
+			new WorldPoint(3240, 3301, 0), new WorldPoint(3241, 3302, 0)));
+	}
+
+	@Test
 	public void lockedDoorLoopStrikesOutWithinTheStrikeLimit()
+	{
+		assertStrikesOut("refused open", cyclesToStrikeOut(true, OPEN_STOP));
+		assertStrikesOut("cross-nudge from the open stop", cyclesToStrikeOut(false, OPEN_STOP));
+		assertStrikesOut("cross-nudge from two tiles out", cyclesToStrikeOut(false, ATTEMPT_START));
+	}
+
+	private static void assertStrikesOut(String path, int strikeOutCycle)
+	{
+		assertTrue("a locked door that never opens must strike out instead of looping (" + path + "); cycle="
+			+ strikeOutCycle, strikeOutCycle > 0 && strikeOutCycle <= Rs2Walker.DOOR_CROSS_FAILURE_STRIKE_LIMIT);
+	}
+
+	private static int cyclesToStrikeOut(boolean doorKeepsOpenAction, WorldPoint nudgeStart)
 	{
 		DoorAttemptLedger ledger = new DoorAttemptLedger();
 		long now = 1_000_000L;
-		int strikeOutCycle = -1;
-		for (int cycle = 1; cycle <= 20 && strikeOutCycle < 0; cycle++, now += LOOP_PERIOD_MS)
+		for (int cycle = 1; cycle <= 20; cycle++, now += LOOP_PERIOD_MS)
 		{
-			boolean traversed = Rs2WalkerDoors.didTraverseInteractedDoor(
-				ATTEMPT_START, OPEN_STOP, DOOR, NEAR_SIDE, FAR_SIDE);
-			DoorAttemptLedger.Strike strike;
-			if (traversed)
+			if (Rs2WalkerDoors.didTraverseInteractedDoor(ATTEMPT_START, OPEN_STOP, DOOR, NEAR_SIDE, FAR_SIDE))
 			{
 				ledger.clearCrossFailures(NEAR_SIDE, FAR_SIDE);
+				continue;
+			}
+			boolean conclusive;
+			if (doorKeepsOpenAction)
+			{
+				conclusive = Rs2WalkerDoors.isConclusiveRefusedOpenSample(OPEN_STOP, NEAR_SIDE, false);
+			}
+			else if (Rs2WalkerDoors.isDoorEdgeNudgeResolved(nudgeStart, NEAR_SIDE, NEAR_SIDE, FAR_SIDE))
+			{
+				ledger.clearCrossFailures(NEAR_SIDE, FAR_SIDE);
+				continue;
 			}
 			else
 			{
-				strike = ledger.registerCrossFailure(NEAR_SIDE, FAR_SIDE, false, now,
-					Rs2Walker.DOOR_CROSS_FAILURE_DECAY_MS, Rs2Walker.DOOR_CROSS_FAILURE_STRIKE_LIMIT);
-				if (strike == DoorAttemptLedger.Strike.STRIKE_OUT)
-				{
-					strikeOutCycle = cycle;
-					break;
-				}
+				conclusive = Rs2WalkerDoors.isConclusiveCrossNudgeSample(nudgeStart, NEAR_SIDE, NEAR_SIDE, false, false);
 			}
-			strike = ledger.registerCrossFailure(NEAR_SIDE, FAR_SIDE,
-				Rs2WalkerDoors.isConclusiveCrossNudgeSample(OPEN_STOP, NEAR_SIDE, NEAR_SIDE, false, false),
-				now + 3_000L, Rs2Walker.DOOR_CROSS_FAILURE_DECAY_MS, Rs2Walker.DOOR_CROSS_FAILURE_STRIKE_LIMIT);
+			DoorAttemptLedger.Strike strike = ledger.registerCrossFailure(NEAR_SIDE, FAR_SIDE, conclusive, now,
+				Rs2Walker.DOOR_CROSS_FAILURE_DECAY_MS, Rs2Walker.DOOR_CROSS_FAILURE_STRIKE_LIMIT);
 			if (strike == DoorAttemptLedger.Strike.STRIKE_OUT)
 			{
-				strikeOutCycle = cycle;
+				return cycle;
 			}
 		}
-		assertTrue("a locked door that never opens must strike out instead of looping; cycle=" + strikeOutCycle,
-			strikeOutCycle > 0 && strikeOutCycle <= Rs2Walker.DOOR_CROSS_FAILURE_STRIKE_LIMIT);
+		return -1;
 	}
 
 	@Test
