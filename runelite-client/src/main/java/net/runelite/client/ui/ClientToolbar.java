@@ -65,6 +65,12 @@ public class ClientToolbar
 		return clientUI.getNavigationBounds(button);
 	}
 
+	public NavigationButton findSidebarNavigation(String tooltip)
+	{
+		assert SwingUtilities.isEventDispatchThread() : "must be on EDT";
+		return clientUI.findSidebarNavigation(tooltip);
+	}
+
 	public Rectangle getSidebarBounds()
 	{
 		assert SwingUtilities.isEventDispatchThread() : "must be on EDT";

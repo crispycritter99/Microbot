@@ -39,6 +39,8 @@ public class MicrobotTour
 {
 	static final int TOUR_VERSION = 1;
 	static final String TOUR_PROPERTY = "microbot.tour";
+	static final String ANTIBAN_TOOLTIP = "Antiban";
+	static final String INVENTORY_SETUPS_TOOLTIP = "Inventory Setups";
 	static final long SETTLE_MS = 2_500;
 	static final long LOAD_FALLBACK_MS = 45_000;
 	static final long GIVE_UP_MS = 5 * 60_000;
@@ -410,6 +412,8 @@ public class MicrobotTour
 				openMicrobotPanel();
 				cloudPanel.get().expand();
 				break;
+			case ANTIBAN:
+			case INVENTORY_SETUPS:
 			case HELP:
 				if (!clientToolbar.isSidebarOpen())
 				{
@@ -446,12 +450,22 @@ public class MicrobotTour
 				return screenBounds(topLevelPanel.get().getProfilesTab());
 			case MICROBOT_CLOUD:
 				return screenBounds(cloudPanel.get());
+			case ANTIBAN:
+				return sidebarTabBounds(ANTIBAN_TOOLTIP);
+			case INVENTORY_SETUPS:
+				return sidebarTabBounds(INVENTORY_SETUPS_TOOLTIP);
 			case HELP:
 				NavigationButton help = helpMenu.getButton();
 				return help == null ? null : clientToolbar.getNavigationBounds(help);
 			default:
 				return null;
 		}
+	}
+
+	private Rectangle sidebarTabBounds(String tooltip)
+	{
+		NavigationButton button = clientToolbar.findSidebarNavigation(tooltip);
+		return button == null ? null : clientToolbar.getNavigationBounds(button);
 	}
 
 	private void track(boolean force)

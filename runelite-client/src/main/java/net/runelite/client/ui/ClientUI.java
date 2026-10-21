@@ -1156,6 +1156,14 @@ public class ClientUI
 		pushHistory();
 	}
 
+	NavigationButton findSidebarNavigation(String tooltip)
+	{
+		return sidebarEntries.stream()
+			.filter(navBtn -> tooltip.equals(navBtn.getTooltip()))
+			.findFirst()
+			.orElse(null);
+	}
+
 	Rectangle getNavigationBounds(NavigationButton navBtn)
 	{
 		if (navBtn == null)

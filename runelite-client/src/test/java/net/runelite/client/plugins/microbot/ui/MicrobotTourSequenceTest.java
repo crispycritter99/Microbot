@@ -33,9 +33,9 @@ public class MicrobotTourSequenceTest
 		}
 		assertEquals(Optional.empty(), sequence.previous(MicrobotTourStep.WELCOME));
 		assertEquals(Optional.empty(), sequence.next(MicrobotTourStep.HELP));
-		assertEquals(8, sequence.total());
+		assertEquals(10, sequence.total());
 		assertEquals(1, sequence.position(MicrobotTourStep.WELCOME));
-		assertEquals(8, sequence.position(MicrobotTourStep.HELP));
+		assertEquals(10, sequence.position(MicrobotTourStep.HELP));
 		assertTrue(sequence.isLast(MicrobotTourStep.HELP));
 		assertFalse(sequence.isLast(MicrobotTourStep.MICROBOT_CLOUD));
 	}
@@ -54,7 +54,7 @@ public class MicrobotTourSequenceTest
 	{
 		MicrobotTourSequence sequence = withoutHelp();
 		assertEquals(6, sequence.position(MicrobotTourStep.PROFILES));
-		assertEquals(7, sequence.total());
+		assertEquals(9, sequence.total());
 		assertTrue(sequence.isLast(MicrobotTourStep.MICROBOT_CLOUD));
 	}
 
@@ -64,7 +64,7 @@ public class MicrobotTourSequenceTest
 		MicrobotTourSequence sequence = all();
 		sequence.markSkipped(MicrobotTourStep.INSTALLED);
 		assertEquals(Optional.of(MicrobotTourStep.PLUGIN_HUB), sequence.next(MicrobotTourStep.COMMUNITY_PLUGINS));
-		assertEquals(7, sequence.total());
+		assertEquals(9, sequence.total());
 		assertEquals(4, sequence.position(MicrobotTourStep.PLUGIN_HUB));
 	}
 
@@ -74,8 +74,8 @@ public class MicrobotTourSequenceTest
 		MicrobotTourSequence sequence = all();
 		sequence.markSkipped(MicrobotTourStep.HELP);
 		assertTrue(sequence.isLast(MicrobotTourStep.MICROBOT_CLOUD));
-		assertEquals(7, sequence.position(MicrobotTourStep.MICROBOT_CLOUD));
-		assertEquals(7, sequence.total());
+		assertEquals(9, sequence.position(MicrobotTourStep.MICROBOT_CLOUD));
+		assertEquals(9, sequence.total());
 	}
 
 	@Test

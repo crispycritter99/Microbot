@@ -29,6 +29,14 @@ enum MicrobotTourStep
 	PROFILES("Profiles",
 		"Profiles keep separate sets of settings. Make one per account or per activity, then switch between them here.",
 		false, true, Side.LEFT),
+	ANTIBAN("Antiban",
+		"Antiban makes your bot act more like a person: breaks, micro breaks, natural mouse movement and varied timing. "
+			+ "Open this panel to tune it. Scripts that support antiban use these settings while they run.",
+		false, true, Side.LEFT),
+	INVENTORY_SETUPS("Inventory Setups",
+		"Save the gear and items a script should bring as an inventory setup. Some scripts, like AIO Fighter, Barrows and "
+			+ "Herb Run, let you pick a setup in their settings and load it from the bank.",
+		false, true, Side.LEFT),
 	MICROBOT_CLOUD("Microbot Cloud",
 		"New: get a Discord or email alert when this client stops responding, a script stops on an error or the game logs out. "
 			+ "Bot alerts shows whether they are on and lets you link your Microbot account. Open the dashboard to see your bots.",
