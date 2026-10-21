@@ -6,7 +6,6 @@ import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
-import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -70,20 +69,6 @@ public class MicrobotTour
 			track(true);
 		}
 
-		@Override
-		public void windowActivated(WindowEvent e)
-		{
-			track(true);
-		}
-
-		@Override
-		public void windowDeactivated(WindowEvent e)
-		{
-			if (e.getOppositeWindow() == null)
-			{
-				hideOverlay();
-			}
-		}
 	};
 
 	private volatile boolean gameLoadedSeen;
@@ -96,7 +81,8 @@ public class MicrobotTour
 	private MicrobotTourSpotlight spotlight;
 	private MicrobotTourSequence sequence;
 	private MicrobotTourStep current;
-	private boolean markSeen;
+	private boolean countAutoShow;
+	private boolean userPlaced;
 	private int navigation;
 	private Rectangle lastTarget;
 	private Rectangle lastSidebar;
@@ -284,10 +270,10 @@ public class MicrobotTour
 		}
 		end();
 		frame = owner;
-		markSeen = auto;
+		countAutoShow = auto;
 		sequence = new MicrobotTourSequence(Arrays.asList(MicrobotTourStep.values()),
 			step -> step != MicrobotTourStep.HELP || helpMenu.getButton() != null);
-		callout = new MicrobotTourCallout(frame, this::end, this::back, this::next);
+		callout = new MicrobotTourCallout(frame, this::end, this::neverAgain, this::back, this::next, () -> userPlaced = true);
 		spotlight = new MicrobotTourSpotlight(frame.getLayeredPane());
 		frame.addWindowListener(windowListener);
 		sequence.first().ifPresent(step -> go(step, true));
@@ -330,12 +316,21 @@ public class MicrobotTour
 		MicrobotTourStep step = sequence.next(current).orElse(null);
 		if (step == null)
 		{
+			state.markTourSeen(TOUR_VERSION);
+			persist();
 			end();
 		}
 		else
 		{
 			go(step, true);
 		}
+	}
+
+	private void neverAgain()
+	{
+		state.markTourSeen(TOUR_VERSION);
+		persist();
+		end();
 	}
 
 	private void back()
@@ -388,10 +383,11 @@ public class MicrobotTour
 			cloudUsed();
 		}
 		current = step;
-		if (markSeen)
+		userPlaced = false;
+		if (countAutoShow)
 		{
-			markSeen = false;
-			state.markTourSeen(TOUR_VERSION);
+			countAutoShow = false;
+			state.recordAutoShow(TOUR_VERSION);
 			persist();
 		}
 		callout.setStep(step, sequence.position(step), sequence.total(), sequence.previous(step).isPresent(), sequence.isLast(step));
@@ -464,8 +460,7 @@ public class MicrobotTour
 		{
 			return;
 		}
-		if (!frame.isShowing() || (frame.getExtendedState() & Frame.ICONIFIED) != 0
-			|| KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow() == null)
+		if (!frame.isShowing() || (frame.getExtendedState() & Frame.ICONIFIED) != 0)
 		{
 			hideOverlay();
 			return;
@@ -492,9 +487,12 @@ public class MicrobotTour
 		{
 			side = MicrobotTourPlacement.Side.BELOW;
 		}
-		MicrobotTourPlacement.Result placement = MicrobotTourPlacement.place(target, sidebar, callout.getSize(),
-			frameBounds, usableScreen(frame), side, MicrobotTourPlacement.GAP);
-		callout.setLocation(placement.getLocation());
+		if (!userPlaced)
+		{
+			MicrobotTourPlacement.Result placement = MicrobotTourPlacement.place(target, sidebar, callout.getSize(),
+				frameBounds, usableScreen(frame), side, MicrobotTourPlacement.GAP);
+			callout.setLocation(placement.getLocation());
+		}
 		if (!callout.isVisible())
 		{
 			callout.setVisible(true);

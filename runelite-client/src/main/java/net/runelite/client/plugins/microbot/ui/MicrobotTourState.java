@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 class MicrobotTourState
 {
 	static final String CLOUD_BADGE = "cloud";
+	static final int MAX_AUTO_SHOWS = 3;
 	private static final String TOUR_SEEN_VERSION = "tour.seenVersion";
+	private static final String TOUR_AUTO_SHOWN = "tour.autoShown.";
 
 	private final Path file;
 	private final Properties properties = new Properties();
@@ -99,7 +101,12 @@ class MicrobotTourState
 
 	synchronized boolean shouldAutoShow(int tourVersion)
 	{
-		return !readFailed && seenVersion() < tourVersion;
+		return !readFailed && seenVersion() < tourVersion && autoShown(tourVersion) < MAX_AUTO_SHOWS;
+	}
+
+	synchronized void recordAutoShow(int tourVersion)
+	{
+		properties.setProperty(TOUR_AUTO_SHOWN + tourVersion, Integer.toString(autoShown(tourVersion) + 1));
 	}
 
 	synchronized void markTourSeen(int tourVersion)
@@ -137,7 +144,17 @@ class MicrobotTourState
 
 	private int seenVersion()
 	{
-		String value = properties.getProperty(TOUR_SEEN_VERSION);
+		return intProperty(TOUR_SEEN_VERSION);
+	}
+
+	private int autoShown(int tourVersion)
+	{
+		return intProperty(TOUR_AUTO_SHOWN + tourVersion);
+	}
+
+	private int intProperty(String key)
+	{
+		String value = properties.getProperty(key);
 		if (value == null)
 		{
 			return 0;

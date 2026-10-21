@@ -56,6 +56,25 @@ public class MicrobotTourStateTest
 	}
 
 	@Test
+	public void skippedTourComesBackAtMostThreeTimes() throws IOException
+	{
+		Path file = file();
+		for (int start = 0; start < MicrobotTourState.MAX_AUTO_SHOWS; start++)
+		{
+			MicrobotTourState state = new MicrobotTourState(file);
+			state.load();
+			assertTrue(state.shouldAutoShow(1));
+			state.recordAutoShow(1);
+			state.save();
+		}
+
+		MicrobotTourState state = new MicrobotTourState(file);
+		state.load();
+		assertFalse(state.shouldAutoShow(1));
+		assertTrue(state.shouldAutoShow(2));
+	}
+
+	@Test
 	public void versionedReShow() throws IOException
 	{
 		Path file = file();
