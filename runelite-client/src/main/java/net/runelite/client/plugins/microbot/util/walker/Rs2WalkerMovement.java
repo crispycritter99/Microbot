@@ -892,7 +892,7 @@ final class Rs2WalkerMovement {
         if (worldPoint == null || SCENE_CLICKS.isSuppressed(System.currentTimeMillis())) {
             return false;
         }
-        Rs2Walker.toggleWalkRunEnergy(toggleRun);
+        Rs2Player.toggleRunEnergy(toggleRun);
         if (!dispatchSceneWalk(worldPoint)) {
             return false;
         }

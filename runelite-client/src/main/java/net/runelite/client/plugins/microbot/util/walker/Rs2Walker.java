@@ -3593,14 +3593,9 @@ public class Rs2Walker {
 
 
 
-    static void toggleWalkRunEnergy(boolean toggle) {
-        if (toggle && !Microbot.enableAutoRunOn) return;
-        Rs2Player.toggleRunEnergy(toggle);
-    }
-
     private static void manageRunEnergy(int pathRemaining) {
         try {
-            toggleWalkRunEnergy(true);
+            Rs2Player.toggleRunEnergy(true);
             if (pathRemaining < STAMINA_MIN_PATH_TILES) return;
             if (Rs2Player.getRunEnergy() >= staminaThreshold()) return;
             if (Rs2Player.hasStaminaBuffActive()) return;
@@ -3949,7 +3944,7 @@ public class Rs2Walker {
             log.debug("[Walker] walkFastCanvas rejected: null worldPoint");
             return false;
         }
-        toggleWalkRunEnergy(toggleRun);
+        Rs2Player.toggleRunEnergy(toggleRun);
         LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), worldPoint);
 
         if (Microbot.getClient().getTopLevelWorldView().isInstance() && localPoint == null) {
