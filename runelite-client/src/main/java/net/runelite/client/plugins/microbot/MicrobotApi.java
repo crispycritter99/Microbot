@@ -107,6 +107,36 @@ public class MicrobotApi {
         }
     }
 
+    public void submitClientLog(JsonObject payload)
+    {
+        Request request = new Request.Builder()
+                .url(microbotApiUrl + "/plugintelemetry/client-logs")
+                .header("X-Plugin-Telemetry-Token", pluginTelemetryToken)
+                .post(RequestBody.create(RuneLiteAPI.JSON, gson.toJson(payload)))
+                .build();
+
+        client.newCall(request).enqueue(new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                log.debug("Client log upload failed", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response)
+            {
+                boolean successful = response.isSuccessful();
+                int code = response.code();
+                response.close();
+                if (!successful)
+                {
+                    log.debug("Client log upload rejected: HTTP {}", code);
+                }
+            }
+        });
+    }
+
     public void submitErrors(JsonObject payload, Runnable onRejected)
     {
         Request request = new Request.Builder()
