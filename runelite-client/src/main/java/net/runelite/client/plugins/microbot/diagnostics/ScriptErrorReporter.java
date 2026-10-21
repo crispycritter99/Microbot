@@ -35,6 +35,7 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.MicrobotApi;
+import net.runelite.client.plugins.microbot.alerts.ClientAlertReporter;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
 import net.runelite.client.util.ResetResistantAttachment;
 
@@ -59,19 +60,21 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 	private final ScheduledExecutorService executor;
 	private final boolean disableTelemetry;
 	private final ClientSessionManager clientSessionManager;
+	private final ClientAlertReporter clientAlertReporter;
 	private final Map<String, JsonObject> pending = new LinkedHashMap<>();
 	private ScheduledFuture<?> flushTask;
 	private volatile String playerName;
 
 	@Inject
 	ScriptErrorReporter(MicrobotApi microbotApi, MicrobotPluginManager microbotPluginManager, ScheduledExecutorService executor,
-		ClientSessionManager clientSessionManager, @Named("disableTelemetry") boolean disableTelemetry)
+		ClientSessionManager clientSessionManager, ClientAlertReporter clientAlertReporter, @Named("disableTelemetry") boolean disableTelemetry)
 	{
 		this.microbotApi = microbotApi;
 		this.microbotPluginManager = microbotPluginManager;
 		this.executor = executor;
 		this.disableTelemetry = disableTelemetry;
 		this.clientSessionManager = clientSessionManager;
+		this.clientAlertReporter = clientAlertReporter;
 		setName("SCRIPT_ERROR_REPORTER");
 	}
 
@@ -130,6 +133,10 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 			return;
 		}
 		List<String> frames = frames(root);
+		if (clientAlertReporter.isActive())
+		{
+			clientAlertReporter.onScriptError(event.getLoggerName(), frames, alertMessage(event, root));
+		}
 		String fingerprint = root == null
 			? event.getLoggerName() + "|" + scrub(event.getMessage()).replaceAll("\\d+", "#")
 			: root.getClassName() + "|" + frames.stream()
@@ -259,6 +266,19 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		frames.forEach(stack::add);
 		error.add("stack", stack);
 		return error;
+	}
+
+	private String alertMessage(ILoggingEvent event, IThrowableProxy root)
+	{
+		String message = scrub(event.getFormattedMessage());
+		if (root == null)
+		{
+			return message;
+		}
+		String exception = root.getClassName().substring(root.getClassName().lastIndexOf('.') + 1);
+		String detail = scrub(root.getMessage());
+		String cause = detail.isEmpty() ? exception : exception + ": " + detail;
+		return message.isEmpty() ? cause : message + " (" + cause + ")";
 	}
 
 	private boolean isDisabled()
