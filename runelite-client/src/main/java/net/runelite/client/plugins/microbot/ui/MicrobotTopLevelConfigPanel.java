@@ -267,10 +267,6 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         cloudPanel.setActive(false);
     }
 
-    Component getInstalledTab() {
-        return pluginListPanelTab;
-    }
-
     Component getProfilesTab() {
         return profilePanelTab;
     }
@@ -281,10 +277,6 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
 
     Component getTabContent() {
         return content;
-    }
-
-    MicrobotCloudPanel getCloudPanel() {
-        return cloudPanel;
     }
 
     void showInstalledTab() {

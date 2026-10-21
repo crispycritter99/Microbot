@@ -27,7 +27,8 @@ enum MicrobotTourStep
 		"Browse the Microbot Plugin Hub to find and install more plugins. Each one you install appears under Installed.",
 		false, true, Side.LEFT),
 	PROFILES("Profiles",
-		"Profiles keep separate sets of settings. Make one per account or per activity, then switch between them here.",
+		"A profile is one account: its name is the login username, and it holds the password, bank PIN, member status, world "
+			+ "and Discord webhook. Plugin settings are saved per profile. Scripts use the active profile to log in and enter the bank PIN.",
 		false, true, Side.LEFT),
 	ANTIBAN("Antiban",
 		"Antiban makes your bot act more like a person: breaks, micro breaks, natural mouse movement and varied timing. "
