@@ -7,9 +7,9 @@ import java.awt.KeyboardFocusManager;
 import javax.inject.Singleton;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import net.runelite.client.plugins.info.JRichTextPane;
 import net.runelite.client.util.LinkBrowser;
 
@@ -66,7 +66,7 @@ public class DeviceLinkDialog
 	{
 		JRichTextPane pane = new JRichTextPane();
 		pane.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
-		pane.setFont(UIManager.getFont("OptionPane.messageFont"));
+		pane.setFont(new JLabel().getFont());
 		pane.setContentType("text/html");
 		pane.setText(toHtml(message, url));
 		return pane;
