@@ -91,20 +91,36 @@ public class ClientLogUploadTest
 	}
 
 	@Test
-	public void scrubLogRemovesPlayerNameWithNonBreakingSpace()
+	public void scrubLogRemovesPlayerNameWhenNameHasNonBreakingSpace()
 	{
-		reporter.rememberPlayerName("Bob Smith");
-
-		String scrubbed = reporter.scrubLog("login Bob Smith ok\n");
+		String scrubbed = reporter.scrubLog("login Bob Smith ok\n", "Bob Smith");
 
 		assertTrue(scrubbed.contains("[player]"));
 		assertFalse(scrubbed.contains("Bob"));
 	}
 
 	@Test
+	public void scrubLogRemovesPlayerNameWhenLogHasNonBreakingSpace()
+	{
+		String scrubbed = reporter.scrubLog("login Bob Smith ok\n", "Bob Smith");
+
+		assertTrue(scrubbed.contains("[player]"));
+		assertFalse(scrubbed.contains("Bob"));
+	}
+
+	@Test
+	public void scrubLogRedactsIpAddresses()
+	{
+		String scrubbed = reporter.scrubLog("connected to 203.0.113.7 port 43594\n", null);
+
+		assertTrue(scrubbed.contains("[ip]"));
+		assertFalse(scrubbed.contains("203.0.113.7"));
+	}
+
+	@Test
 	public void scrubLogRedactsSessionIds()
 	{
-		String scrubbed = reporter.scrubLog("session 00000000-0000-0000-0000-000000000001 started\n");
+		String scrubbed = reporter.scrubLog("session 00000000-0000-0000-0000-000000000001 started\n", null);
 
 		assertTrue(scrubbed.contains("[redacted]"));
 		assertFalse(scrubbed.contains("0000-0000"));

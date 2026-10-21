@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -50,6 +51,7 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 	static final long LOG_UPLOAD_DELAY_SECONDS = 5;
 	static final long LOG_UPLOAD_INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(10);
 	static final int MAX_LOG_BYTES = 256 * 1024;
+	private static final Pattern IP_PATTERN = Pattern.compile("\\b\\d{1,3}(\\.\\d{1,3}){3}\\b");
 	private final AtomicLong lastLogUpload = new AtomicLong();
 
 	private final MicrobotApi microbotApi;
@@ -109,7 +111,8 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		{
 			if (!isDisabled())
 			{
-				executor.schedule(this::uploadClientLog, LOG_UPLOAD_DELAY_SECONDS, TimeUnit.SECONDS);
+				String name = playerName;
+				executor.schedule(() -> uploadClientLog(name), LOG_UPLOAD_DELAY_SECONDS, TimeUnit.SECONDS);
 			}
 			return;
 		}
@@ -311,7 +314,7 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		return frames;
 	}
 
-	private void uploadClientLog()
+	private void uploadClientLog(String name)
 	{
 		UUID sessionId = clientSessionManager.getMicrobotSessionId();
 		if (sessionId == null || isDisabled())
@@ -327,7 +330,7 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		String text;
 		try
 		{
-			text = scrubLog(tail(new File(RuneLite.LOGS_DIR, "client.log"), MAX_LOG_BYTES));
+			text = scrubLog(tail(new File(RuneLite.LOGS_DIR, "client.log"), MAX_LOG_BYTES), name);
 		}
 		catch (IOException e)
 		{
@@ -369,13 +372,14 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		}
 	}
 
-	String scrubLog(String raw)
+	String scrubLog(String raw, String name)
 	{
 		String text = raw;
-		String name = playerName;
 		if (name != null && !name.isEmpty())
 		{
-			text = text.replace(name, "[player]").replace(name.replace(' ', ' '), "[player]");
+			text = text.replace(name, "[player]")
+				.replace(name.replace(' ', ' '), "[player]")
+				.replace(name.replace(' ', ' '), "[player]");
 		}
 		String user = System.getProperty("user.name");
 		if (user != null && user.length() >= 3)
@@ -385,7 +389,7 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		StringBuilder out = new StringBuilder();
 		for (String line : text.split("\n", -1))
 		{
-			out.append(DiagnosticReport.redact(line)).append('\n');
+			out.append(IP_PATTERN.matcher(DiagnosticReport.redact(line)).replaceAll("[ip]")).append('\n');
 		}
 		return out.toString();
 	}
