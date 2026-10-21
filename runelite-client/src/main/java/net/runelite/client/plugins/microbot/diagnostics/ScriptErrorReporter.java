@@ -369,13 +369,13 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 		}
 	}
 
-	private String scrubLog(String raw)
+	String scrubLog(String raw)
 	{
 		String text = raw;
 		String name = playerName;
 		if (name != null && !name.isEmpty())
 		{
-			text = text.replace(name, "[player]");
+			text = text.replace(name, "[player]").replace(name.replace(' ', ' '), "[player]");
 		}
 		String user = System.getProperty("user.name");
 		if (user != null && user.length() >= 3)

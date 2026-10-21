@@ -14,6 +14,8 @@ import net.runelite.client.ClientSessionManager;
 import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,6 +88,26 @@ public class ClientLogUploadTest
 		Files.write(file.toPath(), "first line\nsecond line\nthird line\n".getBytes(StandardCharsets.UTF_8));
 
 		assertEquals("third line\n", ScriptErrorReporter.tail(file, 11));
+	}
+
+	@Test
+	public void scrubLogRemovesPlayerNameWithNonBreakingSpace()
+	{
+		reporter.rememberPlayerName("Bob Smith");
+
+		String scrubbed = reporter.scrubLog("login Bob Smith ok\n");
+
+		assertTrue(scrubbed.contains("[player]"));
+		assertFalse(scrubbed.contains("Bob"));
+	}
+
+	@Test
+	public void scrubLogRedactsSessionIds()
+	{
+		String scrubbed = reporter.scrubLog("session 00000000-0000-0000-0000-000000000001 started\n");
+
+		assertTrue(scrubbed.contains("[redacted]"));
+		assertFalse(scrubbed.contains("0000-0000"));
 	}
 
 	@Test
