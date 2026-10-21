@@ -24,12 +24,16 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class that communicates with the microbot api
  */
 @Slf4j
 public class MicrobotApi {
+
+    static final long CANCEL_DEVICE_LINK_TIMEOUT_SECONDS = 2;
 
     private final OkHttpClient client;
     private final Gson gson;
@@ -195,6 +199,37 @@ public class MicrobotApi {
         {
             return DeviceLinkPoll.parse(gson, response.code(), response.body().string());
         }
+    }
+
+    public CompletableFuture<Void> cancelDeviceLink(String deviceCode)
+    {
+        JsonObject body = new JsonObject();
+        body.addProperty("deviceCode", deviceCode);
+        CompletableFuture<Void> done = new CompletableFuture<>();
+        Call call = client.newCall(deviceLinkRequest("/alerts/device-links/cancel", body));
+        call.timeout().timeout(CANCEL_DEVICE_LINK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        call.enqueue(new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                log.debug("Unable to cancel the pending link for this client", e);
+                done.complete(null);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response)
+            {
+                int code = response.code();
+                response.close();
+                if (code >= 300)
+                {
+                    log.debug("Cancelling the pending link for this client was rejected: HTTP {}", code);
+                }
+                done.complete(null);
+            }
+        });
+        return done;
     }
 
     private Request deviceLinkRequest(String path, JsonObject body)

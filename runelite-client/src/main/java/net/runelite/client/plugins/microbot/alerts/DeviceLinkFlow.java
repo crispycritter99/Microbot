@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.alerts;
 
 import com.google.common.base.Strings;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +71,11 @@ public class DeviceLinkFlow
 	@Subscribe
 	public void onClientShutdown(ClientShutdown event)
 	{
-		stop();
+		CompletableFuture<Void> cancelled = abandon();
+		if (cancelled != null)
+		{
+			event.waitFor(cancelled);
+		}
 	}
 
 	public synchronized void start()
@@ -123,13 +128,24 @@ public class DeviceLinkFlow
 		executor.execute(RunnableExceptionLogger.wrap(() -> begin(next)));
 	}
 
-	public synchronized void stop()
+	public void stop()
 	{
-		if (attempt != null)
+		abandon();
+	}
+
+	private CompletableFuture<Void> abandon()
+	{
+		String deviceCode;
+		synchronized (this)
 		{
-			cancel(attempt);
+			if (attempt == null)
+			{
+				return null;
+			}
+			deviceCode = cancel(attempt);
 			dialog.close();
 		}
+		return cancelOnServer(deviceCode);
 	}
 
 	synchronized boolean isLinking()
@@ -176,6 +192,7 @@ public class DeviceLinkFlow
 		{
 			if (attempt != current)
 			{
+				cancelOnServer(link.getDeviceCode());
 				return;
 			}
 			long waitSeconds = link.getExpiresIn() > 0 ? Math.min(link.getExpiresIn(), MAX_WAIT_SECONDS) : MAX_WAIT_SECONDS;
@@ -272,16 +289,34 @@ public class DeviceLinkFlow
 		dialog.showMessage(message);
 	}
 
-	private synchronized void cancel(Attempt current)
+	private synchronized String cancel(Attempt current)
 	{
 		if (attempt != current)
 		{
-			return;
+			return null;
 		}
 		attempt = null;
 		if (current.future != null)
 		{
 			current.future.cancel(false);
+		}
+		return current.link != null ? current.link.getDeviceCode() : null;
+	}
+
+	private CompletableFuture<Void> cancelOnServer(String deviceCode)
+	{
+		if (Strings.isNullOrEmpty(deviceCode))
+		{
+			return null;
+		}
+		try
+		{
+			return microbotApi.cancelDeviceLink(deviceCode);
+		}
+		catch (RuntimeException e)
+		{
+			log.debug("Unable to cancel the pending link for this client", e);
+			return null;
 		}
 	}
 
@@ -301,7 +336,7 @@ public class DeviceLinkFlow
 		{
 			message += "\n\n" + TOO_MANY_LINKS;
 		}
-		dialog.showWaiting(message, link.getVerificationUrl(), () -> cancel(current));
+		dialog.showWaiting(message, link.getVerificationUrl(), () -> cancelOnServer(cancel(current)));
 	}
 
 	static String displayLabel(String label)

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +61,7 @@ public class DeviceLinkFlowTest
 	{
 		api = mock(MicrobotApi.class);
 		when(api.startDeviceLink(anyString())).thenReturn(new DeviceLinkStart(DEVICE_CODE, USER_CODE, URL, 600, 5));
+		when(api.cancelDeviceLink(anyString())).thenReturn(CompletableFuture.completedFuture(null));
 		token = mock(ClientLinkToken.class);
 		when(token.get()).thenReturn(Optional.empty());
 		configManager = mock(ConfigManager.class);
@@ -224,10 +226,15 @@ public class DeviceLinkFlowTest
 		polls(DeviceLinkPoll.Status.PENDING);
 		flow.start();
 		Scheduled pending = scheduled.peekFirst();
+		CompletableFuture<Void> cancelled = new CompletableFuture<>();
+		when(api.cancelDeviceLink(DEVICE_CODE)).thenReturn(cancelled);
+		ClientShutdown event = new ClientShutdown();
 
-		flow.onClientShutdown(new ClientShutdown());
+		flow.onClientShutdown(event);
 
 		verify(pending.getFuture()).cancel(false);
+		verify(api, times(1)).cancelDeviceLink(DEVICE_CODE);
+		assertTrue(event.getTasks().contains(cancelled));
 		runNext(5);
 		verify(api, never()).pollDeviceLink(anyString());
 		assertTrue(scheduled.isEmpty());
@@ -243,10 +250,97 @@ public class DeviceLinkFlowTest
 		verify(dialog).showWaiting(anyString(), anyString(), onCancel.capture());
 
 		onCancel.getValue().run();
+		onCancel.getValue().run();
+		flow.stop();
 		runNext(5);
 
 		verify(api, never()).pollDeviceLink(anyString());
+		verify(api, times(1)).cancelDeviceLink(DEVICE_CODE);
 		assertFalse(flow.isLinking());
+	}
+
+	@Test
+	public void cancelFailuresAreSwallowed() throws IOException
+	{
+		polls(DeviceLinkPoll.Status.PENDING);
+		when(api.cancelDeviceLink(anyString())).thenThrow(new IllegalStateException("offline"));
+		flow.start();
+		ArgumentCaptor<Runnable> onCancel = ArgumentCaptor.forClass(Runnable.class);
+		verify(dialog).showWaiting(anyString(), anyString(), onCancel.capture());
+
+		onCancel.getValue().run();
+		assertFalse(flow.isLinking());
+
+		flow.start();
+		ClientShutdown event = new ClientShutdown();
+		flow.onClientShutdown(event);
+
+		verify(api, times(2)).cancelDeviceLink(DEVICE_CODE);
+		assertTrue(event.getTasks().isEmpty());
+		assertFalse(flow.isLinking());
+	}
+
+	@Test
+	public void nothingIsCancelledOnceTheLinkIsSettled() throws IOException
+	{
+		when(api.pollDeviceLink(DEVICE_CODE)).thenReturn(new DeviceLinkPoll(DeviceLinkPoll.Status.LINKED, TOKEN, "Desk PC"),
+			DeviceLinkPoll.of(DeviceLinkPoll.Status.DENIED), DeviceLinkPoll.of(DeviceLinkPoll.Status.EXPIRED));
+		ArgumentCaptor<Runnable> onCancel = ArgumentCaptor.forClass(Runnable.class);
+
+		for (int i = 0; i < 3; i++)
+		{
+			flow.relink();
+			runNext(5);
+			assertFalse(flow.isLinking());
+			flow.stop();
+			flow.onClientShutdown(new ClientShutdown());
+		}
+		verify(dialog, times(3)).showWaiting(anyString(), anyString(), onCancel.capture());
+		onCancel.getAllValues().forEach(Runnable::run);
+
+		verify(api, never()).cancelDeviceLink(anyString());
+	}
+
+	@Test
+	public void nothingIsCancelledWhenTheCodeRunsOut() throws IOException
+	{
+		when(api.startDeviceLink(anyString())).thenReturn(new DeviceLinkStart(DEVICE_CODE, USER_CODE, URL, 10, 5));
+		polls(DeviceLinkPoll.Status.PENDING);
+		flow.start();
+		runNext(5);
+		runNext(5);
+		assertFalse(flow.isLinking());
+
+		flow.onClientShutdown(new ClientShutdown());
+
+		verify(dialog).showMessage(DeviceLinkFlow.EXPIRED);
+		verify(api, never()).cancelDeviceLink(anyString());
+	}
+
+	@Test
+	public void aCodeIssuedAfterStoppingIsCancelled() throws IOException
+	{
+		when(api.startDeviceLink(anyString())).thenAnswer(invocation ->
+		{
+			flow.stop();
+			return new DeviceLinkStart(DEVICE_CODE, USER_CODE, URL, 600, 5);
+		});
+
+		flow.start();
+
+		verify(api, times(1)).cancelDeviceLink(DEVICE_CODE);
+		verify(dialog, never()).browse(anyString());
+		assertTrue(scheduled.isEmpty());
+		assertFalse(flow.isLinking());
+	}
+
+	@Test
+	public void stoppingWithNothingPendingSendsNoCancel()
+	{
+		flow.onClientShutdown(new ClientShutdown());
+		flow.stop();
+
+		verify(api, never()).cancelDeviceLink(anyString());
 	}
 
 	@Test
