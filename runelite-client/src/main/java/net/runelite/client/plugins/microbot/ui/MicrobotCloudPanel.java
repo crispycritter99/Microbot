@@ -3,6 +3,7 @@ package net.runelite.client.plugins.microbot.ui;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
@@ -11,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.swing.Box;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -34,11 +36,13 @@ public class MicrobotCloudPanel extends JPanel
 
 	private final DeviceLinkFlow deviceLinkFlow;
 	private final JLabel title = new JLabel("Microbot Cloud");
+	private final JLabel newBadge = newChip();
 	private final JPanel body = new JPanel(new GridLayout(0, 1, 0, 4));
 	private final JLabel alertStatus = new JLabel();
 	private final JButton alertAction = new JButton();
 	private final Timer refresher = new Timer(1000, e -> refresh());
 	private BotAlertStatus shown;
+	private Runnable onUsed = () -> { };
 
 	@Inject
 	MicrobotCloudPanel(DeviceLinkFlow deviceLinkFlow)
@@ -58,9 +62,15 @@ public class MicrobotCloudPanel extends JPanel
 			public void mouseClicked(MouseEvent e)
 			{
 				applyCollapsed(body.isVisible());
+				onUsed.run();
 			}
 		});
-		add(title, BorderLayout.NORTH);
+		JPanel header = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+		header.add(title);
+		header.add(Box.createHorizontalStrut(6));
+		newBadge.setVisible(false);
+		header.add(newBadge);
+		add(header, BorderLayout.NORTH);
 
 		body.setBorder(new EmptyBorder(4, 0, 0, 0));
 		JLabel alertsName = new JLabel("Bot alerts");
@@ -79,6 +89,7 @@ public class MicrobotCloudPanel extends JPanel
 		{
 			deviceLinkFlow.start();
 			refresh();
+			onUsed.run();
 		});
 		body.add(alertAction);
 
@@ -86,7 +97,11 @@ public class MicrobotCloudPanel extends JPanel
 		dashboard.setFont(FontManager.getRunescapeSmallFont());
 		dashboard.setFocusable(false);
 		dashboard.setToolTipText(DASHBOARD);
-		dashboard.addActionListener(e -> LinkBrowser.browse(DASHBOARD));
+		dashboard.addActionListener(e ->
+		{
+			LinkBrowser.browse(DASHBOARD);
+			onUsed.run();
+		});
 		body.add(dashboard);
 		add(body, BorderLayout.CENTER);
 
@@ -107,6 +122,43 @@ public class MicrobotCloudPanel extends JPanel
 		}
 	}
 
+	static JLabel newChip()
+	{
+		JLabel chip = new JLabel("NEW");
+		chip.setOpaque(true);
+		chip.setBackground(ColorScheme.BRAND_ORANGE);
+		chip.setForeground(ColorScheme.DARKER_GRAY_COLOR);
+		chip.setFont(FontManager.getRunescapeSmallFont());
+		chip.setBorder(new EmptyBorder(0, 4, 0, 4));
+		chip.setToolTipText("New in Microbot");
+		return chip;
+	}
+
+	void setNewBadgeVisible(boolean visible)
+	{
+		if (newBadge.isVisible() != visible)
+		{
+			newBadge.setVisible(visible);
+			revalidate();
+			repaint();
+		}
+	}
+
+	boolean isNewBadgeVisible()
+	{
+		return newBadge.isVisible();
+	}
+
+	void onUsed(Runnable listener)
+	{
+		onUsed = listener == null ? () -> { } : listener;
+	}
+
+	void expand()
+	{
+		applyCollapsed(false);
+	}
+
 	private void applyCollapsed(boolean collapsed)
 	{
 		body.setVisible(!collapsed);
@@ -118,6 +170,11 @@ public class MicrobotCloudPanel extends JPanel
 	private void refresh()
 	{
 		BotAlertStatus status = deviceLinkFlow.status();
+		if (status.isOn() && newBadge.isVisible())
+		{
+			setNewBadgeVisible(false);
+			onUsed.run();
+		}
 		if (status == shown)
 		{
 			return;

@@ -36,6 +36,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
     private final MicrobotPluginListPanel pluginListPanel;
     private final MaterialTab pluginListPanelTab;
     private final MaterialTab profilePanelTab;
+    private final MaterialTab pluginHubTab;
 
     private boolean active = false;
     private MicrobotPluginPanel current;
@@ -118,7 +119,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
 
         pluginListPanelTab = addTab(pluginListPanel.getMuxer(), installedIcon, "Installed Microbot Plugins");
         profilePanelTab = addTab(profilePanel, "profile_icon.png", "Profiles");
-        addTab(microbotPluginHubPanelProvider, hubIcon, "Microbot Hub");
+        pluginHubTab = addTab(microbotPluginHubPanelProvider, hubIcon, "Microbot Hub");
 
         tabGroup.select(pluginListPanelTab);
     }
@@ -264,6 +265,23 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         active = false;
         current.onDeactivate();
         cloudPanel.setActive(false);
+    }
+
+    Component getProfilesTab() {
+        return profilePanelTab;
+    }
+
+    Component getPluginHubTab() {
+        return pluginHubTab;
+    }
+
+    Component getTabContent() {
+        return content;
+    }
+
+    void showInstalledTab() {
+        tabGroup.select(pluginListPanelTab);
+        pluginListPanel.getMuxer().pushState(pluginListPanel);
     }
 
     public void openConfigurationPanel(String name) {
