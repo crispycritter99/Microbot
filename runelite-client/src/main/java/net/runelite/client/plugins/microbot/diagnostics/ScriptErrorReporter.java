@@ -9,6 +9,10 @@ import ch.qos.logback.core.UnsynchronizedAppenderBase;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,12 +21,15 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.ClientSessionManager;
+import net.runelite.client.RuneLite;
 import net.runelite.client.RuneLiteProperties;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -39,6 +46,13 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 	private static final int MAX_FRAMES = 20;
 	private static final int FINGERPRINT_FRAMES = 3;
 	private static final long FLUSH_MINUTES = 5;
+	static final String CLIENT_THREAD_STALL_MESSAGE = "Client thread did not run task within";
+	static final String CLIENT_THREAD_STALL_REASON = "client-thread-stall";
+	static final long LOG_UPLOAD_DELAY_SECONDS = 5;
+	static final long LOG_UPLOAD_INTERVAL_MILLIS = TimeUnit.MINUTES.toMillis(10);
+	static final int MAX_LOG_BYTES = 256 * 1024;
+	private static final Pattern IP_PATTERN = Pattern.compile("\\b\\d{1,3}(\\.\\d{1,3}){3}\\b");
+	private final AtomicLong lastLogUpload = new AtomicLong();
 
 	private final MicrobotApi microbotApi;
 	private final MicrobotPluginManager microbotPluginManager;
@@ -93,6 +107,15 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 	@Override
 	protected void append(ILoggingEvent event)
 	{
+		if (event.getLevel().equals(Level.WARN) && event.getFormattedMessage().startsWith(CLIENT_THREAD_STALL_MESSAGE))
+		{
+			if (!isDisabled())
+			{
+				String name = playerName;
+				executor.schedule(() -> uploadClientLog(name), LOG_UPLOAD_DELAY_SECONDS, TimeUnit.SECONDS);
+			}
+			return;
+		}
 		if (!event.getLevel().isGreaterOrEqual(Level.ERROR)
 			|| event.getLoggerName().startsWith(ScriptErrorReporter.class.getPackageName())
 			|| event.getLoggerName().equals(MicrobotApi.class.getName())
@@ -289,6 +312,86 @@ public class ScriptErrorReporter extends UnsynchronizedAppenderBase<ILoggingEven
 			frames.add(element.getClassName() + "." + element.getMethodName() + ":" + element.getLineNumber());
 		}
 		return frames;
+	}
+
+	private void uploadClientLog(String name)
+	{
+		UUID sessionId = clientSessionManager.getMicrobotSessionId();
+		if (sessionId == null || isDisabled())
+		{
+			return;
+		}
+		long now = System.currentTimeMillis();
+		long last = lastLogUpload.get();
+		if (last != 0 && now - last < LOG_UPLOAD_INTERVAL_MILLIS || !lastLogUpload.compareAndSet(last, now))
+		{
+			return;
+		}
+		String text;
+		try
+		{
+			text = scrubLog(tail(new File(RuneLite.LOGS_DIR, "client.log"), MAX_LOG_BYTES), name);
+		}
+		catch (IOException e)
+		{
+			log.debug("Could not read client log for upload", e);
+			return;
+		}
+		JsonObject payload = new JsonObject();
+		payload.addProperty("sessionId", sessionId.toString());
+		payload.addProperty("reason", CLIENT_THREAD_STALL_REASON);
+		payload.addProperty("microbotVersion", RuneLiteProperties.getMicrobotVersion());
+		payload.addProperty("log", text);
+		microbotApi.submitClientLog(payload);
+	}
+
+	static String tail(File file, int maxBytes) throws IOException
+	{
+		try (RandomAccessFile raf = new RandomAccessFile(file, "r"))
+		{
+			long length = raf.length();
+			long start = Math.max(0, length - maxBytes);
+			long readFrom = start > 0 ? start - 1 : 0;
+			byte[] bytes = new byte[(int) (length - readFrom)];
+			raf.seek(readFrom);
+			raf.readFully(bytes);
+			String text = new String(bytes, StandardCharsets.UTF_8);
+			if (start > 0)
+			{
+				if (bytes[0] == '\n')
+				{
+					text = text.substring(1);
+				}
+				else
+				{
+					int newline = text.indexOf('\n');
+					text = newline < 0 ? "" : text.substring(newline + 1);
+				}
+			}
+			return text;
+		}
+	}
+
+	String scrubLog(String raw, String name)
+	{
+		String text = raw;
+		if (name != null && !name.isEmpty())
+		{
+			text = text.replace(name, "[player]")
+				.replace(name.replace(' ', ' '), "[player]")
+				.replace(name.replace(' ', ' '), "[player]");
+		}
+		String user = System.getProperty("user.name");
+		if (user != null && user.length() >= 3)
+		{
+			text = text.replace(user, "[user]");
+		}
+		StringBuilder out = new StringBuilder();
+		for (String line : text.split("\n", -1))
+		{
+			out.append(IP_PATTERN.matcher(DiagnosticReport.redact(line)).replaceAll("[ip]")).append('\n');
+		}
+		return out.toString();
 	}
 
 	private String scrub(String raw)
