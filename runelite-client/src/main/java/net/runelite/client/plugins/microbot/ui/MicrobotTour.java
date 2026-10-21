@@ -188,11 +188,10 @@ public class MicrobotTour
 			&& shouldAutoShow;
 	}
 
-	static boolean isReady(boolean frameShowing, boolean iconified, boolean active, boolean otherDialogShowing, boolean gameLoaded, long msSinceLoaded)
+	static boolean isReady(boolean frameShowing, boolean iconified, boolean otherDialogShowing, boolean gameLoaded, long msSinceLoaded)
 	{
 		return frameShowing
 			&& !iconified
-			&& active
 			&& !otherDialogShowing
 			&& gameLoaded
 			&& msSinceLoaded >= SETTLE_MS;
@@ -241,9 +240,8 @@ public class MicrobotTour
 		JFrame target = findFrame();
 		boolean showing = target != null;
 		boolean iconified = showing && (target.getExtendedState() & Frame.ICONIFIED) != 0;
-		boolean active = showing && target.isActive();
 		boolean dialog = showing && otherDialogShowing(target);
-		if (isReady(showing, iconified, active, dialog, since >= 0, since >= 0 ? now - since : 0) && navButton != null)
+		if (isReady(showing, iconified, dialog, since >= 0, since >= 0 ? now - since : 0) && navButton != null)
 		{
 			disarm();
 			begin(true);

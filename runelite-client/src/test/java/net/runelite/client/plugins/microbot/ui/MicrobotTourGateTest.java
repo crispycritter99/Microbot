@@ -20,15 +20,14 @@ public class MicrobotTourGateTest
 	}
 
 	@Test
-	public void readyNeedsAShowingActiveSettledFrame()
+	public void readyNeedsAShowingSettledFrameWithoutFocus()
 	{
 		long settled = MicrobotTour.SETTLE_MS;
-		assertTrue(MicrobotTour.isReady(true, false, true, false, true, settled));
-		assertFalse(MicrobotTour.isReady(false, false, true, false, true, settled));
-		assertFalse(MicrobotTour.isReady(true, true, true, false, true, settled));
-		assertFalse(MicrobotTour.isReady(true, false, false, false, true, settled));
-		assertFalse(MicrobotTour.isReady(true, false, true, true, true, settled));
-		assertFalse(MicrobotTour.isReady(true, false, true, false, false, settled));
-		assertFalse(MicrobotTour.isReady(true, false, true, false, true, settled - 1));
+		assertTrue(MicrobotTour.isReady(true, false, false, true, settled));
+		assertFalse(MicrobotTour.isReady(false, false, false, true, settled));
+		assertFalse(MicrobotTour.isReady(true, true, false, true, settled));
+		assertFalse(MicrobotTour.isReady(true, false, true, true, settled));
+		assertFalse(MicrobotTour.isReady(true, false, false, false, settled));
+		assertFalse(MicrobotTour.isReady(true, false, false, true, settled - 1));
 	}
 }
