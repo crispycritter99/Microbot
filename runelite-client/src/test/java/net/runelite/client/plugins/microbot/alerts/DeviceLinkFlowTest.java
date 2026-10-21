@@ -302,6 +302,37 @@ public class DeviceLinkFlowTest
 	}
 
 	@Test
+	public void aRevokedLauncherTokenIsNotShadowedByANewLink() throws IOException
+	{
+		when(token.isFromEnvironment()).thenReturn(true);
+		flow.start();
+
+		verify(dialog).showMessage(DeviceLinkFlow.LAUNCHER_TOKEN);
+		verify(api, never()).startDeviceLink(anyString());
+		assertFalse(flow.isLinking());
+	}
+
+	@Test
+	public void aBrowserThatCannotOpenStillLeavesTheFlowPolling() throws IOException
+	{
+		polls(DeviceLinkPoll.Status.PENDING);
+		doThrow(new IllegalArgumentException("bad url")).when(dialog).browse(anyString());
+
+		try
+		{
+			flow.start();
+		}
+		catch (IllegalArgumentException expected)
+		{
+		}
+
+		assertTrue(flow.isLinking());
+		runNext(5);
+		verify(api).pollDeviceLink(DEVICE_CODE);
+		assertEquals(1, scheduled.size());
+	}
+
+	@Test
 	public void startFailuresExplainWhatHappened() throws IOException
 	{
 		when(api.startDeviceLink(anyString())).thenThrow(new IOException("offline"));

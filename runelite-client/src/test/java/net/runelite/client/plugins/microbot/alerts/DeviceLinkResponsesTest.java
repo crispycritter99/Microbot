@@ -2,6 +2,7 @@ package net.runelite.client.plugins.microbot.alerts;
 
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.net.URI;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -32,6 +33,16 @@ public class DeviceLinkResponsesTest
 		assertEquals(600, start.getExpiresIn());
 		assertEquals(5, start.getInterval());
 		assertFalse(start.toString().contains(DEVICE_CODE));
+	}
+
+	@Test
+	public void verificationUrlIsNormalizedSoTheBrowserCanOpenIt() throws IOException
+	{
+		DeviceLinkStart start = DeviceLinkStart.parse(GSON, 200,
+			started(DEVICE_CODE, "TEST-CODE", "https://dashboard.example.test/link?code=TEST CODE"));
+
+		assertEquals("https://dashboard.example.test/link?code=TEST%20CODE", start.getVerificationUrl());
+		URI.create(start.getVerificationUrl());
 	}
 
 	@Test

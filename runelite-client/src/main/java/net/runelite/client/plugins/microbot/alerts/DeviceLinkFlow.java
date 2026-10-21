@@ -29,6 +29,7 @@ public class DeviceLinkFlow
 
 	static final String TELEMETRY_OFF = "Bot alerts are off because telemetry is disabled.\nTurn telemetry back on to link this client.";
 	static final String ALREADY_LINKED = "This client is already linked to a Microbot account.\nTo link it to another account, clear Alert link token first.";
+	static final String LAUNCHER_TOKEN = "The launcher started this client with a link that no longer works.\nStart it again from the launcher while signed in to link it.";
 	static final String UNREACHABLE = "Could not reach microbot.cloud.\nCheck your connection and click Link to Microbot account again.";
 	static final String TOO_MANY_PENDING = "Too many clients are waiting to be linked from this network.\nApprove one of them or try again in 10 minutes.";
 	static final String DENIED = "Linking was declined on microbot.cloud.\nClick Link to Microbot account to try again.";
@@ -100,6 +101,11 @@ public class DeviceLinkFlow
 			dialog.showMessage(ALREADY_LINKED);
 			return;
 		}
+		if (clientLinkToken.isFromEnvironment())
+		{
+			dialog.showMessage(LAUNCHER_TOKEN);
+			return;
+		}
 		Attempt next = new Attempt();
 		attempt = next;
 		executor.execute(RunnableExceptionLogger.wrap(() -> begin(next)));
@@ -149,8 +155,8 @@ public class DeviceLinkFlow
 			current.intervalSeconds = link.getInterval() > 0 ? link.getInterval() : DEFAULT_INTERVAL_SECONDS;
 			log.info("Waiting for this client to be approved for bot alerts in the browser");
 			showWaiting(current);
-			dialog.browse(link.getVerificationUrl());
 			schedule(current);
+			dialog.browse(link.getVerificationUrl());
 		}
 	}
 

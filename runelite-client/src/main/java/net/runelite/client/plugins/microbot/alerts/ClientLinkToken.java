@@ -43,6 +43,11 @@ public class ClientLinkToken
 		return resolve(System.getenv(ENV_VAR), configManager.getConfiguration(MicrobotConfig.configGroup, MicrobotConfig.keyAlertLinkToken));
 	}
 
+	public boolean isFromEnvironment()
+	{
+		return resolve(System.getenv(ENV_VAR), null).isPresent();
+	}
+
 	public boolean isTelemetryDisabled()
 	{
 		return disableTelemetry || Microbot.isTelemetryDisabled();

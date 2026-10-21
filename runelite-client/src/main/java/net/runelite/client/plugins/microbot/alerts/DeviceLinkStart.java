@@ -32,25 +32,21 @@ public class DeviceLinkStart
 			throw new IOException("Unable to start linking: HTTP " + code);
 		}
 		JsonObject json = DeviceLinkPoll.json(gson, body);
+		String url = DeviceLinkPoll.string(json, "verificationUrl");
+		HttpUrl verificationUrl = url == null ? null : HttpUrl.parse(url);
 		DeviceLinkStart start = new DeviceLinkStart(
 			DeviceLinkPoll.string(json, "deviceCode"),
 			DeviceLinkPoll.string(json, "userCode"),
-			DeviceLinkPoll.string(json, "verificationUrl"),
+			verificationUrl == null ? null : verificationUrl.toString(),
 			DeviceLinkPoll.integer(json, "expiresIn"),
 			DeviceLinkPoll.integer(json, "interval"));
 		if (start.deviceCode == null || !DEVICE_CODE.matcher(start.deviceCode).matches()
 			|| start.userCode == null || !USER_CODE.matcher(start.userCode).matches()
-			|| !isHttps(start.verificationUrl))
+			|| verificationUrl == null || !verificationUrl.isHttps())
 		{
 			throw new IOException("Unexpected link response");
 		}
 		return start;
-	}
-
-	static boolean isHttps(String url)
-	{
-		HttpUrl parsed = url == null ? null : HttpUrl.parse(url);
-		return parsed != null && parsed.isHttps();
 	}
 
 	public static class ThrottledException extends IOException
