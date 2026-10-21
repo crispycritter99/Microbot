@@ -34,6 +34,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
 
     private final EventBus eventBus;
     private final DiagnosticReportCollector diagnosticReportCollector;
+    private final MicrobotCloudPanel cloudPanel;
     private final MicrobotPluginListPanel pluginListPanel;
     private final MaterialTab pluginListPanelTab;
     private final MaterialTab profilePanelTab;
@@ -89,12 +90,14 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
             MicrobotPluginListPanel pluginListPanel,
             MicrobotProfilePanel profilePanel,
             Provider<MicrobotPluginHubPanel> microbotPluginHubPanelProvider,
-            DiagnosticReportCollector diagnosticReportCollector
+            DiagnosticReportCollector diagnosticReportCollector,
+            MicrobotCloudPanel cloudPanel
     ) {
         super(false);
 
         this.eventBus = eventBus;
         this.diagnosticReportCollector = diagnosticReportCollector;
+        this.cloudPanel = cloudPanel;
 
         tabGroup = new MaterialTabGroup();
         tabGroup.setLayout(new GridLayout(1, 0, 7, 7));
@@ -125,7 +128,8 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
     private JPanel buildVersionFooter() {
         JPanel footer = new JPanel();
         footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
-        footer.setBorder(new EmptyBorder(4, 0, 4, 0));
+        footer.setBorder(new EmptyBorder(0, 0, 4, 0));
+        footer.add(cloudPanel);
 
         String version = RuneLiteProperties.getMicrobotVersion();
         JLabel versionLabel = new JLabel(version == null || version.isBlank() ? "microbot" : "microbot v" + version, SwingConstants.CENTER);
@@ -296,12 +300,14 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
     public void onActivate() {
         active = true;
         current.onActivate();
+        cloudPanel.setActive(true);
     }
 
     @Override
     public void onDeactivate() {
         active = false;
         current.onDeactivate();
+        cloudPanel.setActive(false);
     }
 
     public void openConfigurationPanel(String name) {

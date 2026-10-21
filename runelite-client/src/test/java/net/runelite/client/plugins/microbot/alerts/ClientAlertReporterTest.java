@@ -340,7 +340,7 @@ public class ClientAlertReporterTest
 	{
 		ConfigChanged other = new ConfigChanged();
 		other.setGroup(MicrobotConfig.configGroup);
-		other.setKey(MicrobotConfig.keyAlertLinkStart);
+		other.setKey(MicrobotConfig.keyInputIdleResumeMs);
 		reporter.onConfigChanged(other);
 		verify(api, never()).sendAlertEvent(any(), any(), any());
 

@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ClientShutdown;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.MicrobotConfig;
 import net.runelite.client.util.RunnableExceptionLogger;
@@ -36,10 +35,10 @@ public class DeviceLinkFlow
 	static final String LINKED_BY_LAUNCHER = "The launcher linked this client to your Microbot account.\n\n"
 		+ "To rename or remove it, go to " + ALERTS_PAGE;
 	static final String LAUNCHER_TOKEN = "The launcher started this client with a link that no longer works.\nStart it again from the launcher while signed in to link it.";
-	static final String UNREACHABLE = "Could not reach microbot.cloud.\nCheck your connection and click Link to Microbot account again.";
+	static final String UNREACHABLE = "Could not reach microbot.cloud.\nCheck your connection and try again.";
 	static final String TOO_MANY_PENDING = "Too many clients are waiting to be linked from this network.\nApprove one of them or try again in 10 minutes.";
-	static final String DENIED = "Linking was declined on microbot.cloud.\nClick Link to Microbot account to try again.";
-	static final String EXPIRED = "The link code expired before it was approved.\nClick Link to Microbot account to try again.";
+	static final String DENIED = "Linking was declined on microbot.cloud.\nYou can link again from Microbot Cloud at the bottom of the Microbot sidebar.";
+	static final String EXPIRED = "The link code expired before it was approved.\nYou can link again from Microbot Cloud at the bottom of the Microbot sidebar.";
 	static final String TOO_MANY_LINKS = "Your account already has 50 linked clients.\nRemove one on the Alerts page and this client links on its own.";
 
 	private final MicrobotApi microbotApi;
@@ -66,19 +65,6 @@ public class DeviceLinkFlow
 		this.dialog = dialog;
 		this.executor = executor;
 		this.clock = clock;
-	}
-
-	@Subscribe
-	public void onConfigChanged(ConfigChanged event)
-	{
-		if (MicrobotConfig.configGroup.equals(event.getGroup())
-			&& MicrobotConfig.keyAlertLinkStart.equals(event.getKey())
-			&& event.getProfile() == null
-			&& event.getNewValue() != null)
-		{
-			configManager.unsetConfiguration(MicrobotConfig.configGroup, MicrobotConfig.keyAlertLinkStart);
-			start();
-		}
 	}
 
 	@Subscribe
@@ -149,6 +135,23 @@ public class DeviceLinkFlow
 	synchronized boolean isLinking()
 	{
 		return attempt != null;
+	}
+
+	public synchronized BotAlertStatus status()
+	{
+		if (clientLinkToken.isTelemetryDisabled())
+		{
+			return BotAlertStatus.TELEMETRY_OFF;
+		}
+		if (attempt != null)
+		{
+			return BotAlertStatus.LINKING;
+		}
+		if (clientLinkToken.get().isPresent())
+		{
+			return clientLinkToken.isFromEnvironment() ? BotAlertStatus.LINKED_BY_LAUNCHER : BotAlertStatus.LINKED;
+		}
+		return clientLinkToken.configured().isPresent() ? BotAlertStatus.REVOKED : BotAlertStatus.NOT_LINKED;
 	}
 
 	private void begin(Attempt current)

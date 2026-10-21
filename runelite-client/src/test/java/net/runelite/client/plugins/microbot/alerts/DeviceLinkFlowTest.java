@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import lombok.Value;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.events.ClientShutdown;
-import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.MicrobotConfig;
 import static org.junit.Assert.assertEquals;
@@ -384,16 +383,26 @@ public class DeviceLinkFlowTest
 	}
 
 	@Test
-	public void theSettingsButtonStartsLinkingAndIsNotStored() throws IOException
+	public void statusFollowsTheLinkState() throws IOException
 	{
-		flow.onConfigChanged(configChanged(MicrobotConfig.keyAlertLinkStart, null));
-		flow.onConfigChanged(configChanged(MicrobotConfig.keyAlertLinkToken, "x"));
-		verify(api, never()).startDeviceLink(anyString());
+		assertEquals(BotAlertStatus.NOT_LINKED, flow.status());
 
-		flow.onConfigChanged(configChanged(MicrobotConfig.keyAlertLinkStart, "b6f3"));
+		polls(DeviceLinkPoll.Status.PENDING);
+		flow.start();
+		assertEquals(BotAlertStatus.LINKING, flow.status());
+		flow.stop();
 
-		verify(configManager).unsetConfiguration(MicrobotConfig.configGroup, MicrobotConfig.keyAlertLinkStart);
-		verify(api).startDeviceLink(DeviceLinkFlow.DEFAULT_LABEL);
+		when(token.configured()).thenReturn(Optional.of(TOKEN));
+		assertEquals(BotAlertStatus.REVOKED, flow.status());
+
+		when(token.get()).thenReturn(Optional.of(TOKEN));
+		assertEquals(BotAlertStatus.LINKED, flow.status());
+
+		when(token.isFromEnvironment()).thenReturn(true);
+		assertEquals(BotAlertStatus.LINKED_BY_LAUNCHER, flow.status());
+
+		when(token.isTelemetryDisabled()).thenReturn(true);
+		assertEquals(BotAlertStatus.TELEMETRY_OFF, flow.status());
 	}
 
 	@Test
@@ -403,14 +412,5 @@ public class DeviceLinkFlowTest
 		assertEquals("a <html>b",DeviceLinkFlow.displayLabel("a\n<html>b"));
 		assertEquals(DeviceLinkFlow.DEFAULT_LABEL, DeviceLinkFlow.displayLabel(null));
 		assertEquals(DeviceLinkFlow.MAX_LABEL_LENGTH, DeviceLinkFlow.displayLabel("x".repeat(200)).length());
-	}
-
-	private static ConfigChanged configChanged(String key, String newValue)
-	{
-		ConfigChanged event = new ConfigChanged();
-		event.setGroup(MicrobotConfig.configGroup);
-		event.setKey(key);
-		event.setNewValue(newValue);
-		return event;
 	}
 }

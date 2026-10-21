@@ -4,7 +4,6 @@ import ch.qos.logback.classic.Level;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.runelite.client.config.Config;
-import net.runelite.client.config.ConfigButton;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
@@ -276,35 +275,11 @@ public interface MicrobotConfig extends Config
 		return 1800;
 	}
 
-	@ConfigSection(
-		name = "Bot alerts",
-		description = "Get a Discord or email alert from microbot.cloud when this client stops responding, a script stops on an error or the game logs out",
-		position = 5,
-		closedByDefault = true
-	)
-	String alertsSection = "alertsSection";
-
-	String keyAlertLinkStart = "alertLinkStart";
-	@ConfigItem(
-		keyName = keyAlertLinkStart,
-		name = "Link to Microbot account",
-		description = "Opens microbot.cloud in your browser so you can approve this client for Discord or email alerts. " +
-				"Not needed when the launcher starts this client while you are signed in. Alerts stay off while telemetry is disabled.",
-		position = 0,
-		section = alertsSection
-	)
-	default ConfigButton alertLinkStart()
-	{
-		return null;
-	}
-
 	String keyAlertLinkToken = "alertLinkToken";
 	@ConfigItem(
 		keyName = keyAlertLinkToken,
 		name = "Alert link token",
-		description = "Filled in by Link to Microbot account",
-		position = 1,
-		section = alertsSection,
+		description = "Filled in by Link to Microbot account in the Microbot Cloud panel",
 		secret = true,
 		hidden = true
 	)
