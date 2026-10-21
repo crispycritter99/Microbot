@@ -1,0 +1,46 @@
+package net.runelite.client.plugins.microbot.ui;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import net.runelite.client.plugins.microbot.ui.MicrobotTourPlacement.Side;
+
+@Getter
+@RequiredArgsConstructor
+enum MicrobotTourStep
+{
+	WELCOME("Welcome to Microbot",
+		"Microbot is the RuneLite client you already know, with Microbot plugins added that can automate parts of the game for you. "
+			+ "This short tour shows where everything is. You can skip it now and replay it later from the red bug button.",
+		false, false, Side.CENTER),
+	SIDEBAR("The RuneLite sidebar",
+		"Each icon in this strip opens a panel. Your regular RuneLite plugins are under the wrench, as in normal RuneLite. "
+			+ "Microbot adds its own button at the top.",
+		false, true, Side.LEFT),
+	COMMUNITY_PLUGINS("Community Plugins",
+		"This is the Microbot button. Click it at any time to open your Microbot plugins, the Plugin Hub and Microbot Cloud.",
+		false, true, Side.LEFT),
+	INSTALLED("Your installed plugins",
+		"Your Microbot plugins live here. Flip a plugin's switch to start or stop it, click the gear to change its settings, "
+			+ "and click the star to pin it to the top. The search bar finds plugins by name or tag.",
+		false, true, Side.LEFT),
+	PLUGIN_HUB("Plugin Hub",
+		"Browse the Microbot Plugin Hub to find and install more plugins. Each one you install appears under Installed.",
+		false, true, Side.LEFT),
+	PROFILES("Profiles",
+		"Profiles keep separate sets of settings. Make one per account or per activity, then switch between them here.",
+		false, true, Side.LEFT),
+	MICROBOT_CLOUD("Microbot Cloud",
+		"New: get a Discord or email alert when this client stops responding, a script stops on an error or the game logs out. "
+			+ "Click \"Link to Microbot account\" to connect, or open the dashboard to see your bots.",
+		true, true, Side.LEFT),
+	HELP("Need help?",
+		"The red bug button copies diagnostics for bug reports, can start Microbot once in safe mode, and links to Discord and GitHub. "
+			+ "You can also replay this tour from it. That's it, have fun!",
+		false, true, Side.LEFT);
+
+	private final String title;
+	private final String body;
+	private final boolean isNew;
+	private final boolean requiresTarget;
+	private final Side preferredSide;
+}

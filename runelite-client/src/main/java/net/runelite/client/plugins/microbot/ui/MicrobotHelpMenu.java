@@ -37,6 +37,7 @@ public class MicrobotHelpMenu
 	private final ClientToolbar clientToolbar;
 	private NavigationButton button;
 	private Runnable onSafeModeChanged = () -> { };
+	private Runnable onShowTour;
 
 	@Inject
 	MicrobotHelpMenu(DiagnosticReportCollector diagnosticReportCollector, ClientToolbar clientToolbar)
@@ -75,6 +76,16 @@ public class MicrobotHelpMenu
 		onSafeModeChanged = listener;
 	}
 
+	NavigationButton getButton()
+	{
+		return button;
+	}
+
+	void onShowTour(Runnable listener)
+	{
+		onShowTour = listener;
+	}
+
 	private void showAtPointer()
 	{
 		PointerInfo pointer = MouseInfo.getPointerInfo();
@@ -111,6 +122,15 @@ public class MicrobotHelpMenu
 		menu.add(safeMode);
 
 		menu.addSeparator();
+
+		Runnable showTour = onShowTour;
+		if (showTour != null)
+		{
+			JMenuItem tour = new JMenuItem("Show the Microbot tour");
+			tour.setToolTipText("Replay the short tour of the Microbot client.");
+			tour.addActionListener(e -> showTour.run());
+			menu.add(tour);
+		}
 
 		JMenuItem discord = new JMenuItem("Ask for help on Discord");
 		discord.addActionListener(e -> LinkBrowser.browse(RuneLiteProperties.getDiscordInvite()));
