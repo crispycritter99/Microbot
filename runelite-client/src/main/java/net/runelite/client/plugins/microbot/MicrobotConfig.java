@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Level;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.runelite.client.config.Config;
+import net.runelite.client.config.ConfigButton;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
@@ -283,13 +284,26 @@ public interface MicrobotConfig extends Config
 	)
 	String alertsSection = "alertsSection";
 
+	String keyAlertLinkStart = "alertLinkStart";
+	@ConfigItem(
+		keyName = keyAlertLinkStart,
+		name = "Link to Microbot account",
+		description = "Opens microbot.cloud in your browser so you can approve this client. The alert link token is then filled in for you.",
+		position = 0,
+		section = alertsSection
+	)
+	default ConfigButton alertLinkStart()
+	{
+		return null;
+	}
+
 	String keyAlertLinkToken = "alertLinkToken";
 	@ConfigItem(
 		keyName = keyAlertLinkToken,
 		name = "Alert link token",
-		description = "Paste the link code from the Alerts page on microbot.cloud. Not needed when the launcher starts this client while you are signed in. " +
-				"Alerts stay off while telemetry is disabled.",
-		position = 0,
+		description = "Filled in by Link to Microbot account, or paste the link code from the Alerts page on microbot.cloud. " +
+				"Not needed when the launcher starts this client while you are signed in. Alerts stay off while telemetry is disabled.",
+		position = 1,
 		section = alertsSection,
 		secret = true
 	)

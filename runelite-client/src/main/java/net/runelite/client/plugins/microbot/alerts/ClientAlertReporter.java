@@ -27,12 +27,14 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.ClientSessionManager;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ClientShutdown;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PluginChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.MicrobotApi;
+import net.runelite.client.plugins.microbot.MicrobotConfig;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.breakhandler.breakhandlerv2.BreakHandlerV2State;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
@@ -119,6 +121,17 @@ public class ClientAlertReporter
 		if (reportedSessionId != null)
 		{
 			event.waitFor(executor.submit(this::closeAbandonedSession));
+		}
+	}
+
+	@Subscribe
+	public void onConfigChanged(ConfigChanged event)
+	{
+		if (MicrobotConfig.configGroup.equals(event.getGroup())
+			&& MicrobotConfig.keyAlertLinkToken.equals(event.getKey())
+			&& isActive())
+		{
+			executor.execute(RunnableExceptionLogger.wrap(this::heartbeat));
 		}
 	}
 

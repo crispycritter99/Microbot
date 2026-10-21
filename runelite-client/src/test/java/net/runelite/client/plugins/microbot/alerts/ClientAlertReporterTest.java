@@ -16,11 +16,13 @@ import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.ClientSessionManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.ClientShutdown;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PluginChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.MicrobotApi;
+import net.runelite.client.plugins.microbot.MicrobotConfig;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -330,6 +332,26 @@ public class ClientAlertReporterTest
 			eq(ClientAlertReporter.HEARTBEAT_SECONDS), eq(TimeUnit.SECONDS));
 
 		heartbeat.getValue().run();
+		assertEquals(1, sentOfType(AlertEvent.HEARTBEAT).size());
+	}
+
+	@Test
+	public void aNewTokenSendsAHeartbeatRightAway()
+	{
+		ConfigChanged other = new ConfigChanged();
+		other.setGroup(MicrobotConfig.configGroup);
+		other.setKey(MicrobotConfig.keyAlertLinkStart);
+		reporter.onConfigChanged(other);
+		verify(api, never()).sendAlertEvent(any(), any(), any());
+
+		ConfigChanged linked = new ConfigChanged();
+		linked.setGroup(MicrobotConfig.configGroup);
+		linked.setKey(MicrobotConfig.keyAlertLinkToken);
+		reporter.onConfigChanged(linked);
+		assertEquals(1, sentOfType(AlertEvent.HEARTBEAT).size());
+
+		when(token.get()).thenReturn(Optional.empty());
+		reporter.onConfigChanged(linked);
 		assertEquals(1, sentOfType(AlertEvent.HEARTBEAT).size());
 	}
 

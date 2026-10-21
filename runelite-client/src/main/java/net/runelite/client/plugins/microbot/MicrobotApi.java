@@ -7,6 +7,8 @@ import com.google.gson.JsonParseException;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.RuneLiteProperties;
 import net.runelite.client.plugins.microbot.alerts.ClientLinkToken;
+import net.runelite.client.plugins.microbot.alerts.DeviceLinkPoll;
+import net.runelite.client.plugins.microbot.alerts.DeviceLinkStart;
 import net.runelite.http.api.RuneLiteAPI;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -173,6 +175,34 @@ public class MicrobotApi {
                 }
             }
         });
+    }
+
+    public DeviceLinkStart startDeviceLink(String label) throws IOException
+    {
+        JsonObject body = new JsonObject();
+        body.addProperty("label", label);
+        try (Response response = client.newCall(deviceLinkRequest("/alerts/device-links", body)).execute())
+        {
+            return DeviceLinkStart.parse(gson, response.code(), response.body().string());
+        }
+    }
+
+    public DeviceLinkPoll pollDeviceLink(String deviceCode) throws IOException
+    {
+        JsonObject body = new JsonObject();
+        body.addProperty("deviceCode", deviceCode);
+        try (Response response = client.newCall(deviceLinkRequest("/alerts/device-links/token", body)).execute())
+        {
+            return DeviceLinkPoll.parse(gson, response.code(), response.body().string());
+        }
+    }
+
+    private Request deviceLinkRequest(String path, JsonObject body)
+    {
+        return new Request.Builder()
+                .url(microbotApiUrl + path)
+                .post(RequestBody.create(RuneLiteAPI.JSON, gson.toJson(body)))
+                .build();
     }
 
     private Request.Builder linked(Request.Builder builder)

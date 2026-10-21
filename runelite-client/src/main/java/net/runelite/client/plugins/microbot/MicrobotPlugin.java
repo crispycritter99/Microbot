@@ -18,6 +18,7 @@ import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.alerts.ClientAlertReporter;
+import net.runelite.client.plugins.microbot.alerts.DeviceLinkFlow;
 import net.runelite.client.plugins.microbot.diagnostics.ScriptErrorReporter;
 import net.runelite.client.plugins.microbot.pouch.PouchOverlay;
 import net.runelite.client.plugins.microbot.ui.MicrobotPluginConfigurationDescriptor;
@@ -142,6 +143,9 @@ public class MicrobotPlugin extends Plugin
 
 	@Inject
 	private ClientAlertReporter clientAlertReporter;
+
+	@Inject
+	private DeviceLinkFlow deviceLinkFlow;
 	
 	// Widget change tracking for overlay cache invalidation
 	private volatile boolean widgetLayoutChanged = false;
@@ -171,6 +175,7 @@ public class MicrobotPlugin extends Plugin
 		scriptErrorAttachment = scriptErrorReporter.install(context);
 		eventBus.register(clientAlertReporter);
 		clientAlertReporter.start();
+		eventBus.register(deviceLinkFlow);
 
 		// Initialize the cached configuration in GameChatAppender
 		GameChatAppender.updateConfiguration(
@@ -238,6 +243,8 @@ public class MicrobotPlugin extends Plugin
 		scriptErrorAttachment.remove();
 		eventBus.unregister(clientAlertReporter);
 		clientAlertReporter.stop();
+		eventBus.unregister(deviceLinkFlow);
+		deviceLinkFlow.stop();
 		microbotVersionChecker.shutdown();
 	}
 
