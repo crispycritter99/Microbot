@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.RuneLiteProperties;
+import net.runelite.client.plugins.microbot.alerts.ClientLinkToken;
 import net.runelite.http.api.RuneLiteAPI;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -31,12 +32,14 @@ public class MicrobotApi {
     private final OkHttpClient client;
     private final Gson gson;
     private final String pluginTelemetryToken;
+    private final ClientLinkToken clientLinkToken;
 
     private final String microbotApiUrl = System.getProperty("microbot.apiUrl", "https://microbot.cloud/api");
     @Inject
-    MicrobotApi(OkHttpClient client, Gson gson) {
+    MicrobotApi(OkHttpClient client, Gson gson, ClientLinkToken clientLinkToken) {
         this.client = client;
         this.gson = gson;
+        this.clientLinkToken = clientLinkToken;
 
         this.pluginTelemetryToken = "zeifkdsjqfiedfb15181==";
     }
@@ -54,7 +57,7 @@ public class MicrobotApi {
      * @throws IOException if the HTTP request fails, the response body is invalid, or the UUID parsing fails.
      */
     public UUID microbotOpen() throws IOException {
-        try (Response response = client.newCall(new Request.Builder().url(microbotApiUrl + "/session").build()).execute()) {
+        try (Response response = client.newCall(linked(new Request.Builder().url(microbotApiUrl + "/session")).build()).execute()) {
             ResponseBody body = response.body();
 
             InputStream in = body.byteStream();
@@ -139,6 +142,45 @@ public class MicrobotApi {
         });
     }
 
+    public void sendAlertEvent(String token, JsonObject payload, Runnable onUnauthorized)
+    {
+        Request request = new Request.Builder()
+                .url(microbotApiUrl + "/alerts/events")
+                .header(ClientLinkToken.HEADER, token)
+                .post(RequestBody.create(RuneLiteAPI.JSON, gson.toJson(payload)))
+                .build();
+
+        client.newCall(request).enqueue(new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                log.debug("Alert event upload failed", e);
+            }
+
+            @Override
+            public void onResponse(Call call, Response response)
+            {
+                int code = response.code();
+                response.close();
+                if (code == 401)
+                {
+                    onUnauthorized.run();
+                }
+                else if (code >= 300)
+                {
+                    log.debug("Alert event rejected: HTTP {}", code);
+                }
+            }
+        });
+    }
+
+    private Request.Builder linked(Request.Builder builder)
+    {
+        clientLinkToken.get().ifPresent(token -> builder.header(ClientLinkToken.HEADER, token));
+        return builder;
+    }
+
     /**
      * Sends a ping request to the microbot API to update the session status.
      *
@@ -156,9 +198,9 @@ public class MicrobotApi {
      * @throws IOException if the HTTP request fails or the response is unsuccessful.
      */
     public void microbotPing(UUID uuid, boolean loggedIn) throws IOException {
-        try (Response response = client.newCall(new Request.Builder().url(microbotApiUrl + "/session?sessionId=" + uuid.toString()
+        try (Response response = client.newCall(linked(new Request.Builder().url(microbotApiUrl + "/session?sessionId=" + uuid.toString()
                 + "&isLoggedIn=" + loggedIn
-                + "&version=" + RuneLiteProperties.getMicrobotVersion()).build()).execute()) {
+                + "&version=" + RuneLiteProperties.getMicrobotVersion())).build()).execute()) {
             if (!response.isSuccessful()) {
                 throw new IOException("Unsuccessful ping");
             }

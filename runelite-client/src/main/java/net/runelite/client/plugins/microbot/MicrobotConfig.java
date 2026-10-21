@@ -276,6 +276,29 @@ public interface MicrobotConfig extends Config
 	}
 
 	@ConfigSection(
+		name = "Bot alerts",
+		description = "Get a Discord or email alert from microbot.cloud when this client stops responding, a script stops on an error or the game logs out",
+		position = 5,
+		closedByDefault = true
+	)
+	String alertsSection = "alertsSection";
+
+	String keyAlertLinkToken = "alertLinkToken";
+	@ConfigItem(
+		keyName = keyAlertLinkToken,
+		name = "Alert link token",
+		description = "Paste the link code from the Alerts page on microbot.cloud. Not needed when the launcher starts this client while you are signed in. " +
+				"Alerts stay off while telemetry is disabled.",
+		position = 0,
+		section = alertsSection,
+		secret = true
+	)
+	default String alertLinkToken()
+	{
+		return "";
+	}
+
+	@ConfigSection(
 		name = "World hop limit",
 		description = "Pace world hops so the per-IP login limit (\"Too many login attempts\") is never reached",
 		position = 4
