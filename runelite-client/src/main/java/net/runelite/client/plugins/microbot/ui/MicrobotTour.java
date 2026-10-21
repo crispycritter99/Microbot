@@ -50,7 +50,7 @@ public class MicrobotTour
 	private final ClientToolbar clientToolbar;
 	private final MicrobotHelpMenu helpMenu;
 	private final Provider<MicrobotTopLevelConfigPanel> topLevelPanel;
-	private final MicrobotCloudPanel cloudPanel;
+	private final Provider<MicrobotCloudPanel> cloudPanel;
 	private final DeviceLinkFlow deviceLinkFlow;
 	private final ScheduledExecutorService executor;
 	private final MicrobotTourState state;
@@ -106,7 +106,7 @@ public class MicrobotTour
 
 	@Inject
 	MicrobotTour(ClientToolbar clientToolbar, MicrobotHelpMenu helpMenu, Provider<MicrobotTopLevelConfigPanel> topLevelPanel,
-		MicrobotCloudPanel cloudPanel, DeviceLinkFlow deviceLinkFlow, ScheduledExecutorService executor)
+		Provider<MicrobotCloudPanel> cloudPanel, DeviceLinkFlow deviceLinkFlow, ScheduledExecutorService executor)
 	{
 		this.clientToolbar = clientToolbar;
 		this.helpMenu = helpMenu;
@@ -125,7 +125,7 @@ public class MicrobotTour
 		{
 			this.navButton = navButton;
 			installed = true;
-			cloudPanel.onUsed(this::cloudUsed);
+			cloudPanel.get().onUsed(this::cloudUsed);
 			helpMenu.onShowTour(this::replay);
 		});
 		submit(() ->
@@ -143,7 +143,7 @@ public class MicrobotTour
 			installed = false;
 			disarm();
 			end();
-			cloudPanel.onUsed(null);
+			cloudPanel.get().onUsed(null);
 			helpMenu.onShowTour(null);
 			navButton = null;
 		});
@@ -221,7 +221,7 @@ public class MicrobotTour
 			state.markCloudBadgeSeen();
 			persist();
 		}
-		cloudPanel.setNewBadgeVisible(MicrobotTourState.cloudBadgeVisible(state.isCloudBadgeSeen(), linked));
+		cloudPanel.get().setNewBadgeVisible(MicrobotTourState.cloudBadgeVisible(state.isCloudBadgeSeen(), linked));
 		if (shouldAutoStart(GraphicsEnvironment.isHeadless(), Boolean.getBoolean("microbot.test.mode"),
 			System.getProperty(TOUR_PROPERTY), StartupRecovery.mode().isSafeMode(), state.shouldAutoShow(TOUR_VERSION)))
 		{
@@ -412,7 +412,7 @@ public class MicrobotTour
 				break;
 			case MICROBOT_CLOUD:
 				openMicrobotPanel();
-				cloudPanel.expand();
+				cloudPanel.get().expand();
 				break;
 			case HELP:
 				if (!clientToolbar.isSidebarOpen())
@@ -449,7 +449,7 @@ public class MicrobotTour
 			case PROFILES:
 				return screenBounds(topLevelPanel.get().getProfilesTab());
 			case MICROBOT_CLOUD:
-				return screenBounds(cloudPanel);
+				return screenBounds(cloudPanel.get());
 			case HELP:
 				NavigationButton help = helpMenu.getButton();
 				return help == null ? null : clientToolbar.getNavigationBounds(help);
@@ -543,7 +543,7 @@ public class MicrobotTour
 
 	private void cloudUsed()
 	{
-		cloudPanel.setNewBadgeVisible(false);
+		cloudPanel.get().setNewBadgeVisible(false);
 		if (!state.isCloudBadgeSeen())
 		{
 			state.markCloudBadgeSeen();
