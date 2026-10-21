@@ -164,7 +164,7 @@ public class MicrobotHelpMenu
 		BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g = image.createGraphics();
 		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-		g.setColor(new Color(220, 220, 220));
+		g.setColor(new Color(220, 50, 50));
 		g.setStroke(new BasicStroke(1.4f));
 		g.drawLine(5, 1, 6, 3);
 		g.drawLine(11, 1, 10, 3);

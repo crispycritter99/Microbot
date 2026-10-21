@@ -19,8 +19,6 @@ import javax.swing.Timer;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.MatteBorder;
-import net.runelite.client.config.ConfigManager;
-import net.runelite.client.plugins.microbot.MicrobotConfig;
 import net.runelite.client.plugins.microbot.alerts.BotAlertStatus;
 import net.runelite.client.plugins.microbot.alerts.DeviceLinkFlow;
 import net.runelite.client.ui.ColorScheme;
@@ -30,13 +28,11 @@ import net.runelite.client.util.LinkBrowser;
 @Singleton
 public class MicrobotCloudPanel extends JPanel
 {
-	static final String KEY_COLLAPSED = "cloudPanelCollapsed";
 	private static final String DASHBOARD = "https://dashboard.microbot.cloud";
 	private static final Icon EXPAND_ICON = new ArrowIcon(false);
 	private static final Icon RETRACT_ICON = new ArrowIcon(true);
 
 	private final DeviceLinkFlow deviceLinkFlow;
-	private final ConfigManager configManager;
 	private final JLabel title = new JLabel("Microbot Cloud");
 	private final JPanel body = new JPanel(new GridLayout(0, 1, 0, 4));
 	private final JLabel alertStatus = new JLabel();
@@ -45,10 +41,9 @@ public class MicrobotCloudPanel extends JPanel
 	private BotAlertStatus shown;
 
 	@Inject
-	MicrobotCloudPanel(DeviceLinkFlow deviceLinkFlow, ConfigManager configManager)
+	MicrobotCloudPanel(DeviceLinkFlow deviceLinkFlow)
 	{
 		this.deviceLinkFlow = deviceLinkFlow;
-		this.configManager = configManager;
 
 		setLayout(new BorderLayout());
 		setBorder(new CompoundBorder(new MatteBorder(1, 0, 0, 0, ColorScheme.MEDIUM_GRAY_COLOR), new EmptyBorder(4, 10, 4, 10)));
@@ -62,7 +57,7 @@ public class MicrobotCloudPanel extends JPanel
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
-				setCollapsed(body.isVisible());
+				applyCollapsed(body.isVisible());
 			}
 		});
 		add(title, BorderLayout.NORTH);
@@ -95,7 +90,7 @@ public class MicrobotCloudPanel extends JPanel
 		body.add(dashboard);
 		add(body, BorderLayout.CENTER);
 
-		applyCollapsed(Boolean.TRUE.equals(configManager.getConfiguration(MicrobotConfig.configGroup, KEY_COLLAPSED, Boolean.class)));
+		applyCollapsed(false);
 		refresh();
 	}
 
@@ -109,19 +104,6 @@ public class MicrobotCloudPanel extends JPanel
 		else
 		{
 			refresher.stop();
-		}
-	}
-
-	private void setCollapsed(boolean collapsed)
-	{
-		applyCollapsed(collapsed);
-		if (collapsed)
-		{
-			configManager.setConfiguration(MicrobotConfig.configGroup, KEY_COLLAPSED, true);
-		}
-		else
-		{
-			configManager.unsetConfiguration(MicrobotConfig.configGroup, KEY_COLLAPSED);
 		}
 	}
 
