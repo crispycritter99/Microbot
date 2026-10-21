@@ -72,6 +72,29 @@ public class AlertEventTest
 	}
 
 	@Test
+	public void intendedIsOnlySentForLogouts()
+	{
+		JsonObject loggedOut = AlertEvent.builder()
+			.type(AlertEvent.LOGGED_OUT)
+			.intended(true)
+			.build()
+			.toJson(SESSION);
+		JsonObject heartbeat = AlertEvent.builder()
+			.type(AlertEvent.HEARTBEAT)
+			.intended(true)
+			.build()
+			.toJson(SESSION);
+		JsonObject unintended = AlertEvent.builder()
+			.type(AlertEvent.LOGGED_OUT)
+			.build()
+			.toJson(SESSION);
+
+		assertTrue(loggedOut.get("intended").getAsBoolean());
+		assertFalse(heartbeat.get("intended").getAsBoolean());
+		assertFalse(unintended.get("intended").getAsBoolean());
+	}
+
+	@Test
 	public void fieldsAreCutToTheApiLimits()
 	{
 		List<String> scripts = new ArrayList<>();

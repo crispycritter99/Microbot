@@ -36,6 +36,7 @@ import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
 import net.runelite.client.plugins.microbot.breakhandler.breakhandlerv2.BreakHandlerV2State;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
+import net.runelite.client.plugins.microbot.util.player.LogoutRequested;
 import net.runelite.client.util.RunnableExceptionLogger;
 import net.runelite.client.util.Text;
 
@@ -48,6 +49,7 @@ public class ClientAlertReporter
 	static final long ERROR_STOP_WINDOW_MS = 30_000;
 	static final long ERROR_ALERT_INTERVAL_MS = TimeUnit.MINUTES.toMillis(30);
 	static final int MAX_RECENT_ERRORS = 50;
+	static final long INTENDED_LOGOUT_WINDOW_MS = 30_000;
 
 	private final MicrobotApi microbotApi;
 	private final ClientLinkToken clientLinkToken;
@@ -64,6 +66,8 @@ public class ClientAlertReporter
 	private volatile boolean shuttingDown;
 	private volatile GameState lastGameState;
 	private volatile UUID reportedSessionId;
+	private volatile long logoutRequestedAt;
+	private volatile boolean awaitingRelog;
 
 	@Inject
 	ClientAlertReporter(MicrobotApi microbotApi, ClientLinkToken clientLinkToken, ClientSessionManager clientSessionManager,
@@ -143,15 +147,36 @@ public class ClientAlertReporter
 	}
 
 	@Subscribe
+	public void onLogoutRequested(LogoutRequested event)
+	{
+		logoutRequestedAt = System.currentTimeMillis();
+	}
+
+	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
 		GameState previous = lastGameState;
-		lastGameState = event.getGameState();
-		if (!isLogout(previous, event.getGameState()) || !isActive())
+		GameState next = event.getGameState();
+		lastGameState = next;
+		if (isLogout(previous, next))
 		{
+			boolean intended = isIntendedLogout(logoutRequestedAt, System.currentTimeMillis());
+			logoutRequestedAt = 0;
+			if (isActive())
+			{
+				awaitingRelog = true;
+				send(snapshot().type(AlertEvent.LOGGED_OUT).loggedIn(false).intended(intended).build());
+			}
 			return;
 		}
-		send(snapshot().type(AlertEvent.LOGGED_OUT).loggedIn(false).build());
+		if (next == GameState.LOGGED_IN && awaitingRelog)
+		{
+			awaitingRelog = false;
+			if (isActive())
+			{
+				send(snapshot().type(AlertEvent.HEARTBEAT).loggedIn(true).build());
+			}
+		}
 	}
 
 	public void onScriptError(String loggerName, List<String> frames, String message)
@@ -340,6 +365,11 @@ public class ClientAlertReporter
 		return BreakHandlerScript.isBreakActive()
 			|| BreakHandlerScript.isMicroBreakActive()
 			|| BreakHandlerV2State.isBreakActive();
+	}
+
+	static boolean isIntendedLogout(long requestedAt, long now)
+	{
+		return requestedAt > 0 && now >= requestedAt && now - requestedAt <= INTENDED_LOGOUT_WINDOW_MS;
 	}
 
 	static boolean isLogout(GameState previous, GameState next)

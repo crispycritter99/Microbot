@@ -32,6 +32,7 @@ public class AlertEvent
 	List<String> runningScripts = List.of();
 	boolean loggedIn;
 	boolean breakActive;
+	boolean intended;
 
 	public JsonObject toJson(UUID sessionId)
 	{
@@ -53,6 +54,7 @@ public class AlertEvent
 		json.add("runningScripts", scripts);
 		json.addProperty("loggedIn", loggedIn);
 		json.addProperty("breakActive", breakActive);
+		json.addProperty("intended", LOGGED_OUT.equals(type) && intended);
 		return json;
 	}
 

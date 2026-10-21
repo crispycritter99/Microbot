@@ -8,18 +8,26 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.ClientSessionManager;
+import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.events.ClientShutdown;
 import net.runelite.client.events.PluginChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.MicrobotApi;
+import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
+import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
+import net.runelite.client.plugins.microbot.util.player.LogoutRequested;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.tabs.Rs2Tab;
+import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -33,6 +41,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -186,7 +195,98 @@ public class ClientAlertReporterTest
 
 		JsonObject event = sentOfType(AlertEvent.LOGGED_OUT).get(0);
 		assertFalse(event.get("loggedIn").getAsBoolean());
+		assertFalse(event.get("intended").getAsBoolean());
 		assertEquals(1, event.getAsJsonArray("runningScripts").size());
+	}
+
+	@Test
+	public void logoutRequestedThroughTheLogoutHelpersIsIntended()
+	{
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onLogoutRequested(new LogoutRequested());
+		reporter.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+
+		assertTrue(sentOfType(AlertEvent.LOGGED_OUT).get(0).get("intended").getAsBoolean());
+	}
+
+	@Test
+	public void theLogoutHelperAnnouncesTheRequestOnlyWhenLoggedIn()
+	{
+		EventBus bus = mock(EventBus.class);
+		AtomicBoolean loggedIn = new AtomicBoolean(true);
+		try (var microbot = mockStatic(Microbot.class);
+			var keyboard = mockStatic(Rs2Keyboard.class);
+			var tab = mockStatic(Rs2Tab.class);
+			var widget = mockStatic(Rs2Widget.class))
+		{
+			microbot.when(Microbot::getEventBus).thenReturn(bus);
+			microbot.when(Microbot::getClient).thenReturn(mock(Client.class));
+			microbot.when(Microbot::isLoggedIn).thenAnswer(call -> loggedIn.get());
+
+			Rs2Player.logout();
+			verify(bus, times(1)).post(any(LogoutRequested.class));
+
+			loggedIn.set(false);
+			Rs2Player.logout();
+			verify(bus, times(1)).post(any(LogoutRequested.class));
+		}
+	}
+
+	@Test
+	public void aLogoutRequestCoversOnlyTheNextLogout()
+	{
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onLogoutRequested(new LogoutRequested());
+		reporter.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+		reporter.onGameStateChanged(gameState(GameState.LOGGING_IN));
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onGameStateChanged(gameState(GameState.CONNECTION_LOST));
+		reporter.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+
+		List<JsonObject> logouts = sentOfType(AlertEvent.LOGGED_OUT);
+		assertEquals(2, logouts.size());
+		assertTrue(logouts.get(0).get("intended").getAsBoolean());
+		assertFalse(logouts.get(1).get("intended").getAsBoolean());
+	}
+
+	@Test
+	public void aLogoutRequestOnlyCountsWithinTheWindow()
+	{
+		long requestedAt = 1_000_000;
+		assertTrue(ClientAlertReporter.isIntendedLogout(requestedAt, requestedAt));
+		assertTrue(ClientAlertReporter.isIntendedLogout(requestedAt, requestedAt + ClientAlertReporter.INTENDED_LOGOUT_WINDOW_MS));
+		assertFalse(ClientAlertReporter.isIntendedLogout(requestedAt, requestedAt + ClientAlertReporter.INTENDED_LOGOUT_WINDOW_MS + 1));
+		assertFalse(ClientAlertReporter.isIntendedLogout(requestedAt, requestedAt - 1));
+		assertFalse(ClientAlertReporter.isIntendedLogout(0, requestedAt));
+	}
+
+	@Test
+	public void relogAfterALogoutSendsALoggedInHeartbeatRightAway()
+	{
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+		reporter.onGameStateChanged(gameState(GameState.LOGGING_IN));
+		reporter.onGameStateChanged(gameState(GameState.LOADING));
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onGameStateChanged(gameState(GameState.LOADING));
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+
+		List<JsonObject> heartbeats = sentOfType(AlertEvent.HEARTBEAT);
+		assertEquals(1, heartbeats.size());
+		assertTrue(heartbeats.get(0).get("loggedIn").getAsBoolean());
+		assertFalse(heartbeats.get(0).get("intended").getAsBoolean());
+	}
+
+	@Test
+	public void loginWithoutAPriorLogoutSendsNoHeartbeat()
+	{
+		reporter.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+		reporter.onGameStateChanged(gameState(GameState.LOGGING_IN));
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+		reporter.onGameStateChanged(gameState(GameState.HOPPING));
+		reporter.onGameStateChanged(gameState(GameState.LOGGED_IN));
+
+		verify(api, never()).sendAlertEvent(any(), any(), any());
 	}
 
 	@Test
