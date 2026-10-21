@@ -1472,17 +1472,23 @@ final class Rs2WalkerDoors {
         } else {
             WebWalkLog.spInfo("door_edge_nudge_unresolved | from={} to={} before={} after={}",
                     compactWorldPoint(fromWp), compactWorldPoint(toWp), compactWorldPoint(before), compactWorldPoint(after));
-            // A stationary player who clicked past an "open" door and moved nowhere is the seed-gate
-            // signature: the door reads open (or opens and instantly re-shuts) while the game refuses
-            // the crossing. A cancelled wait or an in-flight sample proves nothing.
+            // A stationary player who clicked past the door and either moved nowhere or stopped on its
+            // near-side tile is the seed-gate signature: the door reads open (or opens and instantly
+            // re-shuts, or stays locked) while the game refuses the crossing. A cancelled wait or an
+            // in-flight sample proves nothing.
             registerDoorCrossFailure(fromWp, toWp,
-                    before.equals(after) && !Rs2Player.isMoving()
-                            && (target == null || !isWalkCancelled(target)),
+                    isConclusiveCrossNudgeSample(before, after, fromWp, Rs2Player.isMoving(),
+                            target != null && isWalkCancelled(target)),
                     "cross-nudge");
         }
         return progressed;
     }
 
+    static boolean isConclusiveCrossNudgeSample(WorldPoint before, WorldPoint after, WorldPoint fromWp,
+                                                boolean moving, boolean cancelled) {
+        return before != null && after != null && !moving && !cancelled
+                && (before.equals(after) || after.equals(fromWp));
+    }
 
     static boolean tryRecentDoorAttemptEdgeNudge(WorldPoint playerLoc, WorldPoint target) {
         return tryRecentDoorAttemptEdgeNudge(playerLoc, target, null);
@@ -1979,8 +1985,16 @@ final class Rs2WalkerDoors {
         if (afterTo >= beforeTo) {
             return false;
         }
+        if (fromWp != null && isCardinalEdge(fromWp, toWp)
+                && !Rs2DoorGeometry.crossedDoorAxis(fromWp, toWp, end)) {
+            return false;
+        }
         // Keep the traversal check anchored to the active segment.
         return fromWp == null || fromWp.getPlane() == end.getPlane();
+    }
+
+    static boolean isCardinalEdge(WorldPoint fromWp, WorldPoint toWp) {
+        return (fromWp.getX() == toWp.getX()) != (fromWp.getY() == toWp.getY());
     }
 
     static boolean shouldBlacklistDoorAfterWrongTraversal(WorldPoint start, WorldPoint end, WorldPoint fromWp, WorldPoint toWp) {
