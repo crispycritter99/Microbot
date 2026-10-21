@@ -289,6 +289,7 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
 
     void showInstalledTab() {
         tabGroup.select(pluginListPanelTab);
+        pluginListPanel.getMuxer().pushState(pluginListPanel);
     }
 
     public void openConfigurationPanel(String name) {

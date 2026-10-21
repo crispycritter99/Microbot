@@ -6,6 +6,7 @@ import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsEnvironment;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
@@ -67,6 +68,21 @@ public class MicrobotTour
 		public void windowDeiconified(WindowEvent e)
 		{
 			track(true);
+		}
+
+		@Override
+		public void windowActivated(WindowEvent e)
+		{
+			track(true);
+		}
+
+		@Override
+		public void windowDeactivated(WindowEvent e)
+		{
+			if (e.getOppositeWindow() == null)
+			{
+				hideOverlay();
+			}
 		}
 	};
 
@@ -279,6 +295,10 @@ public class MicrobotTour
 
 	private void end()
 	{
+		if (current == MicrobotTourStep.MICROBOT_CLOUD)
+		{
+			cloudUsed();
+		}
 		navigation++;
 		tracker.stop();
 		if (frame != null)
@@ -363,16 +383,16 @@ public class MicrobotTour
 
 	private void show(MicrobotTourStep step)
 	{
+		if (current == MicrobotTourStep.MICROBOT_CLOUD && step != MicrobotTourStep.MICROBOT_CLOUD)
+		{
+			cloudUsed();
+		}
 		current = step;
 		if (markSeen)
 		{
 			markSeen = false;
 			state.markTourSeen(TOUR_VERSION);
 			persist();
-		}
-		if (step == MicrobotTourStep.MICROBOT_CLOUD)
-		{
-			cloudUsed();
 		}
 		callout.setStep(step, sequence.position(step), sequence.total(), sequence.previous(step).isPresent(), sequence.isLast(step));
 		lastTargetKnown = false;
@@ -444,7 +464,8 @@ public class MicrobotTour
 		{
 			return;
 		}
-		if (!frame.isShowing() || (frame.getExtendedState() & Frame.ICONIFIED) != 0)
+		if (!frame.isShowing() || (frame.getExtendedState() & Frame.ICONIFIED) != 0
+			|| KeyboardFocusManager.getCurrentKeyboardFocusManager().getActiveWindow() == null)
 		{
 			hideOverlay();
 			return;

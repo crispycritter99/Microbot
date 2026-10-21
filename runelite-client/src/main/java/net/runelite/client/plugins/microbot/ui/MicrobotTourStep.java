@@ -31,7 +31,7 @@ enum MicrobotTourStep
 		false, true, Side.LEFT),
 	MICROBOT_CLOUD("Microbot Cloud",
 		"New: get a Discord or email alert when this client stops responding, a script stops on an error or the game logs out. "
-			+ "Click \"Link to Microbot account\" to connect, or open the dashboard to see your bots.",
+			+ "Bot alerts shows whether they are on and lets you link your Microbot account. Open the dashboard to see your bots.",
 		true, true, Side.LEFT),
 	HELP("Need help?",
 		"The red bug button copies diagnostics for bug reports, can start Microbot once in safe mode, and links to Discord and GitHub. "
