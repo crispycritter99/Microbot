@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import net.runelite.client.ClientSessionManager;
+import net.runelite.client.plugins.microbot.alerts.ClientAlertReporter;
 import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.externalplugins.MicrobotPluginManager;
 import static org.junit.Assert.assertEquals;
@@ -50,7 +51,7 @@ public class ClientLogUploadTest
 	{
 		ClientSessionManager sessions = mock(ClientSessionManager.class);
 		when(sessions.getMicrobotSessionId()).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000001"));
-		ScriptErrorReporter reporter = new ScriptErrorReporter(mock(MicrobotApi.class), mock(MicrobotPluginManager.class), executor, sessions, disableTelemetry);
+		ScriptErrorReporter reporter = new ScriptErrorReporter(mock(MicrobotApi.class), mock(MicrobotPluginManager.class), executor, sessions, mock(ClientAlertReporter.class), disableTelemetry);
 		reporter.setContext(context);
 		reporter.start();
 		return reporter;
