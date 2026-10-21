@@ -27,8 +27,14 @@ public class DeviceLinkFlow
 	static final long SLOW_DOWN_SECONDS = 5;
 	static final int MAX_LABEL_LENGTH = 60;
 
+	static final String ALERTS_PAGE = "https://dashboard.microbot.cloud/alerts";
+
 	static final String TELEMETRY_OFF = "Bot alerts are off because telemetry is disabled.\nTurn telemetry back on to link this client.";
-	static final String ALREADY_LINKED = "This client is already linked to a Microbot account.\nTo link it to another account, clear Alert link token first.";
+	static final String ALREADY_LINKED = "This client is linked to a Microbot account.\n\n"
+		+ "To rename or remove it, go to " + ALERTS_PAGE + "\n"
+		+ "To link it to a different account, click Link to another account.";
+	static final String LINKED_BY_LAUNCHER = "The launcher linked this client to your Microbot account.\n\n"
+		+ "To rename or remove it, go to " + ALERTS_PAGE;
 	static final String LAUNCHER_TOKEN = "The launcher started this client with a link that no longer works.\nStart it again from the launcher while signed in to link it.";
 	static final String UNREACHABLE = "Could not reach microbot.cloud.\nCheck your connection and click Link to Microbot account again.";
 	static final String TOO_MANY_PENDING = "Too many clients are waiting to be linked from this network.\nApprove one of them or try again in 10 minutes.";
@@ -98,7 +104,14 @@ public class DeviceLinkFlow
 		}
 		if (clientLinkToken.get().isPresent())
 		{
-			dialog.showMessage(ALREADY_LINKED);
+			if (clientLinkToken.isFromEnvironment())
+			{
+				dialog.showLinked(LINKED_BY_LAUNCHER, ALERTS_PAGE, null);
+			}
+			else
+			{
+				dialog.showLinked(ALREADY_LINKED, ALERTS_PAGE, this::relink);
+			}
 			return;
 		}
 		if (clientLinkToken.isFromEnvironment())
@@ -106,6 +119,19 @@ public class DeviceLinkFlow
 			dialog.showMessage(LAUNCHER_TOKEN);
 			return;
 		}
+		startAttempt();
+	}
+
+	synchronized void relink()
+	{
+		if (attempt == null && !clientLinkToken.isTelemetryDisabled() && !clientLinkToken.isFromEnvironment())
+		{
+			startAttempt();
+		}
+	}
+
+	private void startAttempt()
+	{
 		Attempt next = new Attempt();
 		attempt = next;
 		executor.execute(RunnableExceptionLogger.wrap(() -> begin(next)));

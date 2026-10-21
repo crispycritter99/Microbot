@@ -292,12 +292,48 @@ public class DeviceLinkFlowTest
 	}
 
 	@Test
-	public void alreadyLinkedClientsDoNotStartAgain() throws IOException
+	public void alreadyLinkedClientsOnlyRelinkWhenAsked() throws IOException
 	{
 		when(token.get()).thenReturn(Optional.of(TOKEN));
 		flow.start();
 
-		verify(dialog).showMessage(DeviceLinkFlow.ALREADY_LINKED);
+		ArgumentCaptor<Runnable> onRelink = ArgumentCaptor.forClass(Runnable.class);
+		verify(dialog).showLinked(eq(DeviceLinkFlow.ALREADY_LINKED), eq(DeviceLinkFlow.ALERTS_PAGE), onRelink.capture());
+		verify(api, never()).startDeviceLink(anyString());
+		assertFalse(flow.isLinking());
+
+		polls(DeviceLinkPoll.Status.PENDING);
+		onRelink.getValue().run();
+		onRelink.getValue().run();
+
+		verify(api, times(1)).startDeviceLink(DeviceLinkFlow.DEFAULT_LABEL);
+		verify(dialog).showWaiting(contains("Code: " + USER_CODE), eq(URL), any());
+		assertTrue(flow.isLinking());
+	}
+
+	@Test
+	public void relinkingReplacesTheStoredToken() throws IOException
+	{
+		when(token.get()).thenReturn(Optional.of(TOKEN));
+		String replacement = "mbc_" + "r".repeat(43);
+		when(api.pollDeviceLink(DEVICE_CODE)).thenReturn(new DeviceLinkPoll(DeviceLinkPoll.Status.LINKED, replacement, "Desk PC"));
+
+		flow.relink();
+		runNext(5);
+
+		verify(configManager).setConfiguration(MicrobotConfig.configGroup, MicrobotConfig.keyAlertLinkToken, replacement);
+		assertFalse(flow.isLinking());
+	}
+
+	@Test
+	public void launcherLinkedClientsCannotRelinkFromTheClient() throws IOException
+	{
+		when(token.get()).thenReturn(Optional.of(TOKEN));
+		when(token.isFromEnvironment()).thenReturn(true);
+		flow.start();
+		flow.relink();
+
+		verify(dialog).showLinked(DeviceLinkFlow.LINKED_BY_LAUNCHER, DeviceLinkFlow.ALERTS_PAGE, null);
 		verify(api, never()).startDeviceLink(anyString());
 	}
 

@@ -288,7 +288,8 @@ public interface MicrobotConfig extends Config
 	@ConfigItem(
 		keyName = keyAlertLinkStart,
 		name = "Link to Microbot account",
-		description = "Opens microbot.cloud in your browser so you can approve this client. The alert link token is then filled in for you.",
+		description = "Opens microbot.cloud in your browser so you can approve this client for Discord or email alerts. " +
+				"Not needed when the launcher starts this client while you are signed in. Alerts stay off while telemetry is disabled.",
 		position = 0,
 		section = alertsSection
 	)
@@ -301,11 +302,11 @@ public interface MicrobotConfig extends Config
 	@ConfigItem(
 		keyName = keyAlertLinkToken,
 		name = "Alert link token",
-		description = "Filled in by Link to Microbot account, or paste the link code from the Alerts page on microbot.cloud. " +
-				"Not needed when the launcher starts this client while you are signed in. Alerts stay off while telemetry is disabled.",
+		description = "Filled in by Link to Microbot account",
 		position = 1,
 		section = alertsSection,
-		secret = true
+		secret = true,
+		hidden = true
 	)
 	default String alertLinkToken()
 	{
