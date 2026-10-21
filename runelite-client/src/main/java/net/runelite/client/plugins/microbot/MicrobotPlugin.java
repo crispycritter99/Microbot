@@ -23,6 +23,7 @@ import net.runelite.client.plugins.microbot.diagnostics.ScriptErrorReporter;
 import net.runelite.client.plugins.microbot.pouch.PouchOverlay;
 import net.runelite.client.plugins.microbot.ui.MicrobotPluginConfigurationDescriptor;
 import net.runelite.client.plugins.microbot.ui.MicrobotPluginListPanel;
+import net.runelite.client.plugins.microbot.ui.MicrobotHelpMenu;
 import net.runelite.client.plugins.microbot.ui.MicrobotTopLevelConfigPanel;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.death.Rs2Death;
@@ -146,6 +147,9 @@ public class MicrobotPlugin extends Plugin
 
 	@Inject
 	private DeviceLinkFlow deviceLinkFlow;
+
+	@Inject
+	private MicrobotHelpMenu helpMenu;
 	
 	// Widget change tracking for overlay cache invalidation
 	private volatile boolean widgetLayoutChanged = false;
@@ -218,6 +222,7 @@ public class MicrobotPlugin extends Plugin
 		clientToolbar.addNavigation(navButton);
 
 		new InputSelector(clientToolbar);
+		helpMenu.install();
 
 		Microbot.getPouchScript().startUp();
 
@@ -239,6 +244,7 @@ public class MicrobotPlugin extends Plugin
 		overlayManager.remove(gembagOverlay);
 		overlayManager.remove(pouchOverlay);
 		clientToolbar.removeNavigation(navButton);
+		helpMenu.uninstall();
 		gameChatAttachment.remove();
 		scriptErrorAttachment.remove();
 		eventBus.unregister(clientAlertReporter);
