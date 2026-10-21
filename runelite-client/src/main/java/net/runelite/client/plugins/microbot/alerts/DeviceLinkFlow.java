@@ -272,7 +272,7 @@ public class DeviceLinkFlow
 		{
 			message += "\n\n" + TOO_MANY_LINKS;
 		}
-		dialog.showWaiting(message, () -> cancel(current));
+		dialog.showWaiting(message, link.getVerificationUrl(), () -> cancel(current));
 	}
 
 	static String displayLabel(String label)

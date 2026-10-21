@@ -107,7 +107,7 @@ public class DeviceLinkFlowTest
 
 		verify(api).startDeviceLink(DeviceLinkFlow.DEFAULT_LABEL);
 		verify(dialog).browse(URL);
-		verify(dialog).showWaiting(contains("Code: " + USER_CODE), any());
+		verify(dialog).showWaiting(contains("Code: " + USER_CODE), eq(URL), any());
 		assertTrue(flow.isLinking());
 
 		runNext(5);
@@ -215,7 +215,7 @@ public class DeviceLinkFlowTest
 		runNext(5);
 		runNext(5);
 
-		verify(dialog, times(1)).showWaiting(contains(DeviceLinkFlow.TOO_MANY_LINKS), any());
+		verify(dialog, times(1)).showWaiting(contains(DeviceLinkFlow.TOO_MANY_LINKS), anyString(), any());
 		assertEquals(1, scheduled.size());
 	}
 
@@ -241,7 +241,7 @@ public class DeviceLinkFlowTest
 		polls(DeviceLinkPoll.Status.PENDING);
 		flow.start();
 		ArgumentCaptor<Runnable> onCancel = ArgumentCaptor.forClass(Runnable.class);
-		verify(dialog).showWaiting(anyString(), onCancel.capture());
+		verify(dialog).showWaiting(anyString(), anyString(), onCancel.capture());
 
 		onCancel.getValue().run();
 		runNext(5);
@@ -255,7 +255,7 @@ public class DeviceLinkFlowTest
 	{
 		flow.start();
 		ArgumentCaptor<Runnable> onCancel = ArgumentCaptor.forClass(Runnable.class);
-		verify(dialog).showWaiting(anyString(), onCancel.capture());
+		verify(dialog).showWaiting(anyString(), anyString(), onCancel.capture());
 		when(api.pollDeviceLink(DEVICE_CODE)).thenAnswer(invocation ->
 		{
 			onCancel.getValue().run();
@@ -276,7 +276,7 @@ public class DeviceLinkFlowTest
 		flow.start();
 
 		verify(api, times(1)).startDeviceLink(anyString());
-		verify(dialog, times(2)).showWaiting(contains(USER_CODE), any());
+		verify(dialog, times(2)).showWaiting(contains(USER_CODE), anyString(), any());
 		assertEquals(1, scheduled.size());
 	}
 
