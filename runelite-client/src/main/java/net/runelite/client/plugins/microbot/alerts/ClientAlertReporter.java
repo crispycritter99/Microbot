@@ -1,6 +1,7 @@
 package net.runelite.client.plugins.microbot.alerts;
 
 import com.google.common.base.Strings;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,6 +63,7 @@ public class ClientAlertReporter
 	private ScheduledFuture<?> heartbeatTask;
 	private volatile boolean shuttingDown;
 	private volatile GameState lastGameState;
+	private volatile UUID reportedSessionId;
 
 	@Inject
 	ClientAlertReporter(MicrobotApi microbotApi, ClientLinkToken clientLinkToken, ClientSessionManager clientSessionManager,
@@ -78,23 +80,16 @@ public class ClientAlertReporter
 
 	public void start()
 	{
-		boolean linked = clientLinkToken.configured().isPresent();
-		if (clientLinkToken.isTelemetryDisabled())
-		{
-			if (linked)
-			{
-				log.info("Bot alerts are off because telemetry is disabled");
-			}
-			return;
-		}
 		if (heartbeatTask == null)
 		{
 			heartbeatTask = executor.scheduleWithFixedDelay(RunnableExceptionLogger.wrap(this::heartbeat),
 				FIRST_HEARTBEAT_SECONDS, HEARTBEAT_SECONDS, TimeUnit.SECONDS);
 		}
-		if (linked)
+		if (clientLinkToken.configured().isPresent())
 		{
-			log.info("Bot alerts are on for this client");
+			log.info(clientLinkToken.isTelemetryDisabled()
+				? "Bot alerts are off because telemetry is disabled"
+				: "Bot alerts are on for this client");
 		}
 	}
 
@@ -117,6 +112,10 @@ public class ClientAlertReporter
 	{
 		shuttingDown = true;
 		stop();
+		if (reportedSessionId != null)
+		{
+			event.waitFor(executor.submit(this::closeAbandonedSession));
+		}
 	}
 
 	@Subscribe
@@ -222,14 +221,55 @@ public class ClientAlertReporter
 		{
 			return;
 		}
-		UUID sessionId = clientSessionManager.getMicrobotSessionId();
 		Optional<String> token = clientLinkToken.get();
-		if (sessionId == null || token.isEmpty())
+		if (token.isEmpty())
+		{
+			return;
+		}
+		UUID sessionId = reportingSession();
+		if (sessionId == null)
 		{
 			return;
 		}
 		String value = token.get();
 		microbotApi.sendAlertEvent(value, event.toJson(sessionId), () -> onRejected(value));
+	}
+
+	private UUID reportingSession()
+	{
+		UUID current = clientSessionManager.getMicrobotSessionId();
+		UUID previous = reportedSessionId;
+		if (current == null || current.equals(previous))
+		{
+			return previous;
+		}
+		reportedSessionId = current;
+		if (previous != null)
+		{
+			closeSession(previous);
+		}
+		return current;
+	}
+
+	private void closeAbandonedSession()
+	{
+		UUID reported = reportedSessionId;
+		if (reported != null && !reported.equals(clientSessionManager.getMicrobotSessionId()))
+		{
+			closeSession(reported);
+		}
+	}
+
+	private void closeSession(UUID sessionId)
+	{
+		try
+		{
+			microbotApi.microbotDelete(sessionId);
+		}
+		catch (IOException e)
+		{
+			log.debug("Unable to close the previous alert session", e);
+		}
 	}
 
 	private void onRejected(String token)

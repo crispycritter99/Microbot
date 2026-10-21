@@ -1,10 +1,13 @@
 package net.runelite.client.plugins.microbot.alerts;
 
 import com.google.gson.JsonObject;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
@@ -56,6 +59,7 @@ public class ClientAlertReporterTest
 	private ClientLinkToken token;
 	private ClientSessionManager sessions;
 	private PluginManager pluginManager;
+	private ScheduledExecutorService executor;
 	private ClientAlertReporter reporter;
 
 	@Before
@@ -75,12 +79,17 @@ public class ClientAlertReporterTest
 		when(microbotPluginManager.getInstalledPluginVersion(anyString())).thenReturn(Optional.empty());
 		Client client = mock(Client.class);
 		when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
-		ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+		executor = mock(ScheduledExecutorService.class);
 		doAnswer(invocation ->
 		{
 			invocation.<Runnable>getArgument(0).run();
 			return null;
 		}).when(executor).execute(any());
+		doAnswer(invocation ->
+		{
+			invocation.<Runnable>getArgument(0).run();
+			return CompletableFuture.completedFuture(null);
+		}).when(executor).submit(any(Runnable.class));
 		reporter = new ClientAlertReporter(api, token, sessions, pluginManager, microbotPluginManager, client, executor);
 	}
 
@@ -209,6 +218,65 @@ public class ClientAlertReporterTest
 		reporter.onClientShutdown(new ClientShutdown());
 		reporter.onPluginChanged(new PluginChanged(script, false));
 		verify(api, never()).sendAlertEvent(any(), any(), any());
+	}
+
+	@Test
+	public void heartbeatRunsWhenTelemetryIsTurnedOnAfterStartup()
+	{
+		when(token.isTelemetryDisabled()).thenReturn(true);
+		reporter.start();
+		ArgumentCaptor<Runnable> heartbeat = ArgumentCaptor.forClass(Runnable.class);
+		verify(executor).scheduleWithFixedDelay(heartbeat.capture(), eq(ClientAlertReporter.FIRST_HEARTBEAT_SECONDS),
+			eq(ClientAlertReporter.HEARTBEAT_SECONDS), eq(TimeUnit.SECONDS));
+
+		heartbeat.getValue().run();
+		assertEquals(1, sentOfType(AlertEvent.HEARTBEAT).size());
+	}
+
+	@Test
+	public void eventsStayOnTheLastSessionUntilANewOneOpensThenTheOldOneIsClosed() throws IOException
+	{
+		UUID next = UUID.fromString("00000000-0000-0000-0000-000000000008");
+		reporter.onPluginChanged(new PluginChanged(script, true));
+		when(sessions.getMicrobotSessionId()).thenReturn(null);
+		reporter.onPluginChanged(new PluginChanged(script, false));
+		verify(api, never()).microbotDelete(any());
+
+		when(sessions.getMicrobotSessionId()).thenReturn(next);
+		reporter.onPluginChanged(new PluginChanged(script, true));
+
+		verify(api).microbotDelete(SESSION);
+		assertEquals(List.of(SESSION.toString(), SESSION.toString(), next.toString()),
+			sent().stream().map(json -> json.get("sessionId").getAsString()).collect(Collectors.toList()));
+	}
+
+	@Test
+	public void closingTheClientClosesALinkedSessionTheSessionManagerNoLongerTracks() throws IOException
+	{
+		reporter.onPluginChanged(new PluginChanged(script, true));
+		when(sessions.getMicrobotSessionId()).thenReturn(null);
+
+		reporter.onClientShutdown(new ClientShutdown());
+		verify(api).microbotDelete(SESSION);
+	}
+
+	@Test
+	public void closingTheClientLeavesTheCurrentSessionToTheSessionManager() throws IOException
+	{
+		reporter.onPluginChanged(new PluginChanged(script, true));
+		reporter.onClientShutdown(new ClientShutdown());
+		verify(api, never()).microbotDelete(any());
+	}
+
+	@Test
+	public void anonymousClientsNeverCloseSessions() throws IOException
+	{
+		when(token.get()).thenReturn(Optional.empty());
+		reporter.onPluginChanged(new PluginChanged(script, true));
+		when(sessions.getMicrobotSessionId()).thenReturn(null);
+		reporter.onClientShutdown(new ClientShutdown());
+		verify(api, never()).microbotDelete(any());
+		verify(executor, never()).submit(any(Runnable.class));
 	}
 
 	@Test
