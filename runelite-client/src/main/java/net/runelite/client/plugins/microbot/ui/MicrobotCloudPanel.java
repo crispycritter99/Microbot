@@ -1,14 +1,17 @@
 package net.runelite.client.plugins.microbot.ui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.swing.ImageIcon;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,28 +25,19 @@ import net.runelite.client.plugins.microbot.alerts.BotAlertStatus;
 import net.runelite.client.plugins.microbot.alerts.DeviceLinkFlow;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.LinkBrowser;
-import net.runelite.client.util.SwingUtil;
 
 @Singleton
 public class MicrobotCloudPanel extends JPanel
 {
 	static final String KEY_COLLAPSED = "cloudPanelCollapsed";
 	private static final String DASHBOARD = "https://dashboard.microbot.cloud";
-	private static final ImageIcon EXPAND_ICON;
-	private static final ImageIcon RETRACT_ICON;
-
-	static
-	{
-		BufferedImage arrow = ImageUtil.luminanceOffset(ImageUtil.loadImageResource(MicrobotConfigPanel.class, "/util/arrow_right.png"), -121);
-		EXPAND_ICON = new ImageIcon(arrow);
-		RETRACT_ICON = new ImageIcon(ImageUtil.rotateImage(arrow, Math.PI / 2));
-	}
+	private static final Icon EXPAND_ICON = new ArrowIcon(false);
+	private static final Icon RETRACT_ICON = new ArrowIcon(true);
 
 	private final DeviceLinkFlow deviceLinkFlow;
 	private final ConfigManager configManager;
-	private final JButton toggle = new JButton();
+	private final JLabel title = new JLabel("Microbot Cloud");
 	private final JPanel body = new JPanel(new GridLayout(0, 1, 0, 4));
 	private final JLabel alertStatus = new JLabel();
 	private final JButton alertAction = new JButton();
@@ -59,28 +53,19 @@ public class MicrobotCloudPanel extends JPanel
 		setLayout(new BorderLayout());
 		setBorder(new CompoundBorder(new MatteBorder(1, 0, 0, 0, ColorScheme.MEDIUM_GRAY_COLOR), new EmptyBorder(4, 10, 4, 10)));
 
-		JPanel header = new JPanel(new BorderLayout());
-		header.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-		toggle.setBorder(new EmptyBorder(0, 0, 0, 5));
-		SwingUtil.removeButtonDecorations(toggle);
-		toggle.addActionListener(e -> setCollapsed(body.isVisible()));
-		header.add(toggle, BorderLayout.WEST);
-		JLabel title = new JLabel("Microbot Cloud");
 		title.setForeground(ColorScheme.BRAND_ORANGE);
 		title.setFont(FontManager.getRunescapeBoldFont());
-		title.setToolTipText("Features that use your microbot.cloud account");
-		header.add(title, BorderLayout.CENTER);
-		MouseAdapter onHeader = new MouseAdapter()
+		title.setIconTextGap(6);
+		title.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		title.addMouseListener(new MouseAdapter()
 		{
 			@Override
 			public void mouseClicked(MouseEvent e)
 			{
 				setCollapsed(body.isVisible());
 			}
-		};
-		header.addMouseListener(onHeader);
-		title.addMouseListener(onHeader);
-		add(header, BorderLayout.NORTH);
+		});
+		add(title, BorderLayout.NORTH);
 
 		body.setBorder(new EmptyBorder(4, 0, 0, 0));
 		JLabel alertsName = new JLabel("Bot alerts");
@@ -143,8 +128,8 @@ public class MicrobotCloudPanel extends JPanel
 	private void applyCollapsed(boolean collapsed)
 	{
 		body.setVisible(!collapsed);
-		toggle.setIcon(collapsed ? EXPAND_ICON : RETRACT_ICON);
-		toggle.setToolTipText(collapsed ? "Expand" : "Minimize");
+		title.setIcon(collapsed ? EXPAND_ICON : RETRACT_ICON);
+		title.setToolTipText(collapsed ? "Show Microbot Cloud" : "Minimize Microbot Cloud");
 		revalidate();
 	}
 
@@ -162,6 +147,46 @@ public class MicrobotCloudPanel extends JPanel
 		if (status.getAction() != null)
 		{
 			alertAction.setText(status.getAction());
+		}
+	}
+
+	private static class ArrowIcon implements Icon
+	{
+		private static final int SIZE = 8;
+		private final boolean down;
+
+		ArrowIcon(boolean down)
+		{
+			this.down = down;
+		}
+
+		@Override
+		public void paintIcon(Component c, Graphics g, int x, int y)
+		{
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+			g2.setColor(ColorScheme.LIGHT_GRAY_COLOR);
+			if (down)
+			{
+				g2.fillPolygon(new int[]{x, x + SIZE, x + SIZE / 2}, new int[]{y + 2, y + 2, y + SIZE - 1}, 3);
+			}
+			else
+			{
+				g2.fillPolygon(new int[]{x + 1, x + SIZE - 2, x + 1}, new int[]{y, y + SIZE / 2, y + SIZE}, 3);
+			}
+			g2.dispose();
+		}
+
+		@Override
+		public int getIconWidth()
+		{
+			return SIZE;
+		}
+
+		@Override
+		public int getIconHeight()
+		{
+			return SIZE;
 		}
 	}
 }

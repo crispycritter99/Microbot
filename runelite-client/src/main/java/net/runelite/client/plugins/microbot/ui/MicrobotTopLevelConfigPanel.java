@@ -13,6 +13,8 @@ import net.runelite.client.ui.PluginPanel;
 import net.runelite.client.ui.components.materialtabs.MaterialTab;
 import net.runelite.client.ui.components.materialtabs.MaterialTabGroup;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
+import net.runelite.client.util.SwingUtil;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -33,6 +35,9 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
     private final JPanel content;
 
     private final EventBus eventBus;
+    private static final String BUG_REPORT_URL = "https://github.com/chsami/Microbot/issues/new?template=bug-issue.yml";
+    private static final ImageIcon BUG_ICON = new ImageIcon(bugIcon());
+
     private final DiagnosticReportCollector diagnosticReportCollector;
     private final MicrobotCloudPanel cloudPanel;
     private final MicrobotPluginListPanel pluginListPanel;
@@ -84,6 +89,26 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         return new ImageIcon(image);
     }
 
+    private static BufferedImage bugIcon() {
+        BufferedImage image = new BufferedImage(14, 14, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = image.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.setColor(ColorScheme.LIGHT_GRAY_COLOR);
+        g.setStroke(new BasicStroke(1.2f));
+        g.drawLine(2, 6, 4, 7);
+        g.drawLine(12, 6, 10, 7);
+        g.drawLine(1, 9, 4, 9);
+        g.drawLine(13, 9, 10, 9);
+        g.drawLine(2, 13, 4, 11);
+        g.drawLine(12, 13, 10, 11);
+        g.drawLine(5, 1, 6, 3);
+        g.drawLine(9, 1, 8, 3);
+        g.fillOval(5, 2, 4, 4);
+        g.fillOval(4, 5, 6, 8);
+        g.dispose();
+        return image;
+    }
+
     @Inject
     MicrobotTopLevelConfigPanel(
             EventBus eventBus,
@@ -133,15 +158,39 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
 
         String version = RuneLiteProperties.getMicrobotVersion();
         JLabel versionLabel = new JLabel(version == null || version.isBlank() ? "microbot" : "microbot v" + version, SwingConstants.CENTER);
-        versionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         versionLabel.setFont(FontManager.getRunescapeSmallFont());
         versionLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        footer.add(versionLabel);
+
+        JLabel status = new JLabel("", SwingConstants.CENTER);
+        status.setAlignmentX(Component.CENTER_ALIGNMENT);
+        status.setFont(FontManager.getRunescapeSmallFont());
+        status.setForeground(ColorScheme.PROGRESS_INPROGRESS_COLOR);
+        status.setBorder(new EmptyBorder(2, 6, 0, 6));
+
+        JButton help = new JButton(BUG_ICON);
+        help.setToolTipText("Report a problem");
+        help.setPreferredSize(new Dimension(BUG_ICON.getIconWidth() + 8, BUG_ICON.getIconHeight() + 4));
+        SwingUtil.removeButtonDecorations(help);
+        help.addActionListener(e -> {
+            JPopupMenu menu = buildHelpMenu(status);
+            Dimension size = menu.getPreferredSize();
+            menu.show(help, help.getWidth() - size.width, -size.height);
+        });
+
+        JPanel versionRow = new JPanel(new BorderLayout());
+        versionRow.setBorder(new EmptyBorder(4, 10, 0, 6));
+        versionRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+        versionRow.add(Box.createHorizontalStrut(help.getPreferredSize().width), BorderLayout.WEST);
+        versionRow.add(versionLabel, BorderLayout.CENTER);
+        versionRow.add(help, BorderLayout.EAST);
+        versionRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, versionRow.getPreferredSize().height));
+        footer.add(versionRow);
+
         if (StartupRecovery.mode().isSafeMode()) {
             footer.add(buildSafeModeNotice());
         }
-        footer.add(buildDiagnosticsButton());
-        footer.add(buildRecoveryButton());
+        footer.add(status);
+        showNextStartSafeMode(status);
 
         String proxy = ClientUI.proxyMessage;
         if (proxy != null && !proxy.isBlank()) {
@@ -153,6 +202,71 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
         }
 
         return footer;
+    }
+
+    private JPopupMenu buildHelpMenu(JLabel status) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem diagnostics = new JMenuItem("Copy diagnostics");
+        diagnostics.setToolTipText("Copy client, build, walker and plugin details for bug reports. Excludes account names, chat, tokens and file paths.");
+        diagnostics.addActionListener(e -> copyDiagnostics(status));
+        menu.add(diagnostics);
+
+        JMenuItem safeMode = new JMenuItem(StartupRecovery.nextStartSafeMode() ? "Cancel safe mode next start" : "Safe mode next start");
+        safeMode.setToolTipText("Start Microbot once without external (Hub or sideloaded) plugins and the GPU plugin, to recover from a plugin that freezes or crashes the client. Plugin files and settings are kept.");
+        safeMode.addActionListener(e -> toggleNextStartSafeMode(status));
+        menu.add(safeMode);
+
+        menu.addSeparator();
+
+        JMenuItem discord = new JMenuItem("Ask for help on Discord");
+        discord.addActionListener(e -> LinkBrowser.browse(RuneLiteProperties.getDiscordInvite()));
+        menu.add(discord);
+
+        JMenuItem issue = new JMenuItem("Report a bug on GitHub");
+        issue.setToolTipText("Copy diagnostics first, then paste them into the report.");
+        issue.addActionListener(e -> LinkBrowser.browse(BUG_REPORT_URL));
+        menu.add(issue);
+
+        return menu;
+    }
+
+    private void copyDiagnostics(JLabel status) {
+        String message;
+        try {
+            String report = diagnosticReportCollector.collectReport();
+            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(report), null);
+            message = "Diagnostics copied";
+        } catch (Exception ex) {
+            log.warn("Could not copy diagnostics: {}", ex.getMessage());
+            message = "Could not copy diagnostics";
+        }
+        status.setText(message);
+        status.setVisible(true);
+        Timer reset = new Timer(2500, e -> showNextStartSafeMode(status));
+        reset.setRepeats(false);
+        reset.start();
+    }
+
+    private void toggleNextStartSafeMode(JLabel status) {
+        boolean enable = !StartupRecovery.nextStartSafeMode();
+        if (!StartupRecovery.requestNextStartSafeMode(enable)) {
+            JOptionPane.showMessageDialog(this, "Safe mode could not be scheduled on this system.", "Safe mode on next start", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        showNextStartSafeMode(status);
+        if (enable) {
+            JOptionPane.showMessageDialog(this,
+                    "The next start will use safe mode: external plugins and the GPU plugin stay off for that session only.\n"
+                            + "Close Microbot and start it again. Your plugins and settings are kept, and the start after that is normal.",
+                    "Safe mode on next start", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private static void showNextStartSafeMode(JLabel status) {
+        boolean scheduled = StartupRecovery.nextStartSafeMode();
+        status.setText(scheduled ? "Safe mode is on for the next start" : "");
+        status.setVisible(scheduled);
     }
 
     private JLabel buildSafeModeNotice() {
@@ -171,57 +285,6 @@ public class MicrobotTopLevelConfigPanel extends PluginPanel {
                     .collect(Collectors.joining("<br>")) + "</html>");
         }
         return label;
-    }
-
-    private JButton buildRecoveryButton() {
-        JButton button = new JButton();
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setFont(FontManager.getRunescapeSmallFont());
-        button.setFocusable(false);
-        button.setToolTipText("Start Microbot once without external (Hub or sideloaded) plugins and the GPU plugin, to recover from a plugin that freezes or crashes the client. Plugin files and settings are kept.");
-        updateRecoveryButton(button);
-        button.addActionListener(e -> {
-            boolean enable = !StartupRecovery.nextStartSafeMode();
-            if (!StartupRecovery.requestNextStartSafeMode(enable)) {
-                button.setText("Recovery unavailable");
-                button.setEnabled(false);
-                return;
-            }
-            updateRecoveryButton(button);
-            if (enable) {
-                JOptionPane.showMessageDialog(this,
-                        "The next start will use safe mode: external plugins and the GPU plugin stay off for that session only.\n"
-                                + "Close Microbot and start it again. Your plugins and settings are kept, and the start after that is normal.",
-                        "Safe mode on next start", JOptionPane.INFORMATION_MESSAGE);
-            }
-        });
-        return button;
-    }
-
-    private static void updateRecoveryButton(JButton button) {
-        button.setText(StartupRecovery.nextStartSafeMode() ? "Cancel safe mode next start" : "Safe mode next start");
-    }
-
-    private JButton buildDiagnosticsButton() {
-        JButton button = new JButton("Copy diagnostics");
-        button.setAlignmentX(Component.CENTER_ALIGNMENT);
-        button.setFont(FontManager.getRunescapeSmallFont());
-        button.setFocusable(false);
-        button.setToolTipText("Copy client, build, walker and plugin details for bug reports. Excludes account names, chat, tokens and file paths.");
-        Timer reset = new Timer(2000, e -> button.setText("Copy diagnostics"));
-        reset.setRepeats(false);
-        button.addActionListener(e -> {
-            try {
-                String report = diagnosticReportCollector.collectReport();
-                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(report), null);
-                button.setText("Copied");
-            } catch (Exception ex) {
-                log.warn("Could not copy diagnostics: {}", ex.getMessage());
-                button.setText("Copy failed");
-            }
-            reset.restart();
-        });
-        return button;
     }
 
     private MaterialTab addTab(MicrobotPluginPanel panel, ImageIcon icon, String tooltip) {
