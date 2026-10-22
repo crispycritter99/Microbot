@@ -114,6 +114,7 @@ public final class HwidAgent
 		}
 		catch (Throwable t)
 		{
+			System.clearProperty(RANDOM_DAT_CALL_PROPERTY);
 			log.warning("hwid-agent random.dat fallback: " + t);
 			return current;
 		}
