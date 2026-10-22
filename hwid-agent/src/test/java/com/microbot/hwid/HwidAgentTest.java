@@ -9,7 +9,13 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.InputStream;
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -618,5 +624,160 @@ public class HwidAgentTest
 
 		cw.visitEnd();
 		return cw.toByteArray();
+	}
+
+	@Test
+	public void transformedClientClassesPassJvmVerification() throws Exception
+	{
+		java.util.List<File> jars = new java.util.ArrayList<>();
+		jars.add(InjectedClientJar.locate());
+		String historical = System.getProperty("hwid.historicalClients", "");
+		for (String path : historical.split(File.pathSeparator))
+		{
+			if (!path.isBlank())
+			{
+				jars.add(new File(path));
+			}
+		}
+		assertNotNull("injected-client jar missing from test classpath", jars.get(0));
+
+		for (File jar : jars)
+		{
+			String version = InjectedClientJar.version(jar);
+			RandomDatTransformer.resetForTesting();
+			RandomDatWriteTransformer.resetForTesting();
+			ClassFileTransformer[] transformers = {
+				new PlatformInfoTransformer(),
+				new RandomDatTransformer(),
+				new RandomDatWriteTransformer()
+			};
+
+			Map<String, byte[]> classes = new LinkedHashMap<>();
+			try (ZipFile zip = new ZipFile(jar))
+			{
+				for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements();)
+				{
+					ZipEntry entry = entries.nextElement();
+					if (entry.isDirectory() || !entry.getName().endsWith(".class"))
+					{
+						continue;
+					}
+					try (InputStream in = zip.getInputStream(entry))
+					{
+						classes.put(zipNameToClassName(entry.getName()), in.readAllBytes());
+					}
+				}
+			}
+
+			VerifyingClassLoader loader = new VerifyingClassLoader(classes);
+			Set<String> changed = new LinkedHashSet<>();
+			for (String name : new LinkedHashSet<>(classes.keySet()))
+			{
+				byte[] bytes = classes.get(name);
+				boolean patched = false;
+				for (ClassFileTransformer transformer : transformers)
+				{
+					byte[] result = transformer.transform(loader, name, null, null, bytes);
+					if (result != null)
+					{
+						bytes = result;
+						patched = true;
+					}
+				}
+				if (patched)
+				{
+					classes.put(name, bytes);
+					changed.add(name);
+				}
+			}
+
+			assertFalse(version + ": no classes patched", changed.isEmpty());
+
+			for (String name : changed)
+			{
+				VerifyError error = jvmVerify(loader, name.replace('/', '.'));
+				if (error != null)
+				{
+					throw new AssertionError(version + ": " + name + " failed JVM verification: " + error.getMessage(), error);
+				}
+			}
+		}
+	}
+
+	private static VerifyError jvmVerify(ClassLoader loader, String binaryName) throws InterruptedException
+	{
+		VerifyError[] result = new VerifyError[1];
+		Thread thread = new Thread(() ->
+		{
+			try
+			{
+				Class.forName(binaryName, true, loader);
+			}
+			catch (VerifyError e)
+			{
+				result[0] = e;
+			}
+			catch (Throwable ignored)
+			{
+			}
+		}, "hwid-verify-" + binaryName);
+		thread.setDaemon(true);
+		thread.start();
+		thread.join(30_000);
+		return result[0];
+	}
+
+	private static final class VerifyingClassLoader extends ClassLoader
+	{
+		private final Map<String, byte[]> classes;
+
+		VerifyingClassLoader(Map<String, byte[]> classes)
+		{
+			super(VerifyingClassLoader.class.getClassLoader());
+			this.classes = classes;
+		}
+
+		@Override
+		protected Class<?> findClass(String name) throws ClassNotFoundException
+		{
+			byte[] bytes = classes.get(name.replace('.', '/'));
+			if (bytes == null)
+			{
+				throw new ClassNotFoundException(name);
+			}
+			return defineClass(name, bytes, 0, bytes.length);
+		}
+
+		@Override
+		protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException
+		{
+			synchronized (getClassLoadingLock(name))
+			{
+				Class<?> loaded = findLoadedClass(name);
+				if (loaded == null)
+				{
+					loaded = classes.containsKey(name.replace('.', '/')) ? findClass(name) : super.loadClass(name, resolve);
+				}
+				if (resolve)
+				{
+					resolveClass(loaded);
+				}
+				return loaded;
+			}
+		}
+
+		@Override
+		public InputStream getResourceAsStream(String name)
+		{
+			if (name.endsWith(".class"))
+			{
+				byte[] bytes = classes.get(name.substring(0, name.length() - ".class".length()));
+				if (bytes != null)
+				{
+					return new java.io.ByteArrayInputStream(bytes);
+				}
+			}
+			return super.getResourceAsStream(name);
+		}
 	}
 }

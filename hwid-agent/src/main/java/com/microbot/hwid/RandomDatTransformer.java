@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -37,7 +36,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 	{
 		try
 		{
-			return transformInternal(className, bytes);
+			return transformInternal(loader, className, bytes);
 		}
 		catch (Throwable t)
 		{
@@ -46,7 +45,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		}
 	}
 
-	private byte[] transformInternal(String className, byte[] bytes)
+	private byte[] transformInternal(ClassLoader loader, String className, byte[] bytes)
 	{
 		if (className == null || bytes == null || looksUnlikely(className))
 		{
@@ -55,7 +54,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 
 		ClassReader reader = new ClassReader(bytes);
 		ClassNode node = new ClassNode();
-		reader.accept(node, 0);
+		reader.accept(node, ClassReader.SKIP_FRAMES);
 
 		if (alreadyPatched(node))
 		{
@@ -130,7 +129,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 
 		log.info("hwid-agent random.dat spoof installed on " + node.name + " (" + guards.size() + " sites, field " + owner + "." + name + ")");
 
-		ClassWriter writer = new ClassWriter(0);
+		FrameClassWriter writer = new FrameClassWriter(loader);
 		node.accept(writer);
 		return writer.toByteArray();
 	}

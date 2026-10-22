@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.ProtectionDomain;
 import java.util.logging.Logger;
 import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
@@ -49,7 +48,7 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 
 		try
 		{
-			byte[] patched = patch(classfileBuffer);
+			byte[] patched = patch(loader, classfileBuffer);
 			if (patched == null)
 			{
 				return null;
@@ -140,11 +139,11 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 		return slot;
 	}
 
-	private static byte[] patch(byte[] classfileBuffer) throws Exception
+	private static byte[] patch(ClassLoader loader, byte[] classfileBuffer) throws Exception
 	{
 		ClassReader reader = new ClassReader(classfileBuffer);
 		ClassNode node = new ClassNode();
-		reader.accept(node, 0);
+		reader.accept(node, ClassReader.SKIP_FRAMES);
 
 		boolean patched = false;
 		for (MethodNode method : node.methods)
@@ -196,7 +195,7 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 			return null;
 		}
 
-		ClassWriter writer = new ClassWriter(0);
+		FrameClassWriter writer = new FrameClassWriter(loader);
 		node.accept(writer);
 		return writer.toByteArray();
 	}
