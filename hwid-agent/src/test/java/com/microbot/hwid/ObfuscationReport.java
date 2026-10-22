@@ -87,6 +87,8 @@ public final class ObfuscationReport
 			}
 		}
 
+		List<String> deviceCallers = callersOf(nodes, deviceMethods);
+
 		Properties menuAction = new Properties();
 		if (Files.isRegularFile(menuActionFile))
 		{
@@ -105,7 +107,7 @@ public final class ObfuscationReport
 		Files.write(gettersFile, tsv, StandardCharsets.UTF_8);
 
 		String block = buildBlock(version, fieldOwner, fieldName, hookedSites, otherFieldAccessors,
-			deviceMethods, menuAction, getterRows.size(), doc.toAbsolutePath().getParent().relativize(gettersFile.toAbsolutePath()));
+			deviceMethods, deviceCallers, menuAction, getterRows.size(), doc.toAbsolutePath().getParent().relativize(gettersFile.toAbsolutePath()));
 		replaceBlock(doc, block);
 
 		System.out.println("injected-client " + version);
@@ -113,6 +115,7 @@ public final class ObfuscationReport
 		System.out.println("random.dat hooked sites: " + RandomDatTransformer.patchedSiteCount() + " in " + hookedSites.keySet());
 		System.out.println("random.dat field accessed but not hooked: " + otherFieldAccessors);
 		System.out.println("device id methods: " + (deviceMethods.isEmpty() ? "NOT FOUND" : deviceMethods));
+		System.out.println("device id callers: " + (deviceCallers.isEmpty() ? "none, the client never reads the device ID" : deviceCallers));
 		System.out.println("accessor rows: " + getterRows.size() + " -> " + gettersFile);
 
 		if (fieldOwner == null || hookedSites.isEmpty() || deviceMethods.isEmpty())
@@ -216,6 +219,32 @@ public final class ObfuscationReport
 			}
 		}
 		return new ArrayList<>(found);
+	}
+
+	private static List<String> callersOf(Map<String, ClassNode> nodes, List<String> methods)
+	{
+		Set<String> callers = new LinkedHashSet<>();
+		for (ClassNode node : new TreeMap<>(nodes).values())
+		{
+			for (MethodNode method : node.methods)
+			{
+				String key = node.name + "." + method.name + method.desc;
+				for (AbstractInsnNode insn : method.instructions)
+				{
+					if (insn instanceof MethodInsnNode)
+					{
+						MethodInsnNode call = (MethodInsnNode) insn;
+						String target = call.owner + "." + call.name + call.desc;
+						if (methods.contains(target) && !methods.contains(key))
+						{
+							callers.add(key);
+							break;
+						}
+					}
+				}
+			}
+		}
+		return new ArrayList<>(callers);
 	}
 
 	private static List<String> accessorRows(Map<String, ClassNode> nodes)
@@ -339,7 +368,7 @@ public final class ObfuscationReport
 	}
 
 	private static String buildBlock(String version, String fieldOwner, String fieldName, Map<String, Integer> hookedSites,
-		List<String> otherFieldAccessors, List<String> deviceMethods, Properties menuAction, int accessorCount, Path gettersLink)
+		List<String> otherFieldAccessors, List<String> deviceMethods, List<String> deviceCallers, Properties menuAction, int accessorCount, Path gettersLink)
 	{
 		StringBuilder out = new StringBuilder();
 		out.append(START_MARKER).append('\n');
@@ -351,6 +380,7 @@ public final class ObfuscationReport
 		out.append("| random.dat hooked send sites (").append(siteTotal).append(") | ").append(codeList(hookedSites.keySet())).append(" |\n");
 		out.append("| random.dat field accessed but not hooked | ").append(codeList(otherFieldAccessors)).append(" |\n");
 		out.append("| Device ID methods | ").append(deviceMethods.isEmpty() ? "**not found**" : codeList(deviceMethods)).append(" |\n");
+		out.append("| Device ID method callers | ").append(deviceCallers.isEmpty() ? "none: the client never reads the device ID, so the hook has nothing to replace" : codeList(deviceCallers)).append(" |\n");
 		String menuOwner = menuAction.getProperty("menuAction.ownerClass");
 		if (menuOwner != null)
 		{

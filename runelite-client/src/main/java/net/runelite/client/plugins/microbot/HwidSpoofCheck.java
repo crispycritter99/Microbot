@@ -12,8 +12,8 @@ final class HwidSpoofCheck
 	static final String DEVICE_HOOK_PROPERTY = "microbot.hwid.device.installed";
 	static final String RANDOM_DAT_CALL_PROPERTY = "microbot.hwid.randomdat.lastCall";
 
-	static final String AGENT_MISSING = "Spoof device ID is on, but the HWID agent is not attached, so this login sent the real device ID and random.dat. Start Microbot from the launcher, or add -javaagent:hwid-agent-<version>.jar.";
-	static final String DEVICE_HOOK_MISSING = "Spoof device ID is on, but the HWID agent could not hook the device ID in this client version, so this login sent the real device ID.";
+	static final String AGENT_MISSING = "Spoof device ID is on, but the HWID agent is not attached, so this login sent the real random.dat (and the real device ID, if this client version reads it). Start Microbot from the launcher, or add -javaagent:hwid-agent-<version>.jar.";
+	static final String DEVICE_HOOK_MISSING = "Spoof device ID is on, but the HWID agent could not hook the device ID method in this client version. If this version reads the device ID, the real one was sent at this login.";
 	static final String RANDOM_DAT_HOOK_MISSED = "Spoof device ID is on, but the HWID agent's random.dat hook did not run during this login, so the real random.dat may have been sent.";
 
 	private final Function<String, String> properties;
