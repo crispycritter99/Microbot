@@ -1,6 +1,7 @@
 package com.microbot.hwid;
 
 import java.lang.instrument.Instrumentation;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 public final class HwidAgent
@@ -10,6 +11,8 @@ public final class HwidAgent
 	public static final String TOGGLE_PROPERTY = "microbot.hwid.spoof";
 
 	private static volatile boolean deviceHookInstalled;
+	private static volatile byte[] injectedRandomDat;
+	private static volatile byte[] injectedSnapshot;
 
 	private HwidAgent()
 	{
@@ -61,43 +64,34 @@ public final class HwidAgent
 		return Boolean.parseBoolean(System.getProperty(TOGGLE_PROPERTY, "true"));
 	}
 
-	public static byte[] randomData(byte flag)
+	public static byte[] randomDatField(byte[] current)
 	{
 		try
 		{
+			if (current != null && (current != injectedRandomDat || !Arrays.equals(current, injectedSnapshot)))
+			{
+				return current;
+			}
 			if (!spoofEnabled())
 			{
-				return vanillaRandomDat(flag);
+				injectedRandomDat = null;
+				injectedSnapshot = null;
+				return null;
 			}
 			byte[] data = RandomDatStore.getOrCreate(currentIdentifier());
-			return data.clone();
+			if (current != null && Arrays.equals(current, data))
+			{
+				return current;
+			}
+			byte[] injected = data.clone();
+			injectedSnapshot = data.clone();
+			injectedRandomDat = injected;
+			return injected;
 		}
 		catch (Throwable t)
 		{
 			log.warning("hwid-agent random.dat fallback: " + t);
-			return vanillaRandomDat(flag);
-		}
-	}
-
-	private static byte[] vanillaRandomDat(byte flag)
-	{
-		String owner = RandomDatTransformer.providerOwner();
-		String name = RandomDatTransformer.providerName();
-		if (owner == null || name == null)
-		{
-			return RandomDatStore.fallbackBytes();
-		}
-		try
-		{
-			String dotted = owner.replace('/', '.');
-			Class<?> provider = Class.forName(dotted, false, HwidAgent.class.getClassLoader());
-			Object result = provider.getMethod(name, byte.class).invoke(null, flag);
-			return result instanceof byte[] ? (byte[]) result : RandomDatStore.fallbackBytes();
-		}
-		catch (Throwable t)
-		{
-			log.warning("hwid-agent random.dat passthrough fallback: " + t);
-			return RandomDatStore.fallbackBytes();
+			return current;
 		}
 	}
 

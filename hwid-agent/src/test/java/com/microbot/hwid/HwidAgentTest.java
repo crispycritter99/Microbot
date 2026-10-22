@@ -254,41 +254,84 @@ public class HwidAgentTest
 	}
 
 	@Test
-	public void randomDatSitesAreSwappedAndSpoofedPerIdentifier() throws Exception
+	public void bothGuardShapesAreHookedAndSpoofed() throws Exception
 	{
-		byte[] candidate = buildFakeRandomDatClass();
-		RandomDatTransformer transformer = new RandomDatTransformer();
-		byte[] patched = transformer.transform(null, "StubRandomClient", null, null, candidate);
+		byte[] patched = new RandomDatTransformer().transform(null, "StubRandomClient", null, null, buildFakeRandomDatClass());
 		assertNotNull(patched);
 		assertTrue(RandomDatTransformer.isRandomHookInstalled());
 		assertEquals(2, RandomDatTransformer.patchedSiteCount());
-		assertEquals("com/microbot/hwid/StubOrig", RandomDatTransformer.providerOwner());
-		assertEquals("ab", RandomDatTransformer.providerName());
+		assertEquals("StubRandomClient", RandomDatTransformer.fieldOwner());
+		assertEquals("fix", RandomDatTransformer.fieldName());
 
-		byte[] first = HwidAgent.randomData((byte) 0);
-		assertEquals(24, first.length);
-		assertArrayEquals(first, HwidAgent.randomData((byte) 1));
+		Class<?> stub = new StubLoader("StubRandomClient", patched).defined();
+		byte[] expected = RandomDatStore.getOrCreate(HwidAgent.currentIdentifier());
+		byte[] viaAcmp = (byte[]) stub.getMethod("sendAcmp").invoke(null);
+		byte[] viaIfNull = (byte[]) stub.getMethod("sendIfNull").invoke(null);
+		assertArrayEquals(expected, viaAcmp);
+		assertTrue(viaAcmp == viaIfNull);
+		assertTrue(viaAcmp == stub.getDeclaredField("fix").get(null));
 	}
 
 	@Test
-	public void randomDatPassthroughWhenSpoofDisabled() throws Exception
+	public void serverPushedRandomDatIsPassedThrough() throws Exception
 	{
-		defineStubOrig();
+		byte[] patched = new RandomDatTransformer().transform(null, "StubRandomClient", null, null, buildFakeRandomDatClass());
+		Class<?> stub = new StubLoader("StubRandomClient", patched).defined();
+		byte[] pushed = new byte[24];
+		java.util.Arrays.fill(pushed, (byte) 7);
+		stub.getDeclaredField("fix").set(null, pushed);
+		assertTrue(pushed == stub.getMethod("sendAcmp").invoke(null));
+
+		stub.getDeclaredField("fix").set(null, null);
+		byte[] injected = (byte[]) stub.getMethod("sendAcmp").invoke(null);
+		java.util.Arrays.fill(injected, (byte) 9);
+		assertTrue(injected == stub.getMethod("sendIfNull").invoke(null));
+		assertEquals(9, injected[0]);
+	}
+
+	@Test
+	public void spoofDisabledFallsBackToVanillaRead() throws Exception
+	{
+		byte[] patched = new RandomDatTransformer().transform(null, "StubRandomClient", null, null, buildFakeRandomDatClass());
+		Class<?> stub = new StubLoader("StubRandomClient", patched).defined();
+		byte[] injected = (byte[]) stub.getMethod("sendAcmp").invoke(null);
+		assertNotNull(injected);
+
 		System.setProperty(HwidAgent.TOGGLE_PROPERTY, "false");
 		try
 		{
-			byte[] candidate = buildFakeRandomDatClass();
-			RandomDatTransformer transformer = new RandomDatTransformer();
-			byte[] patched = transformer.transform(null, "StubRandomClient", null, null, candidate);
-			assertNotNull(patched);
-			assertTrue(RandomDatTransformer.isRandomHookInstalled());
-			byte[] result = HwidAgent.randomData((byte) 7);
-			assertArrayEquals(new byte[] {1, 2, 3, 4}, result);
+			byte[] vanilla = (byte[]) stub.getMethod("sendIfNull").invoke(null);
+			assertArrayEquals(new byte[24], vanilla);
+			assertNull(stub.getDeclaredField("fix").get(null));
 		}
 		finally
 		{
 			System.clearProperty(HwidAgent.TOGGLE_PROPERTY);
 		}
+	}
+
+	@Test
+	public void copyHelperIsNotHooked()
+	{
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+		cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "StubCopyHelper", null, "java/lang/Object", null);
+		cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "fix", "[B", null, null).visitEnd();
+		MethodVisitor copy = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "copy", "()V", null, null);
+		copy.visitCode();
+		copy.visitFieldInsn(Opcodes.GETSTATIC, "StubCopyHelper", "fix", "[B");
+		org.objectweb.asm.Label done = new org.objectweb.asm.Label();
+		copy.visitJumpInsn(Opcodes.IFNONNULL, done);
+		copy.visitIntInsn(Opcodes.BIPUSH, 24);
+		copy.visitIntInsn(Opcodes.NEWARRAY, Opcodes.T_BYTE);
+		copy.visitFieldInsn(Opcodes.PUTSTATIC, "StubCopyHelper", "fix", "[B");
+		copy.visitLabel(done);
+		copy.visitInsn(Opcodes.RETURN);
+		copy.visitMaxs(0, 0);
+		copy.visitEnd();
+		cw.visitEnd();
+
+		assertNull(new RandomDatTransformer().transform(null, "StubCopyHelper", null, null, cw.toByteArray()));
+		assertNull(RandomDatTransformer.fieldOwner());
 	}
 
 	@Test
@@ -300,22 +343,29 @@ public class HwidAgentTest
 	}
 
 	@Test
-	public void realInjectedClientRandomDatProviderIsSwapped() throws Exception
+	public void realInjectedClientRandomDatGuardsAreHooked() throws Exception
 	{
 		File jar = locateInjectedClientJar();
 		assertNotNull("injected-client jar missing from test classpath", jar);
 
 		RandomDatTransformer transformer = new RandomDatTransformer();
-		int patchedCount = 0;
+		java.util.List<String> patchedClasses = new java.util.ArrayList<>();
 		try (ZipFile zip = new ZipFile(jar))
 		{
+			ZipEntry clientEntry = zip.getEntry("client.class");
+			assertNotNull(clientEntry);
+			java.util.List<ZipEntry> ordered = new java.util.ArrayList<>();
+			ordered.add(clientEntry);
 			for (java.util.Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements();)
 			{
 				ZipEntry entry = entries.nextElement();
-				if (entry.isDirectory() || !entry.getName().endsWith(".class"))
+				if (!entry.isDirectory() && entry.getName().endsWith(".class") && !entry.equals(clientEntry))
 				{
-					continue;
+					ordered.add(entry);
 				}
+			}
+			for (ZipEntry entry : ordered)
+			{
 				byte[] bytes;
 				try (InputStream in = zip.getInputStream(entry))
 				{
@@ -324,114 +374,116 @@ public class HwidAgentTest
 				byte[] result = transformer.transform(null, zipNameToClassName(entry.getName()), null, null, bytes);
 				if (result != null)
 				{
-					patchedCount++;
-					assertTrue(!stillReferencesRandomDatProvider(result, RandomDatTransformer.providerOwner(), RandomDatTransformer.providerName()));
+					patchedClasses.add(entry.getName());
+					assertEquals(0, unhookedGuards(result, RandomDatTransformer.fieldOwner(), RandomDatTransformer.fieldName()));
 				}
 			}
 		}
-		assertEquals(1, patchedCount);
-		assertEquals("jl", RandomDatTransformer.providerOwner());
-		assertEquals("ab", RandomDatTransformer.providerName());
-		assertEquals(3, RandomDatTransformer.patchedSiteCount());
+		assertEquals("client", RandomDatTransformer.fieldOwner());
+		assertTrue(patchedClasses.contains("client.class"));
+		assertTrue("expected the login send sites to be hooked, got " + RandomDatTransformer.patchedSiteCount(),
+			RandomDatTransformer.patchedSiteCount() >= 2);
 	}
 
-	private static boolean stillReferencesRandomDatProvider(byte[] classBytes, String owner, String name)
+	private static int unhookedGuards(byte[] classBytes, String owner, String name)
 	{
-		org.objectweb.asm.ClassReader reader = new org.objectweb.asm.ClassReader(classBytes);
 		org.objectweb.asm.tree.ClassNode node = new org.objectweb.asm.tree.ClassNode();
-		reader.accept(node, 0);
+		new org.objectweb.asm.ClassReader(classBytes).accept(node, 0);
+		int unhooked = 0;
 		for (MethodNode method : node.methods)
 		{
 			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
 			{
-				if (insn instanceof org.objectweb.asm.tree.MethodInsnNode
-					&& insn.getOpcode() == Opcodes.INVOKESTATIC
-					&& owner.equals(((org.objectweb.asm.tree.MethodInsnNode) insn).owner)
-					&& name.equals(((org.objectweb.asm.tree.MethodInsnNode) insn).name))
+				if (insn.getOpcode() != Opcodes.GETSTATIC
+					|| !owner.equals(((org.objectweb.asm.tree.FieldInsnNode) insn).owner)
+					|| !name.equals(((org.objectweb.asm.tree.FieldInsnNode) insn).name))
 				{
-					return true;
+					continue;
 				}
+				AbstractInsnNode next = insn.getNext();
+				boolean guard = next != null && (next.getOpcode() == Opcodes.IFNULL || next.getOpcode() == Opcodes.IF_ACMPEQ);
+				AbstractInsnNode previous = insn.getPrevious();
+				if (previous != null && previous.getOpcode() == Opcodes.ACONST_NULL)
+				{
+					previous = previous.getPrevious();
+				}
+				boolean hooked = previous != null && previous.getOpcode() == Opcodes.PUTSTATIC;
+				if (guard && !hooked && storesFreshArray(method))
+				{
+					unhooked++;
+				}
+			}
+		}
+		return unhooked;
+	}
+
+	private static boolean storesFreshArray(MethodNode method)
+	{
+		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
+		{
+			if (insn.getOpcode() == Opcodes.NEWARRAY && insn.getNext() != null && insn.getNext().getOpcode() == Opcodes.ASTORE)
+			{
+				return true;
 			}
 		}
 		return false;
 	}
 
-	private static void defineStubOrig()
+	private static final class StubLoader extends ClassLoader
 	{
-		if (stubOrigDefined)
-		{
-			return;
-		}
-		ClassWriter cw = new ClassWriter(0);
-		cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "com/microbot/hwid/StubOrig", null, "java/lang/Object", null);
-		MethodVisitor mv = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "ab", "(B)[B", null, null);
-		mv.visitCode();
-		mv.visitInsn(Opcodes.ICONST_4);
-		mv.visitIntInsn(Opcodes.NEWARRAY, Opcodes.T_BYTE);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitInsn(Opcodes.ICONST_0);
-		mv.visitInsn(Opcodes.ICONST_1);
-		mv.visitInsn(Opcodes.BASTORE);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitInsn(Opcodes.ICONST_1);
-		mv.visitInsn(Opcodes.ICONST_2);
-		mv.visitInsn(Opcodes.BASTORE);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitInsn(Opcodes.ICONST_2);
-		mv.visitInsn(Opcodes.ICONST_3);
-		mv.visitInsn(Opcodes.BASTORE);
-		mv.visitInsn(Opcodes.DUP);
-		mv.visitInsn(Opcodes.ICONST_3);
-		mv.visitInsn(Opcodes.ICONST_4);
-		mv.visitInsn(Opcodes.BASTORE);
-		mv.visitInsn(Opcodes.ARETURN);
-		mv.visitMaxs(4, 2);
-		mv.visitEnd();
-		cw.visitEnd();
-		try
-		{
-			java.lang.invoke.MethodHandles.lookup().defineClass(cw.toByteArray());
-		}
-		catch (IllegalAccessException e)
-		{
-			throw new IllegalStateException(e);
-		}
-		stubOrigDefined = true;
-	}
+		private final String name;
 
-	private static boolean stubOrigDefined;
+		StubLoader(String name, byte[] bytes)
+		{
+			super(StubLoader.class.getClassLoader());
+			this.name = name;
+			defineClass(name, bytes, 0, bytes.length);
+		}
+
+		Class<?> defined() throws ClassNotFoundException
+		{
+			return loadClass(name);
+		}
+	}
 
 	private static byte[] buildFakeRandomDatClass()
 	{
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "StubRandomClient", null, "java/lang/Object", null);
-		cw.visitField(Opcodes.ACC_STATIC, "fix", "[B", null, null).visitEnd();
+		cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "fix", "[B", null, null).visitEnd();
 
-		MethodVisitor mk = cw.visitMethod(Opcodes.ACC_STATIC, "mk", "()V", null, null);
-		mk.visitCode();
-		mk.visitIntInsn(Opcodes.BIPUSH, 24);
-		mk.visitIntInsn(Opcodes.NEWARRAY, Opcodes.T_BYTE);
-		mk.visitFieldInsn(Opcodes.PUTSTATIC, "StubRandomClient", "fix", "[B");
-		mk.visitInsn(Opcodes.RETURN);
-		mk.visitMaxs(1, 0);
-		mk.visitEnd();
+		MethodVisitor acmp = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "sendAcmp", "()[B", null, null);
+		acmp.visitCode();
+		acmp.visitInsn(Opcodes.ACONST_NULL);
+		acmp.visitFieldInsn(Opcodes.GETSTATIC, "StubRandomClient", "fix", "[B");
+		org.objectweb.asm.Label acmpFresh = new org.objectweb.asm.Label();
+		acmp.visitJumpInsn(Opcodes.IF_ACMPEQ, acmpFresh);
+		acmp.visitFieldInsn(Opcodes.GETSTATIC, "StubRandomClient", "fix", "[B");
+		acmp.visitInsn(Opcodes.ARETURN);
+		acmp.visitLabel(acmpFresh);
+		acmp.visitIntInsn(Opcodes.BIPUSH, 24);
+		acmp.visitIntInsn(Opcodes.NEWARRAY, Opcodes.T_BYTE);
+		acmp.visitVarInsn(Opcodes.ASTORE, 0);
+		acmp.visitVarInsn(Opcodes.ALOAD, 0);
+		acmp.visitInsn(Opcodes.ARETURN);
+		acmp.visitMaxs(0, 0);
+		acmp.visitEnd();
 
-		MethodVisitor send = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "send", "()V", null, null);
-		send.visitCode();
-		send.visitFieldInsn(Opcodes.GETSTATIC, "StubRandomClient", "fix", "[B");
-		org.objectweb.asm.Label fresh = new org.objectweb.asm.Label();
-		send.visitJumpInsn(Opcodes.IFNULL, fresh);
-		send.visitInsn(Opcodes.ICONST_0);
-		send.visitMethodInsn(Opcodes.INVOKESTATIC, "com/microbot/hwid/StubOrig", "ab", "(B)[B", false);
-		send.visitInsn(Opcodes.POP);
-		send.visitInsn(Opcodes.RETURN);
-		send.visitLabel(fresh);
-		send.visitInsn(Opcodes.ICONST_0);
-		send.visitMethodInsn(Opcodes.INVOKESTATIC, "com/microbot/hwid/StubOrig", "ab", "(B)[B", false);
-		send.visitInsn(Opcodes.POP);
-		send.visitInsn(Opcodes.RETURN);
-		send.visitMaxs(2, 0);
-		send.visitEnd();
+		MethodVisitor ifNull = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "sendIfNull", "()[B", null, null);
+		ifNull.visitCode();
+		ifNull.visitFieldInsn(Opcodes.GETSTATIC, "StubRandomClient", "fix", "[B");
+		org.objectweb.asm.Label ifNullFresh = new org.objectweb.asm.Label();
+		ifNull.visitJumpInsn(Opcodes.IFNULL, ifNullFresh);
+		ifNull.visitFieldInsn(Opcodes.GETSTATIC, "StubRandomClient", "fix", "[B");
+		ifNull.visitInsn(Opcodes.ARETURN);
+		ifNull.visitLabel(ifNullFresh);
+		ifNull.visitIntInsn(Opcodes.BIPUSH, 24);
+		ifNull.visitIntInsn(Opcodes.NEWARRAY, Opcodes.T_BYTE);
+		ifNull.visitVarInsn(Opcodes.ASTORE, 0);
+		ifNull.visitVarInsn(Opcodes.ALOAD, 0);
+		ifNull.visitInsn(Opcodes.ARETURN);
+		ifNull.visitMaxs(0, 0);
+		ifNull.visitEnd();
 
 		cw.visitEnd();
 		return cw.toByteArray();

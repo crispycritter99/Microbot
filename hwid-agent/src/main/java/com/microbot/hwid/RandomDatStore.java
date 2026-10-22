@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -48,13 +47,6 @@ final class RandomDatStore
 		STORE.setProperty(key, Base64.getEncoder().encodeToString(data));
 		save();
 		log.info("Generated new random.dat seed");
-		return data;
-	}
-
-	static byte[] fallbackBytes()
-	{
-		byte[] data = new byte[24];
-		Arrays.fill(data, (byte) -1);
 		return data;
 	}
 

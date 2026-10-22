@@ -19,9 +19,7 @@ dependencies {
     testImplementation("net.runelite:injected-client:${providers.gradleProperty("runelite.injected-client.version").get()}")
 }
 
-val hwidAgentJar = tasks.register<Jar>("hwidAgentJar") {
-    group = "build"
-    description = "Build the -javaagent HWID spoof jar"
+tasks.jar {
     manifest {
         attributes["Premain-Class"] = "com.microbot.hwid.HwidAgent"
         attributes["Can-Redefine-Classes"] = "true"
@@ -29,10 +27,4 @@ val hwidAgentJar = tasks.register<Jar>("hwidAgentJar") {
     }
     archiveBaseName = "hwid-agent"
     archiveVersion = providers.gradleProperty("microbot.version").orElse(providers.gradleProperty("microbot.commit.sha")).orElse("0.0.0").get()
-    archiveClassifier = ""
-    from(sourceSets.main.get().output)
-}
-
-tasks.assemble {
-    dependsOn(hwidAgentJar)
 }

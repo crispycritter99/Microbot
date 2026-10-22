@@ -2,6 +2,8 @@ package com.microbot.hwid;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -10,9 +12,8 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
-import org.objectweb.asm.tree.InsnNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.JumpInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -21,15 +22,15 @@ public final class RandomDatTransformer implements ClassFileTransformer
 	private static final Logger log = Logger.getLogger(RandomDatTransformer.class.getName());
 
 	private static final String HOOK_CLASS_INTERNAL = "com/microbot/hwid/HwidAgent";
-	private static final String HOOK_METHOD = "randomData";
+	private static final String HOOK_METHOD = "randomDatField";
+	private static final String HOOK_DESCRIPTOR = "([B)[B";
 	private static final String BYTE_ARRAY_DESCRIPTOR = "[B";
-	private static final String PROVIDER_DESCRIPTOR = "(B)[B";
 
+	private static final Object lock = new Object();
 	private static volatile boolean randomHookInstalled;
 	private static volatile int patchedSites;
-	private static volatile String providerOwner;
-	private static volatile String providerName;
-	private static final Object providerLock = new Object();
+	private static volatile String fieldOwner;
+	private static volatile String fieldName;
 
 	public byte[] transform(ClassLoader loader, String className, Class<?> beingLoaded, ProtectionDomain pd, byte[] bytes)
 	{
@@ -44,9 +45,9 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		}
 	}
 
-	private byte[] transformInternal(String className, byte[] bytes) throws Exception
+	private byte[] transformInternal(String className, byte[] bytes)
 	{
-		if (className == null || looksUnlikely(className))
+		if (className == null || bytes == null || looksUnlikely(className))
 		{
 			return null;
 		}
@@ -60,82 +61,80 @@ public final class RandomDatTransformer implements ClassFileTransformer
 			return null;
 		}
 
-		String fieldName = soleStaticByteArrayField(node);
-		if (fieldName == null || !containsNewArray24(node))
+		String owner = fieldOwner;
+		String name = fieldName;
+		if (owner == null)
 		{
-			return null;
+			name = soleStaticByteArrayField(node);
+			if (name == null)
+			{
+				return null;
+			}
+			owner = node.name;
 		}
 
-		String owner = null;
-		String name = null;
-		int sites = 0;
+		List<FieldInsnNode> guards = new ArrayList<>();
 		for (MethodNode method : node.methods)
 		{
-			if (!qualifies(method, fieldName))
+			if (!storesFreshArrayInLocal(method))
 			{
 				continue;
 			}
 			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
 			{
-				if (!(insn instanceof MethodInsnNode) || insn.getOpcode() != Opcodes.INVOKESTATIC)
+				if (isNullGuard(insn, owner, name))
 				{
-					continue;
+					guards.add((FieldInsnNode) insn);
 				}
-				MethodInsnNode call = (MethodInsnNode) insn;
-				if (!PROVIDER_DESCRIPTOR.equals(call.desc)
-					|| call.owner.equals(node.name)
-					|| HOOK_CLASS_INTERNAL.equals(call.owner))
-				{
-					continue;
-				}
-				if (owner != null && !owner.equals(call.owner) || name != null && !name.equals(call.name))
-				{
-					return null;
-				}
-				owner = call.owner;
-				name = call.name;
-				sites++;
 			}
 		}
 
-		if (owner == null || sites == 0)
+		if (guards.isEmpty())
 		{
 			return null;
 		}
 
-		for (MethodNode method : node.methods)
+		synchronized (lock)
 		{
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
+			if (fieldOwner == null)
 			{
-				if (!(insn instanceof MethodInsnNode) || insn.getOpcode() != Opcodes.INVOKESTATIC)
-				{
-					continue;
-				}
-				MethodInsnNode call = (MethodInsnNode) insn;
-				if (!PROVIDER_DESCRIPTOR.equals(call.desc) || !owner.equals(call.owner) || !name.equals(call.name))
-				{
-					continue;
-				}
-				method.instructions.set(insn, new MethodInsnNode(
-					Opcodes.INVOKESTATIC, HOOK_CLASS_INTERNAL, HOOK_METHOD, PROVIDER_DESCRIPTOR, false));
+				fieldOwner = owner;
+				fieldName = name;
 			}
+			else if (!fieldOwner.equals(owner) || !fieldName.equals(name))
+			{
+				return null;
+			}
+			patchedSites += guards.size();
+			randomHookInstalled = true;
 		}
 
-		synchronized (providerLock)
+		for (FieldInsnNode guard : guards)
 		{
-			if (providerOwner == null)
-			{
-				providerOwner = owner;
-				providerName = name;
-				patchedSites = sites;
-				randomHookInstalled = true;
-				log.info("hwid-agent random.dat spoof installed on " + node.name + " (" + sites + " sites)");
-			}
+			InsnList hook = new InsnList();
+			hook.add(new FieldInsnNode(Opcodes.GETSTATIC, owner, name, BYTE_ARRAY_DESCRIPTOR));
+			hook.add(new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_CLASS_INTERNAL, HOOK_METHOD, HOOK_DESCRIPTOR, false));
+			hook.add(new FieldInsnNode(Opcodes.PUTSTATIC, owner, name, BYTE_ARRAY_DESCRIPTOR));
+			findMethod(node, guard).instructions.insertBefore(guard, hook);
 		}
+
+		log.info("hwid-agent random.dat spoof installed on " + node.name + " (" + guards.size() + " sites, field " + owner + "." + name + ")");
 
 		ClassWriter writer = new ClassWriter(0);
 		node.accept(writer);
 		return writer.toByteArray();
+	}
+
+	private static MethodNode findMethod(ClassNode node, AbstractInsnNode insn)
+	{
+		for (MethodNode method : node.methods)
+		{
+			if (method.instructions.contains(insn))
+			{
+				return method;
+			}
+		}
+		throw new IllegalStateException("guard instruction without method");
 	}
 
 	private static boolean looksUnlikely(String className)
@@ -176,70 +175,101 @@ public final class RandomDatTransformer implements ClassFileTransformer
 
 	private static String soleStaticByteArrayField(ClassNode node)
 	{
-		String fieldName = null;
+		String name = null;
 		int count = 0;
 		for (FieldNode field : node.fields)
 		{
 			if ((field.access & Opcodes.ACC_STATIC) != 0 && BYTE_ARRAY_DESCRIPTOR.equals(field.desc))
 			{
 				count++;
-				fieldName = field.name;
+				name = field.name;
 			}
 		}
-		return count == 1 ? fieldName : null;
+		return count == 1 ? name : null;
 	}
 
-	private static boolean containsNewArray24(ClassNode node)
+	private static boolean storesFreshArrayInLocal(MethodNode method)
 	{
-		for (MethodNode method : node.methods)
+		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
 		{
-			for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
+			if (insn.getOpcode() != Opcodes.BIPUSH || ((IntInsnNode) insn).operand != 24)
 			{
-				if (!(insn instanceof IntInsnNode)
-					|| insn.getOpcode() != Opcodes.BIPUSH
-					|| ((IntInsnNode) insn).operand != 24)
-				{
-					continue;
-				}
-				AbstractInsnNode next = insn.getNext();
-				if (next != null
-					&& next.getOpcode() == Opcodes.NEWARRAY
-					&& ((IntInsnNode) next).operand == Opcodes.T_BYTE)
-				{
-					return true;
-				}
+				continue;
+			}
+			AbstractInsnNode array = nextReal(insn);
+			if (array == null
+				|| array.getOpcode() != Opcodes.NEWARRAY
+				|| ((IntInsnNode) array).operand != Opcodes.T_BYTE)
+			{
+				continue;
+			}
+			AbstractInsnNode store = nextReal(array);
+			if (store != null && store.getOpcode() == Opcodes.ASTORE)
+			{
+				return true;
 			}
 		}
 		return false;
 	}
 
-	private static boolean qualifies(MethodNode method, String fieldName)
+	private static boolean isNullGuard(AbstractInsnNode insn, String owner, String name)
 	{
-		boolean hasNullCheck = false;
-		boolean hasProvider = false;
-		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
+		if (insn.getOpcode() != Opcodes.GETSTATIC)
 		{
-			if (!hasNullCheck
-				&& insn instanceof FieldInsnNode
-				&& insn.getOpcode() == Opcodes.GETSTATIC
-				&& BYTE_ARRAY_DESCRIPTOR.equals(((FieldInsnNode) insn).desc)
-				&& ((FieldInsnNode) insn).name.equals(fieldName))
-			{
-				AbstractInsnNode next = insn.getNext();
-				if (next != null && next.getOpcode() == Opcodes.IFNULL)
-				{
-					hasNullCheck = true;
-				}
-			}
-			if (!hasProvider
-				&& insn instanceof MethodInsnNode
-				&& insn.getOpcode() == Opcodes.INVOKESTATIC
-				&& PROVIDER_DESCRIPTOR.equals(((MethodInsnNode) insn).desc))
-			{
-				hasProvider = true;
-			}
+			return false;
 		}
-		return hasNullCheck && hasProvider;
+		FieldInsnNode field = (FieldInsnNode) insn;
+		if (!owner.equals(field.owner) || !name.equals(field.name) || !BYTE_ARRAY_DESCRIPTOR.equals(field.desc))
+		{
+			return false;
+		}
+
+		AbstractInsnNode next = nextReal(insn);
+		if (next == null)
+		{
+			return false;
+		}
+		int op = next.getOpcode();
+		if (op == Opcodes.IFNULL || op == Opcodes.IFNONNULL)
+		{
+			return true;
+		}
+		if (isReferenceCompare(op))
+		{
+			AbstractInsnNode previous = previousReal(insn);
+			return previous != null && previous.getOpcode() == Opcodes.ACONST_NULL;
+		}
+		if (op == Opcodes.ACONST_NULL)
+		{
+			AbstractInsnNode compare = nextReal(next);
+			return compare != null && isReferenceCompare(compare.getOpcode());
+		}
+		return false;
+	}
+
+	private static boolean isReferenceCompare(int opcode)
+	{
+		return opcode == Opcodes.IF_ACMPEQ || opcode == Opcodes.IF_ACMPNE;
+	}
+
+	private static AbstractInsnNode nextReal(AbstractInsnNode insn)
+	{
+		AbstractInsnNode next = insn.getNext();
+		while (next != null && next.getOpcode() < 0)
+		{
+			next = next.getNext();
+		}
+		return next;
+	}
+
+	private static AbstractInsnNode previousReal(AbstractInsnNode insn)
+	{
+		AbstractInsnNode previous = insn.getPrevious();
+		while (previous != null && previous.getOpcode() < 0)
+		{
+			previous = previous.getPrevious();
+		}
+		return previous;
 	}
 
 	static boolean isRandomHookInstalled()
@@ -252,24 +282,24 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		return patchedSites;
 	}
 
-	static String providerOwner()
+	static String fieldOwner()
 	{
-		return providerOwner;
+		return fieldOwner;
 	}
 
-	static String providerName()
+	static String fieldName()
 	{
-		return providerName;
+		return fieldName;
 	}
 
 	static void resetForTesting()
 	{
-		synchronized (providerLock)
+		synchronized (lock)
 		{
 			randomHookInstalled = false;
 			patchedSites = 0;
-			providerOwner = null;
-			providerName = null;
+			fieldOwner = null;
+			fieldName = null;
 		}
 	}
 }
