@@ -82,7 +82,8 @@ public class Rs2Prayer {
 	 * Creates a menu entry and executes it with the appropriate bounds.
 	 *
 	 * @param prayer the prayer to invoke
-	 * @param withMouse true to use mouse clicks with prayer bounds
+	 * @param withMouse true to use the prayer bounds even when the widget reports hidden;
+	 *                  visible prayers are always clicked on their bounds
 	 */
 	private static void invokePrayer(Rs2PrayerEnum prayer, boolean withMouse) {
 		NewMenuEntry menuEntry = new NewMenuEntry(
@@ -94,9 +95,11 @@ public class Rs2Prayer {
                 !isPrayerActive(prayer) ? "Activate": "Deactivate"
 		);
 
-		Rectangle prayerBounds = withMouse ? getPrayerBounds(prayer) : Rs2UiHelper.getDefaultRectangle();
-//		Rectangle prayerBounds = new Rectangle(1, 1);
-        Microbot.doInvoke(menuEntry, prayerBounds);
+		Rectangle prayerBounds = withMouse || !Rs2Widget.isHidden(prayer.getIndex())
+				? getPrayerBounds(prayer)
+				: Rs2UiHelper.getDefaultRectangle();
+
+        Microbot.doInvokeQuick(menuEntry, prayerBounds);
         // Microbot.getClient().menuAction(-1, prayer.getIndex(), MenuAction.CC_OP, 1, -1, "Activate", "Activate");
 	}
 
@@ -239,7 +242,8 @@ public class Rs2Prayer {
 	 * Invokes the quick prayer orb action
 	 * Creates a menu entry for the quick prayer orb and executes it.
 	 *
-	 * @param withMouse true to use mouse with orb bounds
+	 * @param withMouse true to use the orb bounds even when the orb reports hidden;
+	 *                  a visible orb is always clicked on its bounds
 	 */
 	private static void invokeQuickPrayer(boolean withMouse) {
 		NewMenuEntry entry = new NewMenuEntry(
@@ -251,7 +255,9 @@ public class Rs2Prayer {
 				!isQuickPrayerEnabled() ? "Activate" : "Deactivate"
 		);
 
-		Microbot.doInvoke(entry, withMouse ? getQuickPrayerOrbBounds() : Rs2UiHelper.getDefaultRectangle());
+		Microbot.doInvokeQuick(entry, withMouse || !Rs2Widget.isHidden(QUICK_PRAYER_ORB_COMPONENT_ID)
+				? getQuickPrayerOrbBounds()
+				: Rs2UiHelper.getDefaultRectangle());
 	}
 
 	/**

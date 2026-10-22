@@ -29,6 +29,8 @@ Instance location conversions must null-check `LocalPoint.fromWorld`: [movement 
 
 Bounds-check a `LocalPoint` against its worldview before projecting it to the canvas: [movement gotcha 27](movement.md#27-bounds-check-a-localpoint-against-its-own-worldview-before-projecting-it).
 
+A door attempt that ends on the near side is a refusal, not a traversal: [movement gotcha 28](movement.md#28-a-door-attempt-that-ends-on-the-near-side-is-a-refusal-not-a-traversal).
+
 Object submenus: resolve the parent from the composition's action slots, then inspect
 `getOps().getSubOps(parentIndex)`. A fairy ring can expose Favourites at slot 3 even when
 the live parent reports only 3 ops. Preserve the actual child index (including zero)
