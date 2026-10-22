@@ -50,6 +50,18 @@ final class RandomDatStore
 		return data;
 	}
 
+	static synchronized void put(String identifier, byte[] data)
+	{
+		if (identifier == null || data == null || data.length != 24)
+		{
+			return;
+		}
+		loaded();
+		STORE.setProperty(keyFor(identifier), Base64.getEncoder().encodeToString(data));
+		save();
+		log.info("Stored server-assigned random.dat seed");
+	}
+
 	private static String keyFor(String identifier)
 	{
 		try

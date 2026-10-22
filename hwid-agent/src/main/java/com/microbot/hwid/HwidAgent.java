@@ -1,7 +1,12 @@
 package com.microbot.hwid;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.instrument.Instrumentation;
+import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 public final class HwidAgent
@@ -16,6 +21,10 @@ public final class HwidAgent
 	private static volatile boolean deviceHookInstalled;
 	private static volatile byte[] injectedRandomDat;
 	private static volatile byte[] injectedSnapshot;
+	private static volatile String injectedFor;
+	private static File credentialsFile;
+	private static boolean credentialsRead;
+	private static String credentialsCharacterId;
 
 	private HwidAgent()
 	{
@@ -28,6 +37,7 @@ public final class HwidAgent
 			inst.addTransformer(new PlatformInfoTransformer());
 			inst.addTransformer(new RandomDatTransformer());
 			System.setProperty(AGENT_PROPERTY, "loaded");
+			launcherCharacterId();
 		}
 		catch (Throwable t)
 		{
@@ -69,22 +79,30 @@ public final class HwidAgent
 		return Boolean.parseBoolean(System.getProperty(TOGGLE_PROPERTY, "true"));
 	}
 
-	public static byte[] randomDatField(byte[] current)
+	public static synchronized byte[] randomDatField(byte[] current)
 	{
 		try
 		{
 			System.setProperty(RANDOM_DAT_CALL_PROPERTY, Long.toString(System.currentTimeMillis()));
-			if (current != null && (current != injectedRandomDat || !Arrays.equals(current, injectedSnapshot)))
+			if (current != null && current != injectedRandomDat)
 			{
 				return current;
+			}
+			if (current != null && !Arrays.equals(current, injectedSnapshot))
+			{
+				RandomDatStore.put(injectedFor, current);
+				injectedSnapshot = current.clone();
 			}
 			if (!spoofEnabled())
 			{
 				injectedRandomDat = null;
 				injectedSnapshot = null;
+				injectedFor = null;
 				return null;
 			}
-			byte[] data = RandomDatStore.getOrCreate(currentIdentifier());
+			String identifier = currentIdentifier();
+			byte[] data = RandomDatStore.getOrCreate(identifier);
+			injectedFor = identifier;
 			if (current != null && Arrays.equals(current, data))
 			{
 				return current;
@@ -110,12 +128,61 @@ public final class HwidAgent
 		}
 
 		String jxCharacterId = System.getenv("JX_CHARACTER_ID");
+		if (jxCharacterId == null || jxCharacterId.isBlank())
+		{
+			jxCharacterId = launcherCharacterId();
+		}
 		if (jxCharacterId != null && !jxCharacterId.isBlank())
 		{
 			return "jx/" + jxCharacterId.trim();
 		}
 
 		return "default";
+	}
+
+	private static synchronized String launcherCharacterId()
+	{
+		if (!credentialsRead)
+		{
+			credentialsRead = true;
+			credentialsCharacterId = readCharacterId(credentialsFile != null
+				? credentialsFile
+				: new File(new File(System.getProperty("user.home"), ".runelite"), System.getProperty("runelite.credentials.path", "credentials.properties")));
+		}
+		return credentialsCharacterId;
+	}
+
+	private static String readCharacterId(File file)
+	{
+		if (!file.isFile())
+		{
+			return null;
+		}
+		Properties credentials = new Properties();
+		try (InputStream in = Files.newInputStream(file.toPath()))
+		{
+			credentials.load(in);
+		}
+		catch (IOException e)
+		{
+			log.warning("hwid-agent could not read the launcher credentials: " + e);
+			return null;
+		}
+		return credentials.getProperty("JX_CHARACTER_ID");
+	}
+
+	static synchronized void setCredentialsFileForTesting(File file)
+	{
+		credentialsFile = file;
+		credentialsRead = false;
+		credentialsCharacterId = null;
+	}
+
+	static synchronized void resetRandomDatForTesting()
+	{
+		injectedRandomDat = null;
+		injectedSnapshot = null;
+		injectedFor = null;
 	}
 
 	private static String vanillaUsername()

@@ -2,6 +2,7 @@ package com.microbot.hwid;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +31,7 @@ public class HwidAgentTest
 
 	private File storeFile;
 	private File randomDatStoreFile;
+	private File credentialsFile;
 
 	@Before
 	public void setUp() throws Exception
@@ -42,6 +44,9 @@ public class HwidAgentTest
 		RandomDatStore.setStoreFileForTesting(randomDatStoreFile);
 		RandomDatStore.reset();
 		System.setProperty("microbot.hwid.randomdat.store", randomDatStoreFile.getAbsolutePath());
+		credentialsFile = new File(randomDatStoreFile.getParentFile(), randomDatStoreFile.getName() + ".credentials");
+		HwidAgent.setCredentialsFileForTesting(credentialsFile);
+		HwidAgent.resetRandomDatForTesting();
 	}
 
 	@After
@@ -54,6 +59,15 @@ public class HwidAgentTest
 		RandomDatTransformer.resetForTesting();
 		storeFile.delete();
 		randomDatStoreFile.delete();
+		credentialsFile.delete();
+		HwidAgent.setCredentialsFileForTesting(null);
+		HwidAgent.resetRandomDatForTesting();
+	}
+
+	private void launchedForCharacter(String characterId) throws Exception
+	{
+		java.nio.file.Files.write(credentialsFile.toPath(), ("JX_CHARACTER_ID=" + characterId + "\nJX_SESSION_ID=session\n").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+		HwidAgent.setCredentialsFileForTesting(credentialsFile);
 	}
 
 	private static byte[] buildFakePlatformClass()
@@ -223,6 +237,36 @@ public class HwidAgentTest
 	{
 		assertTrue(HwidAgent.spoofEnabled());
 		assertEquals("default", HwidAgent.currentIdentifier());
+	}
+
+	@Test
+	public void identifierFallsBackToLauncherCredentials() throws Exception
+	{
+		launchedForCharacter("123456");
+		assertEquals("jx/123456", HwidAgent.currentIdentifier());
+	}
+
+	@Test
+	public void serverPushedRandomDatStaysWithTheAccountThatReceivedIt() throws Exception
+	{
+		byte[] patched = new RandomDatTransformer().transform(null, "client", null, null, buildFakeRandomDatClass());
+		Class<?> stub = new StubLoader("client", patched).defined();
+
+		byte[] pushed = new byte[24];
+		java.util.Arrays.fill(pushed, (byte) 7);
+
+		launchedForCharacter("first");
+		byte[] injected = (byte[]) stub.getMethod("sendIfNull").invoke(null);
+		System.arraycopy(pushed, 0, injected, 0, pushed.length);
+
+		launchedForCharacter("second");
+		byte[] second = (byte[]) stub.getMethod("sendIfNull").invoke(null);
+		assertArrayEquals(RandomDatStore.getOrCreate("jx/second"), second);
+		assertFalse(java.util.Arrays.equals(pushed, second));
+		assertArrayEquals(pushed, RandomDatStore.getOrCreate("jx/first"));
+
+		launchedForCharacter("first");
+		assertArrayEquals(pushed, (byte[]) stub.getMethod("sendIfNull").invoke(null));
 	}
 
 	@Test
