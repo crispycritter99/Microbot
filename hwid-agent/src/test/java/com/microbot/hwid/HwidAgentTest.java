@@ -236,6 +236,7 @@ public class HwidAgentTest
 		assertEquals("fix", RandomDatTransformer.fieldName());
 
 		Class<?> stub = new StubLoader("client", patched).defined();
+		System.clearProperty(HwidAgent.RANDOM_DAT_CALL_PROPERTY);
 		byte[] expected = RandomDatStore.getOrCreate(HwidAgent.currentIdentifier());
 		byte[] viaAcmp = (byte[]) stub.getMethod("sendAcmp").invoke(null);
 		byte[] viaIfNull = (byte[]) stub.getMethod("sendIfNull").invoke(null);
@@ -243,6 +244,7 @@ public class HwidAgentTest
 		assertTrue(viaAcmp == viaIfNull);
 		assertTrue(viaAcmp == stub.getMethod("sendViaProvider").invoke(null));
 		assertTrue(viaAcmp == stub.getDeclaredField("fix").get(null));
+		assertNotNull(System.getProperty(HwidAgent.RANDOM_DAT_CALL_PROPERTY));
 	}
 
 	@Test

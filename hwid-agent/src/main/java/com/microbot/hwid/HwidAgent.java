@@ -9,6 +9,9 @@ public final class HwidAgent
 	private static final Logger log = Logger.getLogger(HwidAgent.class.getName());
 
 	public static final String TOGGLE_PROPERTY = "microbot.hwid.spoof";
+	public static final String AGENT_PROPERTY = "microbot.hwid.agent";
+	public static final String DEVICE_HOOK_PROPERTY = "microbot.hwid.device.installed";
+	public static final String RANDOM_DAT_CALL_PROPERTY = "microbot.hwid.randomdat.lastCall";
 
 	private static volatile boolean deviceHookInstalled;
 	private static volatile byte[] injectedRandomDat;
@@ -24,6 +27,7 @@ public final class HwidAgent
 		{
 			inst.addTransformer(new PlatformInfoTransformer());
 			inst.addTransformer(new RandomDatTransformer());
+			System.setProperty(AGENT_PROPERTY, "loaded");
 		}
 		catch (Throwable t)
 		{
@@ -34,6 +38,7 @@ public final class HwidAgent
 	static void markDeviceHookInstalled()
 	{
 		deviceHookInstalled = true;
+		System.setProperty(DEVICE_HOOK_PROPERTY, "true");
 	}
 
 	public static boolean isDeviceHookInstalled()
@@ -68,6 +73,7 @@ public final class HwidAgent
 	{
 		try
 		{
+			System.setProperty(RANDOM_DAT_CALL_PROPERTY, Long.toString(System.currentTimeMillis()));
 			if (current != null && (current != injectedRandomDat || !Arrays.equals(current, injectedSnapshot)))
 			{
 				return current;
