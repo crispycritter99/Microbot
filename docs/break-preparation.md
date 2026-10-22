@@ -24,4 +24,6 @@ All registered owners must report readiness. Closing an unready owner during pre
 
 Readiness is reset when a break finishes or is cancelled, and handlers clear stale request state on restart. Plugins should resume their saved workflow after `isRequested()` becomes false. Enable only one break handler at a time.
 
+An active no-logout break is allowed to finish even if a late participant registers and times out. Cancelling a pending preparation releases the global script pause and schedules the next break; a restored pause break that still needs preparation follows this cancellation path too.
+
 Blackjack uses this to secure its curtain and leave the NPC before allowing a break; repeated failed Knock-Out hits must not be treated as a reason to pause in place. The API is independent of Blackjack and leaves existing behavior unchanged when no participant is registered.

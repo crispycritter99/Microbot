@@ -13,6 +13,10 @@ public final class BreakPreparation
 
     private BreakPreparation() {}
 
+    /**
+     * Opts an owner into preparation. Re-registering the same name replaces its handle;
+     * the old handle can no longer report readiness or unregister the replacement.
+     */
     public static synchronized Handle register(String owner)
     {
         Handle handle = new Handle(owner);
@@ -20,11 +24,16 @@ public final class BreakPreparation
         return handle;
     }
 
+    /** Returns whether any plugin has opted in; no participants means no preparation deferral. */
     public static synchronized boolean hasParticipants()
     {
         return !OWNERS.isEmpty();
     }
 
+    /**
+     * Requests preparation and reports whether an owner is still unready.
+     * Handlers call this before a break starts, not while a timed break is already active.
+     */
     public static synchronized boolean shouldDeferBreak()
     {
         if (!requested)
@@ -35,12 +44,14 @@ public final class BreakPreparation
         return OWNERS.values().stream().anyMatch(handle -> !handle.ready);
     }
 
+    /** Reports an unsafe owner shutdown or a 120-second timeout; the handler must cancel the request. */
     public static synchronized boolean isAborted()
     {
         return aborted || (requested && System.currentTimeMillis() - requestedAt >= 120_000
                 && OWNERS.values().stream().anyMatch(handle -> !handle.ready));
     }
 
+    /** Clears the request and readiness on completion, cancellation or handler restart, retaining owners. */
     public static synchronized void finishBreak()
     {
         requested = false;
@@ -48,6 +59,7 @@ public final class BreakPreparation
         OWNERS.values().forEach(handle -> handle.ready = false);
     }
 
+    /** A plugin-owned registration, closed on shutdown, including hot reload. */
     public static final class Handle implements AutoCloseable
     {
         private final String owner;
@@ -58,6 +70,7 @@ public final class BreakPreparation
             this.owner = owner;
         }
 
+        /** Returns whether this current registration has been asked to reach safety. */
         public boolean isRequested()
         {
             synchronized (BreakPreparation.class)
@@ -66,6 +79,7 @@ public final class BreakPreparation
             }
         }
 
+        /** Reports safety for the current request; stale handles and calls before a request are ignored. */
         public void ready()
         {
             synchronized (BreakPreparation.class)
@@ -77,6 +91,7 @@ public final class BreakPreparation
             }
         }
 
+        /** Unregisters this handle; closing while unready cancels a pending request as unsafe. */
         @Override
         public void close()
         {

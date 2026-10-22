@@ -92,7 +92,7 @@ public class BreakHandlerV2Script extends Script {
     private static final int MAX_SAFETY_CHECK_ATTEMPTS = 60;
     private static final int SAFETY_CHECK_DELAY_MS = 5000; // 5 seconds between checks
 
-    public static String version = "2.0.9";
+    public static String version = "2.0.10";
     private boolean restoredPauseNeedsPreparation;
 
     /**
@@ -251,7 +251,7 @@ public class BreakHandlerV2Script extends Script {
      * Initiates break based on configuration
      */
     private void handleBreakRequested() {
-        if (cancelFailedPreparation()) {
+        if ((breakEndTime == null || restoredPauseNeedsPreparation) && cancelFailedPreparation()) {
             return;
         }
         if (shouldDeferRequestedBreak(restoredPauseNeedsPreparation ? null : breakEndTime)) {
@@ -1426,6 +1426,7 @@ public class BreakHandlerV2Script extends Script {
         Microbot.pauseAllScripts.set(true);
     }
 
+    /** Cancels failed preparation and releases the pause so normal script processing can resume. */
     private boolean cancelFailedPreparation() {
         if (!BreakPreparation.isAborted()) {
             return false;
@@ -1433,6 +1434,7 @@ public class BreakHandlerV2Script extends Script {
         log.warn("[BreakHandlerV2] Break preparation failed or timed out; cancelling this request");
         restoredPauseNeedsPreparation = false;
         breakEndTime = null;
+        Microbot.pauseAllScripts.set(false);
         clearPersistedBreakState();
         scheduleNextBreak(true, true);
         transitionToState(BreakHandlerV2State.WAITING_FOR_BREAK);
