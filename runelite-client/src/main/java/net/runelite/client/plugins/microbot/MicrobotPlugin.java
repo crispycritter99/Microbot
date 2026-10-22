@@ -92,6 +92,7 @@ public class MicrobotPlugin extends Plugin
 	 * @apiNote Treat as stable external API: renames or semantic changes break scripts — note in changelog when modifying.
 	 */
 	public static final long LEAGUES_LOCK_CHAT_MAX_ATTEMPT_AGE_MS = Rs2LeaguesTransport.LEAGUES_LOCK_CHAT_MAX_ATTEMPT_AGE_MS;
+	private static final String HWID_SPOOF_PROPERTY = "microbot.hwid.spoof";
 	private EnumSet<WorldType> lastWorldTypeProfile = null;
 
 	@Inject
@@ -173,7 +174,9 @@ public class MicrobotPlugin extends Plugin
 
 		gameChatAppender = new GameChatAppender();
 		gameChatAppender.setName("GAME_CHAT");
-		
+
+		System.setProperty(HWID_SPOOF_PROPERTY, Boolean.toString(microbotConfig.spoofDeviceId()));
+
 		// Set pattern based on new configuration
 		String pattern = microbotConfig.getGameChatLogPattern().getPattern();
 		gameChatAppender.setPattern(pattern);
@@ -562,6 +565,9 @@ public class MicrobotPlugin extends Plugin
 					break;
 				case MicrobotConfig.keyUseStaminaPotsIfNeeded:
 					Microbot.useStaminaPotsIfNeeded = microbotConfig.useStaminaPotsIfNeeded();
+					break;
+				case MicrobotConfig.keySpoofDeviceId:
+					System.setProperty(HWID_SPOOF_PROPERTY, Boolean.toString(microbotConfig.spoofDeviceId()));
 					break;
 				case MicrobotConfig.keyDisableInputYielding:
 					InputArbiter.setDisabled(microbotConfig.disableInputYielding());

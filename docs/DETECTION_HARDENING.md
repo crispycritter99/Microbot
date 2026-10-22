@@ -380,3 +380,31 @@ These are account-management problems (break schedules, skill diversification, I
 | 8.6 | Behavioral/statistical | Not a client problem. |
 
 The practical signal to revisit this: if a ban wave correlates with a specific Microbot build *and* vanilla RuneLite users on the same accounts are unaffected, one of 8.1–8.5 is being actively exploited and we triage from there.
+
+---
+
+## Phase 9 — hardware identifier spoofing (-javaagent) ✅ complete
+
+Vanilla clients send two machine-bound identifiers with every login: the device ID produced by the gamepack `PlatformInfo` class (reads `wmic csproduct get UUID` on Windows, `system_profiler SPHardwareDataType` on macOS, `/etc/machine-id` on Linux) and the 24-byte `random.dat` seed read from the jagex store. Spoofing one without the other still links accounts (fresh device ID + constant random.dat = contradiction only a spoofed client produces; constant device ID + fresh random.dat per launch is already how the vanilla server-side signal behaves across repeated logins from one machine — the pair must both look machine-independent).
+
+Design (inspired by VitaLite's TDeviceIDMixin / TRandomDatMixin, MIT — see `/tmp/opencode/vitalite` reference clone):
+
+- **Agent**: `Microbot/hwid-agent/` is a standalone Gradle module producing `hwid-agent-<microbot.version>.jar` (manifest `Premain-Class=com.microbot.hwid.HwidAgent`, Java 11 bytecode). ASM is NOT bundled — it resolves from the shaded client jar at runtime.
+- **Device ID** (`PlatformInfoTransformer`): identifies the platform class structurally (class-name rotates between revisions; 1.12.36 = `vt`, the two String-returning fingerprint methods contain the commands as LDC constants) and rewrites both method bodies to `iload osType; invokestatic com.microbot.hwid.HwidAgent.deviceId(I)Ljava/lang/String;; areturn`. Cleared try-catch blocks / local variable tables are required or the JVM rejects the rewritten class (`ClassFormatError: Illegal exception table range`).
+- **random.dat** (`RandomDatTransformer`): in 1.12.36 the copy helpers `zj`/`zq` are dead code (zero callers), `client.lx` stays null, and the bytes sent at login always come from `jl.ab:(B)[B` (disk read with an all-`0xFF` fresh fallback, which is why VitaLite forces `0xFF`) at exactly 3 sites — the three login-send methods `dp`, `ads`, `adr`. The transformer detects the Client class structurally (exactly one static `byte[]` field, `bipush 24; newarray byte` present, `getstatic field / ifnull` + the provider call in the same method), then swaps each 3-byte `invokestatic jl.ab:(B)[B` for `invokestatic com.microbot.hwid.HwidAgent.randomData(B)[B`. Length-preserving 3-for-3 swap: no instruction offsets shift, existing StackMapTable stays valid, no frame recompute.
+- **Stores**: per-account UUID (`spoofed-device-ids.properties`) and per-account 24-byte Base64 seed (`spoofed-random-dats.properties`) under `~/.runelite/`, SHA-256-of-identifier keyed so no PII is stored or logged; override via `microbot.hwid.store` / `microbot.hwid.randomdat.store`. Identifier chain: injected client `getUsername()` → env `JX_CHARACTER_ID` → `default`. `getOrCreate` MUST `load()` before checking the in-memory `Properties` — a missing load regenerates a new value every JVM (caught by live smoke testing, see below).
+- **Toggle**: `microbot.hwid.spoof` system property, default `true`, re-read per call. Wired to the in-game settings item `MicrobotConfig.keySpoofDeviceId = "spoofDeviceId"` ("Spoof device ID", General section, position 3) in `MicrobotPlugin.startUp()` / `onConfigChanged` (`HWID_SPOOF_PROPERTY` string, no agent compile dependency). Disabling keeps the transformers installed but passes through to the original code (`VanillaDeviceId` port of vita's `DeviceID.vanillaGetDeviceID`; random.dat reflects back into `jl.ab`).
+- **Launcher**: `Microbot-Launcher/libs/hwid-agent.js` downloads `hwid-agent-<version>.jar` from the release storage next to the client jar (graceful 404 fallback and keeps launching); `-javaagent` is unshifted before `-jar` in `libs/jar-executor.js` (both launch handlers); `libs/ipc-handlers.js` awaits `ensureHwidAgentJar` in `download-client` and fire-and-forget in `client-exists`.
+- **CI**: all three workflows (`nightly.yml`, `manual_nightly.yml`, `release.yml`) build `:hwid-agent:jar`, copy it next to the client artifacts for scp and the GitHub release `files:` list (note differing scp `strip_components`).
+
+Validation (unit + live smoke, all green):
+
+- `:hwid-agent:test` (JUnit 4) — 9 tests: synthetic patch/define/invoke for both transformers, real-jar scans of the shipped `injected-client:1.12.36.jar` (device ID: exactly 1 class patched, fingerprint LDCs gone; random.dat: exactly 1 class, 3 sites swapped, provider `jl.ab` captured; re-transform idempotent), identifier fallback, and both toggles.
+- Live smoke on the real gamepack jar with both transformers registered: patch installs on `vt` and `client`, patched classes define and run, spoofed device ID and random.dat seed stable across JVM runs, per-account (`JX_CHARACTER_ID=sam`) values distinct, disabled toggle returns vanilla output, no side effects on disk outside the store files.
+- `:client:compileJava` + `:client:runUnitTests` green. Microbot itself never sends an HWID; only the gamepack does.
+
+Remaining (flagged, not blocking):
+- In-game login validation on a live account (the true end-to-end check that Jagex receives the spoofed pair).
+- The device ID patch removes `try-catch`/local-table debug info from the two fingerprint methods; harmless but reviewers should not try to restore StackMapTable across a whole-body rewrite.
+
+Key lesson for the next revision: never trust a store that loads lazily, and never rewrite a method body without also clearing its try-catch ranges — both were live-class failures, not unit-test ones.
