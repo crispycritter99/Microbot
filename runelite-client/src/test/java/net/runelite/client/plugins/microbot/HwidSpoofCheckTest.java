@@ -62,6 +62,14 @@ public class HwidSpoofCheckTest
 	}
 
 	@Test
+	public void silentWhenTheLauncherTurnedSpoofingOff()
+	{
+		properties.put(HwidSpoofCheck.LAUNCHER_DISABLED_PROPERTY, "true");
+		check.loginStarted();
+		assertFalse(check.loggedIn(true).isPresent());
+	}
+
+	@Test
 	public void silentWhenSpoofingIsOff()
 	{
 		check.loginStarted();

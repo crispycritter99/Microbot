@@ -9,6 +9,7 @@ import java.util.function.LongSupplier;
 final class HwidSpoofCheck
 {
 	static final String AGENT_PROPERTY = "microbot.hwid.agent";
+	static final String LAUNCHER_DISABLED_PROPERTY = "microbot.hwid.launcherDisabled";
 	static final String DEVICE_HOOK_PROPERTY = "microbot.hwid.device.installed";
 	static final String RANDOM_DAT_CALL_PROPERTY = "microbot.hwid.randomdat.lastCall";
 
@@ -41,7 +42,7 @@ final class HwidSpoofCheck
 	{
 		long startedAt = loginStartedAt;
 		loginStartedAt = -1;
-		if (!spoofEnabled || startedAt < 0)
+		if (!spoofEnabled || startedAt < 0 || Boolean.parseBoolean(properties.apply(LAUNCHER_DISABLED_PROPERTY)))
 		{
 			return Optional.empty();
 		}
