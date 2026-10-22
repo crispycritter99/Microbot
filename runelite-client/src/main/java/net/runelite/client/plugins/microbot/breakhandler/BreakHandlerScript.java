@@ -176,6 +176,7 @@ public class BreakHandlerScript extends Script {
      * Main entry point for the break handler script.
      */
     public boolean run(BreakHandlerConfig config) {
+        BreakPreparation.finishBreak();
         this.config = config;        
         originalWindowTitle = ClientUI.getFrame().getTitle();        
         // Initialize state and timing
@@ -871,6 +872,7 @@ public class BreakHandlerScript extends Script {
 
     @Override
     public void shutdown() {
+        BreakPreparation.finishBreak();
         BreakHandlerState state = currentState.get();
         if(scheduledFuture != null && !scheduledFuture.isDone()) {
             scheduledFuture.cancel(true);

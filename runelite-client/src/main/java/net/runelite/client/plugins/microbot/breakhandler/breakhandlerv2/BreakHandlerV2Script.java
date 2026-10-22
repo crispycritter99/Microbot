@@ -92,12 +92,15 @@ public class BreakHandlerV2Script extends Script {
     private static final int MAX_SAFETY_CHECK_ATTEMPTS = 60;
     private static final int SAFETY_CHECK_DELAY_MS = 5000; // 5 seconds between checks
 
-    public static String version = "2.0.8";
+    public static String version = "2.0.9";
+    private boolean restoredPauseNeedsPreparation;
 
     /**
      * Run the break handler script
      */
     public boolean run(BreakHandlerV2Config config) {
+        BreakPreparation.finishBreak();
+        restoredPauseNeedsPreparation = false;
         this.config = config;
         scriptStartedAt = Instant.now();
         breaksActivatedCount = 0;
@@ -251,7 +254,7 @@ public class BreakHandlerV2Script extends Script {
         if (cancelFailedPreparation()) {
             return;
         }
-        if (shouldDeferRequestedBreak(breakEndTime)) {
+        if (shouldDeferRequestedBreak(restoredPauseNeedsPreparation ? null : breakEndTime)) {
             long now = System.currentTimeMillis();
             if (now - lastLockDeferralLogAt >= LOCK_DEFERRAL_LOG_INTERVAL_MS) {
                 log.info("[BreakHandlerV2] Break deferred while a plugin lock is active");
@@ -261,6 +264,10 @@ public class BreakHandlerV2Script extends Script {
         }
 
         lastLockDeferralLogAt = 0L;
+        if (restoredPauseNeedsPreparation) {
+            restoredPauseNeedsPreparation = false;
+            Microbot.pauseAllScripts.set(true);
+        }
         stopConfiguredPluginIfNeeded();
 
         // If breakEndTime is already set, we're in a no-logout break waiting for it to end
@@ -1352,7 +1359,10 @@ public class BreakHandlerV2Script extends Script {
                     transitionToState(BreakHandlerV2State.LOGGED_OUT);
                 }
             } else {
-                Microbot.pauseAllScripts.set(true);
+                restoredPauseNeedsPreparation = Microbot.isLoggedIn() && BreakPreparation.hasParticipants();
+                if (!restoredPauseNeedsPreparation) {
+                    Microbot.pauseAllScripts.set(true);
+                }
                 transitionToState(BreakHandlerV2State.BREAK_REQUESTED);
             }
         } else {
@@ -1421,6 +1431,7 @@ public class BreakHandlerV2Script extends Script {
             return false;
         }
         log.warn("[BreakHandlerV2] Break preparation failed or timed out; cancelling this request");
+        restoredPauseNeedsPreparation = false;
         breakEndTime = null;
         clearPersistedBreakState();
         scheduleNextBreak(true, true);

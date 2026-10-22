@@ -58,4 +58,40 @@ public class BreakPreparationTest
         BreakPreparation.finishBreak();
         assertFalse(BreakPreparation.isAborted());
     }
+
+    @Test
+    public void cancelledRequestCanBeRequestedAgainWithoutReplacingOwner()
+    {
+        try (BreakPreparation.Handle handle = BreakPreparation.register("blackjack"))
+        {
+            assertTrue(BreakPreparation.shouldDeferBreak());
+            BreakPreparation.finishBreak();
+            assertFalse(handle.isRequested());
+            assertTrue(BreakPreparation.shouldDeferBreak());
+            handle.ready();
+            assertFalse(BreakPreparation.shouldDeferBreak());
+        }
+    }
+
+    @Test
+    public void noParticipantsDoesNotDeferExistingBreakBehavior()
+    {
+        assertFalse(BreakPreparation.hasParticipants());
+        assertFalse(BreakPreparation.shouldDeferBreak());
+        assertFalse(BreakPreparation.isAborted());
+    }
+
+    @Test
+    public void unreadyParticipantTimesOutRatherThanAllowingUnsafeBreak() throws Exception
+    {
+        try (BreakPreparation.Handle handle = BreakPreparation.register("blackjack"))
+        {
+            assertTrue(BreakPreparation.shouldDeferBreak());
+            java.lang.reflect.Field requestedAt = BreakPreparation.class.getDeclaredField("requestedAt");
+            requestedAt.setAccessible(true);
+            requestedAt.setLong(null, System.currentTimeMillis() - 120_001);
+            assertTrue(BreakPreparation.isAborted());
+            assertTrue(BreakPreparation.shouldDeferBreak());
+        }
+    }
 }
