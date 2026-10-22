@@ -102,7 +102,7 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 		return false;
 	}
 
-	private static boolean referencesMarkers(MethodNode method)
+	static boolean referencesMarkers(MethodNode method)
 	{
 		for (org.objectweb.asm.tree.AbstractInsnNode insn : method.instructions)
 		{

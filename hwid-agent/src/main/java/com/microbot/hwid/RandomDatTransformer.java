@@ -31,6 +31,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 	private static volatile int patchedSites;
 	private static volatile String fieldOwner;
 	private static volatile String fieldName;
+	private static final List<String> patchedMethods = new ArrayList<>();
 
 	public byte[] transform(ClassLoader loader, String className, Class<?> beingLoaded, ProtectionDomain pd, byte[] bytes)
 	{
@@ -107,6 +108,11 @@ public final class RandomDatTransformer implements ClassFileTransformer
 			}
 			patchedSites += guards.size();
 			randomHookInstalled = true;
+			for (FieldInsnNode guard : guards)
+			{
+				MethodNode method = findMethod(node, guard);
+				patchedMethods.add(node.name + "." + method.name + method.desc);
+			}
 		}
 
 		for (FieldInsnNode guard : guards)
@@ -292,10 +298,19 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		return fieldName;
 	}
 
+	static List<String> patchedMethods()
+	{
+		synchronized (lock)
+		{
+			return new ArrayList<>(patchedMethods);
+		}
+	}
+
 	static void resetForTesting()
 	{
 		synchronized (lock)
 		{
+			patchedMethods.clear();
 			randomHookInstalled = false;
 			patchedSites = 0;
 			fieldOwner = null;

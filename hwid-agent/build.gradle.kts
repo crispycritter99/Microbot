@@ -28,3 +28,17 @@ tasks.jar {
     archiveBaseName = "hwid-agent"
     archiveVersion = providers.gradleProperty("microbot.version").orElse(providers.gradleProperty("microbot.commit.sha")).orElse("0.0.0").get()
 }
+
+tasks.register<JavaExec>("obfuscationReport") {
+    group = "verification"
+    description = "Locate the obfuscated names the agent hooks in the current injected-client and rewrite the generated values in docs. Re-run when the injected-client dependency bumps."
+
+    classpath = sourceSets.test.get().runtimeClasspath
+    mainClass.set("com.microbot.hwid.ObfuscationReport")
+    args(
+        rootProject.file("docs/DETECTION_HARDENING.md").absolutePath,
+        rootProject.file("docs/obfuscation/injected-getters.tsv").absolutePath,
+        rootProject.file("runelite-client/src/main/resources/net/runelite/client/plugins/microbot/util/reflection/menu-action-info.properties").absolutePath
+    )
+    mustRunAfter(":client:seedMenuActionInfo")
+}

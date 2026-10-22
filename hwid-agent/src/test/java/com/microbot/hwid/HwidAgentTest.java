@@ -145,7 +145,7 @@ public class HwidAgentTest
 	@Test
 	public void realInjectedClientClassIsPatched() throws Exception
 	{
-		File jar = locateInjectedClientJar();
+		File jar = InjectedClientJar.locate();
 		assertNotNull("injected-client jar missing from test classpath", jar);
 
 		PlatformInfoTransformer transformer = new PlatformInfoTransformer();
@@ -201,34 +201,6 @@ public class HwidAgentTest
 			}
 		}
 		return false;
-	}
-
-	private static File locateInjectedClientJar()
-	{
-		for (String entry : System.getProperty("java.class.path", "").split(File.pathSeparator))
-		{
-			if (entry.endsWith(".jar") && entry.contains("injected-client"))
-			{
-				return new File(entry);
-			}
-		}
-		ClassLoader loader = HwidAgentTest.class.getClassLoader();
-		while (loader != null)
-		{
-			if (loader instanceof java.net.URLClassLoader)
-			{
-				for (java.net.URL url : ((java.net.URLClassLoader) loader).getURLs())
-				{
-					String path = url.getPath();
-					if (path.endsWith(".jar") && path.contains("injected-client"))
-					{
-						return new File(java.net.URLDecoder.decode(path, java.nio.charset.StandardCharsets.UTF_8));
-					}
-				}
-			}
-			loader = loader.getParent();
-		}
-		return null;
 	}
 
 	@Test
@@ -345,7 +317,7 @@ public class HwidAgentTest
 	@Test
 	public void realInjectedClientRandomDatGuardsAreHooked() throws Exception
 	{
-		File jar = locateInjectedClientJar();
+		File jar = InjectedClientJar.locate();
 		assertNotNull("injected-client jar missing from test classpath", jar);
 
 		RandomDatTransformer transformer = new RandomDatTransformer();
