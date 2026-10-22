@@ -73,6 +73,10 @@ public final class ObfuscationReport
 			? Collections.emptyList()
 			: methodsAccessing(nodes, fieldOwner, fieldName, hookedSites.keySet());
 
+		RandomDatWriteTransformer.resetForTesting();
+		runTransformer(new RandomDatWriteTransformer(), classes);
+		List<String> fileGuards = new ArrayList<>(new LinkedHashSet<>(RandomDatWriteTransformer.patchedMethods()));
+
 		List<String> deviceClasses = runTransformer(new PlatformInfoTransformer(), classes);
 		List<String> deviceMethods = new ArrayList<>();
 		for (String deviceClass : deviceClasses)
@@ -107,18 +111,19 @@ public final class ObfuscationReport
 		Files.write(gettersFile, tsv, StandardCharsets.UTF_8);
 
 		String block = buildBlock(version, fieldOwner, fieldName, hookedSites, otherFieldAccessors,
-			deviceMethods, deviceCallers, menuAction, getterRows.size(), doc.toAbsolutePath().getParent().relativize(gettersFile.toAbsolutePath()));
+			fileGuards, deviceMethods, deviceCallers, menuAction, getterRows.size(), doc.toAbsolutePath().getParent().relativize(gettersFile.toAbsolutePath()));
 		replaceBlock(doc, block);
 
 		System.out.println("injected-client " + version);
 		System.out.println("random.dat field: " + (fieldOwner == null ? "NOT FOUND" : fieldOwner + "." + fieldName));
 		System.out.println("random.dat hooked sites: " + RandomDatTransformer.patchedSiteCount() + " in " + hookedSites.keySet());
 		System.out.println("random.dat field accessed but not hooked: " + otherFieldAccessors);
+		System.out.println("random.dat file guards: " + (fileGuards.isEmpty() ? "NOT FOUND" : fileGuards));
 		System.out.println("device id methods: " + (deviceMethods.isEmpty() ? "NOT FOUND" : deviceMethods));
 		System.out.println("device id callers: " + (deviceCallers.isEmpty() ? "none, the client never reads the device ID" : deviceCallers));
 		System.out.println("accessor rows: " + getterRows.size() + " -> " + gettersFile);
 
-		if (fieldOwner == null || hookedSites.isEmpty() || deviceMethods.isEmpty())
+		if (fieldOwner == null || hookedSites.isEmpty() || fileGuards.isEmpty() || deviceMethods.isEmpty())
 		{
 			System.err.println("A hook could not be located in injected-client " + version + "; the agent will not spoof it.");
 			System.exit(1);
@@ -368,7 +373,7 @@ public final class ObfuscationReport
 	}
 
 	private static String buildBlock(String version, String fieldOwner, String fieldName, Map<String, Integer> hookedSites,
-		List<String> otherFieldAccessors, List<String> deviceMethods, List<String> deviceCallers, Properties menuAction, int accessorCount, Path gettersLink)
+		List<String> otherFieldAccessors, List<String> fileGuards, List<String> deviceMethods, List<String> deviceCallers, Properties menuAction, int accessorCount, Path gettersLink)
 	{
 		StringBuilder out = new StringBuilder();
 		out.append(START_MARKER).append('\n');
@@ -379,6 +384,7 @@ public final class ObfuscationReport
 		int siteTotal = hookedSites.values().stream().mapToInt(Integer::intValue).sum();
 		out.append("| random.dat hooked send sites (").append(siteTotal).append(") | ").append(codeList(hookedSites.keySet())).append(" |\n");
 		out.append("| random.dat field accessed but not hooked | ").append(codeList(otherFieldAccessors)).append(" |\n");
+		out.append("| random.dat file guarded while spoofing | ").append(fileGuards.isEmpty() ? "**not found**" : codeList(fileGuards)).append(" |\n");
 		out.append("| Device ID methods | ").append(deviceMethods.isEmpty() ? "**not found**" : codeList(deviceMethods)).append(" |\n");
 		out.append("| Device ID method callers | ").append(deviceCallers.isEmpty() ? "none: the client never reads the device ID, so the hook has nothing to replace" : codeList(deviceCallers)).append(" |\n");
 		String menuOwner = menuAction.getProperty("menuAction.ownerClass");

@@ -57,6 +57,7 @@ public class HwidAgentTest
 		DeviceIdStore.reset();
 		RandomDatStore.reset();
 		RandomDatTransformer.resetForTesting();
+		RandomDatWriteTransformer.resetForTesting();
 		storeFile.delete();
 		randomDatStoreFile.delete();
 		credentialsFile.delete();
@@ -292,6 +293,67 @@ public class HwidAgentTest
 	}
 
 	@Test
+	public void randomDatFileIsHiddenWhileSpoofing() throws Exception
+	{
+		byte[] patched = new RandomDatWriteTransformer().transform(null, "StubWriter", null, null, buildFakeRandomDatWriter());
+		assertNotNull(patched);
+		assertEquals(java.util.List.of("StubWriter.persist()V"), RandomDatWriteTransformer.patchedMethods());
+
+		Class<?> writer = new StubLoader("StubWriter", patched).defined();
+		writer.getDeclaredField("handle").set(null, new StubFile());
+		StubFile.seeks = 0;
+		writer.getMethod("persist").invoke(null);
+		assertEquals(0, StubFile.seeks);
+
+		System.setProperty(HwidAgent.TOGGLE_PROPERTY, "false");
+		try
+		{
+			writer.getMethod("persist").invoke(null);
+			assertEquals(1, StubFile.seeks);
+		}
+		finally
+		{
+			System.clearProperty(HwidAgent.TOGGLE_PROPERTY);
+		}
+		assertNull(new RandomDatWriteTransformer().transform(null, "StubWriter", null, null, patched));
+	}
+
+	public static final class StubFile
+	{
+		static int seeks;
+
+		public void seek(long position)
+		{
+			seeks++;
+		}
+	}
+
+	private static byte[] buildFakeRandomDatWriter()
+	{
+		String handleType = "L" + StubFile.class.getName().replace('.', '/') + ";";
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+		cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC | Opcodes.ACC_SUPER, "StubWriter", null, "java/lang/Object", null);
+		cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "handle", handleType, null, null).visitEnd();
+		MethodVisitor persist = cw.visitMethod(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "persist", "()V", null, null);
+		persist.visitCode();
+		persist.visitInsn(Opcodes.ACONST_NULL);
+		persist.visitFieldInsn(Opcodes.GETSTATIC, "StubWriter", "handle", handleType);
+		org.objectweb.asm.Label done = new org.objectweb.asm.Label();
+		persist.visitJumpInsn(Opcodes.IF_ACMPEQ, done);
+		persist.visitFieldInsn(Opcodes.GETSTATIC, "StubWriter", "handle", handleType);
+		persist.visitInsn(Opcodes.LCONST_0);
+		persist.visitMethodInsn(Opcodes.INVOKEVIRTUAL, handleType.substring(1, handleType.length() - 1), "seek", "(J)V", false);
+		persist.visitIntInsn(Opcodes.BIPUSH, 24);
+		persist.visitInsn(Opcodes.POP);
+		persist.visitLabel(done);
+		persist.visitInsn(Opcodes.RETURN);
+		persist.visitMaxs(0, 0);
+		persist.visitEnd();
+		cw.visitEnd();
+		return cw.toByteArray();
+	}
+
+	@Test
 	public void nonClientClassIsIgnored()
 	{
 		assertNull(new RandomDatTransformer().transform(null, "zz", null, null, buildFakeRandomDatClass("zz")));
@@ -387,7 +449,9 @@ public class HwidAgentTest
 		{
 			String version = InjectedClientJar.version(jar);
 			RandomDatTransformer.resetForTesting();
+			RandomDatWriteTransformer.resetForTesting();
 			RandomDatTransformer randomDat = new RandomDatTransformer();
+			RandomDatWriteTransformer randomDatWrite = new RandomDatWriteTransformer();
 			PlatformInfoTransformer platform = new PlatformInfoTransformer();
 			java.util.Map<String, byte[]> patched = new java.util.HashMap<>();
 			int deviceClasses = 0;
@@ -412,6 +476,7 @@ public class HwidAgentTest
 					String className = zipNameToClassName(entry.getName());
 					byte[] result = randomDat.transform(null, className, null, null, bytes);
 					patched.put(className, result != null ? result : bytes);
+					randomDatWrite.transform(null, className, null, null, bytes);
 					if (platform.transform(null, className, null, null, bytes) != null)
 					{
 						deviceClasses++;
@@ -422,6 +487,7 @@ public class HwidAgentTest
 			assertEquals(version + ": device id class", 1, deviceClasses);
 			assertEquals(version + ": random.dat field owner", "client", RandomDatTransformer.fieldOwner());
 			assertTrue(version + ": no random.dat send site hooked", RandomDatTransformer.patchedSiteCount() > 0);
+			assertTrue(version + ": no random.dat file write guarded", !RandomDatWriteTransformer.patchedMethods().isEmpty());
 			java.util.List<String> unhooked = unhookedReaders(patched, RandomDatTransformer.fieldOwner(), RandomDatTransformer.fieldName());
 			assertTrue(version + ": random.dat readers left unhooked " + unhooked, unhooked.isEmpty());
 		}

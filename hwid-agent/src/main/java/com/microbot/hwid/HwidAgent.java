@@ -36,6 +36,7 @@ public final class HwidAgent
 		{
 			inst.addTransformer(new PlatformInfoTransformer());
 			inst.addTransformer(new RandomDatTransformer());
+			inst.addTransformer(new RandomDatWriteTransformer());
 			System.setProperty(AGENT_PROPERTY, "loaded");
 			launcherCharacterId();
 		}
@@ -77,6 +78,11 @@ public final class HwidAgent
 	public static boolean spoofEnabled()
 	{
 		return Boolean.parseBoolean(System.getProperty(TOGGLE_PROPERTY, "true"));
+	}
+
+	public static Object randomDatFile(Object handle)
+	{
+		return spoofEnabled() ? null : handle;
 	}
 
 	public static synchronized byte[] randomDatField(byte[] current)

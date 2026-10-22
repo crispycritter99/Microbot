@@ -122,6 +122,12 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 		return false;
 	}
 
+	private static boolean endsWithIntParameter(MethodNode method)
+	{
+		Type[] arguments = Type.getArgumentTypes(method.desc);
+		return arguments.length > 0 && arguments[arguments.length - 1].getSort() == Type.INT;
+	}
+
 	private static int intParamSlot(MethodNode method)
 	{
 		Type[] arguments = Type.getArgumentTypes(method.desc);
@@ -151,7 +157,7 @@ public final class PlatformInfoTransformer implements ClassFileTransformer
 			{
 				continue;
 			}
-			if (!referencesMarkers(method))
+			if (!referencesMarkers(method) || !endsWithIntParameter(method))
 			{
 				continue;
 			}

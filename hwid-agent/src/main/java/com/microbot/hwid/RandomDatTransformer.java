@@ -147,7 +147,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		throw new IllegalStateException("guard instruction without method");
 	}
 
-	private static boolean looksUnlikely(String className)
+	static boolean looksUnlikely(String className)
 	{
 		return className.startsWith("java/")
 			|| className.startsWith("javax/")
@@ -247,12 +247,12 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		return false;
 	}
 
-	private static boolean isReferenceCompare(int opcode)
+	static boolean isReferenceCompare(int opcode)
 	{
 		return opcode == Opcodes.IF_ACMPEQ || opcode == Opcodes.IF_ACMPNE;
 	}
 
-	private static AbstractInsnNode nextReal(AbstractInsnNode insn)
+	static AbstractInsnNode nextReal(AbstractInsnNode insn)
 	{
 		AbstractInsnNode next = insn.getNext();
 		while (next != null && next.getOpcode() < 0)
@@ -262,7 +262,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		return next;
 	}
 
-	private static AbstractInsnNode previousReal(AbstractInsnNode insn)
+	static AbstractInsnNode previousReal(AbstractInsnNode insn)
 	{
 		AbstractInsnNode previous = insn.getPrevious();
 		while (previous != null && previous.getOpcode() < 0)
