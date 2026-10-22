@@ -13,7 +13,6 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldInsnNode;
 import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.IntInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -25,6 +24,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 	private static final String HOOK_METHOD = "randomDatField";
 	private static final String HOOK_DESCRIPTOR = "([B)[B";
 	private static final String BYTE_ARRAY_DESCRIPTOR = "[B";
+	private static final String CLIENT_CLASS = "client";
 
 	private static final Object lock = new Object();
 	private static volatile boolean randomHookInstalled;
@@ -66,6 +66,10 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		String name = fieldName;
 		if (owner == null)
 		{
+			if (!CLIENT_CLASS.equals(node.name))
+			{
+				return null;
+			}
 			name = soleStaticByteArrayField(node);
 			if (name == null)
 			{
@@ -77,7 +81,7 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		List<FieldInsnNode> guards = new ArrayList<>();
 		for (MethodNode method : node.methods)
 		{
-			if (!storesFreshArrayInLocal(method))
+			if (writesField(method, owner, name))
 			{
 				continue;
 			}
@@ -194,23 +198,13 @@ public final class RandomDatTransformer implements ClassFileTransformer
 		return count == 1 ? name : null;
 	}
 
-	private static boolean storesFreshArrayInLocal(MethodNode method)
+	private static boolean writesField(MethodNode method, String owner, String name)
 	{
 		for (AbstractInsnNode insn = method.instructions.getFirst(); insn != null; insn = insn.getNext())
 		{
-			if (insn.getOpcode() != Opcodes.BIPUSH || ((IntInsnNode) insn).operand != 24)
-			{
-				continue;
-			}
-			AbstractInsnNode array = nextReal(insn);
-			if (array == null
-				|| array.getOpcode() != Opcodes.NEWARRAY
-				|| ((IntInsnNode) array).operand != Opcodes.T_BYTE)
-			{
-				continue;
-			}
-			AbstractInsnNode store = nextReal(array);
-			if (store != null && store.getOpcode() == Opcodes.ASTORE)
+			if (insn.getOpcode() == Opcodes.PUTSTATIC
+				&& owner.equals(((FieldInsnNode) insn).owner)
+				&& name.equals(((FieldInsnNode) insn).name))
 			{
 				return true;
 			}

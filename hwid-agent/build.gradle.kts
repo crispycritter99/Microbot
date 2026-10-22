@@ -19,6 +19,23 @@ dependencies {
     testImplementation("net.runelite:injected-client:${providers.gradleProperty("runelite.injected-client.version").get()}")
 }
 
+val historicalClients: Configuration by configurations.creating {
+    isTransitive = false
+}
+
+dependencies {
+    file("historical-clients.txt").readLines().map { it.trim() }.filter { it.isNotEmpty() }.forEach {
+        historicalClients("net.runelite:injected-client:$it")
+    }
+}
+
+tasks.test {
+    inputs.files(historicalClients)
+    jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Dhwid.historicalClients=" + historicalClients.files.joinToString(File.pathSeparator))
+    })
+}
+
 tasks.jar {
     manifest {
         attributes["Premain-Class"] = "com.microbot.hwid.HwidAgent"
