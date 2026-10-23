@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -74,8 +75,7 @@ public class ClientAlertReporter
 	private volatile UUID reportedSessionId;
 	private volatile long logoutRequestedAt;
 	private volatile boolean awaitingRelog;
-	private volatile boolean bannedReported;
-	private volatile String bannedUsername;
+	private final Set<String> reportedBans = ConcurrentHashMap.newKeySet();
 
 	@Inject
 	ClientAlertReporter(MicrobotApi microbotApi, ClientLinkToken clientLinkToken, ClientSessionManager clientSessionManager,
@@ -183,7 +183,7 @@ public class ClientAlertReporter
 		}
 		else if (next == GameState.LOGGED_IN)
 		{
-			bannedReported = false;
+			reportedBans.clear();
 		}
 		if (isLogout(previous, next))
 		{
@@ -224,14 +224,15 @@ public class ClientAlertReporter
 		{
 			return;
 		}
-		String username = client.getUsername();
-		if (bannedReported && Objects.equals(username, bannedUsername))
+		String username = Strings.nullToEmpty(client.getUsername());
+		if (reportedBans.contains(username))
 		{
 			return;
 		}
-		bannedReported = true;
-		bannedUsername = username;
-		deliver(snapshot().type(AlertEvent.BANNED).loggedIn(false).build());
+		if (deliver(snapshot().type(AlertEvent.BANNED).loggedIn(false).build()))
+		{
+			reportedBans.add(username);
+		}
 	}
 
 	public void onScriptError(String loggerName, List<String> frames, String message)
@@ -296,24 +297,25 @@ public class ClientAlertReporter
 		executor.execute(() -> deliver(event));
 	}
 
-	private void deliver(AlertEvent event)
+	private boolean deliver(AlertEvent event)
 	{
 		if (shuttingDown)
 		{
-			return;
+			return false;
 		}
 		Optional<String> token = clientLinkToken.get();
 		if (token.isEmpty())
 		{
-			return;
+			return false;
 		}
 		UUID sessionId = reportingSession();
 		if (sessionId == null)
 		{
-			return;
+			return false;
 		}
 		String value = token.get();
 		microbotApi.sendAlertEvent(value, event.toJson(sessionId), () -> onRejected(value));
+		return true;
 	}
 
 	private UUID reportingSession()

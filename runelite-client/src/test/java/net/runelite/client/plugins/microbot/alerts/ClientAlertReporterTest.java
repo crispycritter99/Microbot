@@ -473,8 +473,26 @@ public class ClientAlertReporterTest
 		reporter.checkBanned();
 		when(client.getUsername()).thenReturn("second");
 		reporter.checkBanned();
+		when(client.getUsername()).thenReturn("first");
+		reporter.checkBanned();
 
 		assertEquals(2, sentOfType(AlertEvent.BANNED).size());
+	}
+
+	@Test
+	public void aBanThatCouldNotBeSentIsTriedAgain()
+	{
+		when(client.getGameState()).thenReturn(GameState.LOGIN_SCREEN);
+		when(client.getLoginIndex()).thenReturn(ClientAlertReporter.BANNED_LOGIN_INDEX);
+		when(client.getUsername()).thenReturn("first");
+		when(sessions.getMicrobotSessionId()).thenReturn(null);
+		reporter.checkBanned();
+		verify(api, never()).sendAlertEvent(any(), any(), any());
+
+		when(sessions.getMicrobotSessionId()).thenReturn(SESSION);
+		reporter.checkBanned();
+
+		assertEquals(1, sentOfType(AlertEvent.BANNED).size());
 	}
 
 	@Test
