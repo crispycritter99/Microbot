@@ -8,16 +8,22 @@ final class XpTracker
 {
 	private final Map<Skill, Integer> baseline = new EnumMap<>(Skill.class);
 	private long accountHash = -1;
+	private int account;
 
-	synchronized long gained(long accountHash, Skill skill, int xp)
+	synchronized long gained(long accountHash, Skill skill, int xp, boolean statsLoaded)
 	{
 		if (accountHash != this.accountHash)
 		{
 			baseline.clear();
 			this.accountHash = accountHash;
+			account++;
 		}
 		if (xp <= 0)
 		{
+			if (statsLoaded)
+			{
+				baseline.putIfAbsent(skill, 0);
+			}
 			return 0;
 		}
 		Integer start = baseline.get(skill);
@@ -27,5 +33,10 @@ final class XpTracker
 			return 0;
 		}
 		return xp - start;
+	}
+
+	synchronized int account()
+	{
+		return account;
 	}
 }

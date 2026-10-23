@@ -54,6 +54,7 @@ final class DashboardGameState
 		}
 
 		state.add("skills", skills(client, xpTracker));
+		state.addProperty("account", xpTracker.account());
 		state.add("inventory", inventory(client, itemManager));
 		return state;
 	}
@@ -61,6 +62,7 @@ final class DashboardGameState
 	private static JsonArray skills(Client client, XpTracker xpTracker)
 	{
 		long accountHash = client.getAccountHash();
+		boolean statsLoaded = client.getSkillExperience(Skill.HITPOINTS) > 0;
 		JsonArray skills = new JsonArray();
 		for (Skill skill : Skill.values())
 		{
@@ -69,7 +71,7 @@ final class DashboardGameState
 			entry.addProperty("name", skill.getName());
 			entry.addProperty("level", client.getRealSkillLevel(skill));
 			entry.addProperty("boostedLevel", client.getBoostedSkillLevel(skill));
-			entry.addProperty("xpGained", xpTracker.gained(accountHash, skill, xp));
+			entry.addProperty("xpGained", xpTracker.gained(accountHash, skill, xp, statsLoaded));
 			skills.add(entry);
 		}
 		return skills;
