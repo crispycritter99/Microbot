@@ -66,12 +66,23 @@ public class DashboardSyncTest
 	{
 		XpTracker tracker = new XpTracker();
 
-		assertEquals(0, tracker.gained(1, Skill.ATTACK, 0));
-		assertEquals(0, tracker.gained(1, Skill.ATTACK, 1_000));
-		assertEquals(250, tracker.gained(1, Skill.ATTACK, 1_250));
-		assertEquals(0, tracker.gained(1, Skill.MINING, 50));
-		assertEquals(0, tracker.gained(2, Skill.ATTACK, 9_000));
-		assertEquals(100, tracker.gained(2, Skill.ATTACK, 9_100));
+		assertEquals(0, tracker.gained(1, Skill.ATTACK, 0, false));
+		assertEquals(0, tracker.gained(1, Skill.ATTACK, 1_000, true));
+		assertEquals(250, tracker.gained(1, Skill.ATTACK, 1_250, true));
+		assertEquals(0, tracker.gained(1, Skill.MINING, 50, true));
+		assertEquals(1, tracker.account());
+		assertEquals(0, tracker.gained(2, Skill.ATTACK, 9_000, true));
+		assertEquals(100, tracker.gained(2, Skill.ATTACK, 9_100, true));
+		assertEquals(2, tracker.account());
+	}
+
+	@Test
+	public void xpFromZeroCountsOnceTheStatsHaveLoaded()
+	{
+		XpTracker tracker = new XpTracker();
+
+		assertEquals(0, tracker.gained(1, Skill.MINING, 0, true));
+		assertEquals(35, tracker.gained(1, Skill.MINING, 35, true));
 	}
 
 	@Test

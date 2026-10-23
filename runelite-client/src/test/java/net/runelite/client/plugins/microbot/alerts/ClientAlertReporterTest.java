@@ -464,6 +464,20 @@ public class ClientAlertReporterTest
 	}
 
 	@Test
+	public void aSecondDisabledAccountOnTheSameClientIsReportedToo()
+	{
+		when(client.getGameState()).thenReturn(GameState.LOGIN_SCREEN);
+		when(client.getLoginIndex()).thenReturn(ClientAlertReporter.BANNED_LOGIN_INDEX);
+		when(client.getUsername()).thenReturn("first");
+		reporter.checkBanned();
+		reporter.checkBanned();
+		when(client.getUsername()).thenReturn("second");
+		reporter.checkBanned();
+
+		assertEquals(2, sentOfType(AlertEvent.BANNED).size());
+	}
+
+	@Test
 	public void otherLoginScreensAreNotBans()
 	{
 		runScheduledTasksRightAway();

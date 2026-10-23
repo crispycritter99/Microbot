@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
@@ -74,6 +75,7 @@ public class ClientAlertReporter
 	private volatile long logoutRequestedAt;
 	private volatile boolean awaitingRelog;
 	private volatile boolean bannedReported;
+	private volatile String bannedUsername;
 
 	@Inject
 	ClientAlertReporter(MicrobotApi microbotApi, ClientLinkToken clientLinkToken, ClientSessionManager clientSessionManager,
@@ -216,13 +218,19 @@ public class ClientAlertReporter
 
 	void checkBanned()
 	{
-		if (bannedReported || !isActive()
+		if (!isActive()
 			|| client.getGameState() != GameState.LOGIN_SCREEN
 			|| client.getLoginIndex() != BANNED_LOGIN_INDEX)
 		{
 			return;
 		}
+		String username = client.getUsername();
+		if (bannedReported && Objects.equals(username, bannedUsername))
+		{
+			return;
+		}
 		bannedReported = true;
+		bannedUsername = username;
 		deliver(snapshot().type(AlertEvent.BANNED).loggedIn(false).build());
 	}
 
