@@ -23,6 +23,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.GameState;
+import net.runelite.api.events.ActorDeath;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.client.ClientSessionManager;
 import net.runelite.client.eventbus.Subscribe;
@@ -52,6 +53,8 @@ public class ClientAlertReporter
 	static final long ERROR_ALERT_INTERVAL_MS = TimeUnit.MINUTES.toMillis(30);
 	static final int MAX_RECENT_ERRORS = 50;
 	static final long INTENDED_LOGOUT_WINDOW_MS = 30_000;
+	static final int BANNED_LOGIN_INDEX = 14;
+	static final long BAN_CHECK_DELAY_MS = 2_000;
 
 	private final MicrobotApi microbotApi;
 	private final ClientLinkToken clientLinkToken;
@@ -70,6 +73,7 @@ public class ClientAlertReporter
 	private volatile UUID reportedSessionId;
 	private volatile long logoutRequestedAt;
 	private volatile boolean awaitingRelog;
+	private volatile boolean bannedReported;
 
 	@Inject
 	ClientAlertReporter(MicrobotApi microbotApi, ClientLinkToken clientLinkToken, ClientSessionManager clientSessionManager,
@@ -171,6 +175,14 @@ public class ClientAlertReporter
 		GameState previous = lastGameState;
 		GameState next = event.getGameState();
 		lastGameState = next;
+		if (next == GameState.LOGIN_SCREEN)
+		{
+			executor.schedule(RunnableExceptionLogger.wrap(this::checkBanned), BAN_CHECK_DELAY_MS, TimeUnit.MILLISECONDS);
+		}
+		else if (next == GameState.LOGGED_IN)
+		{
+			bannedReported = false;
+		}
 		if (isLogout(previous, next))
 		{
 			boolean intended = isIntendedLogout(logoutRequestedAt, System.currentTimeMillis());
@@ -190,6 +202,28 @@ public class ClientAlertReporter
 				send(snapshot().type(AlertEvent.HEARTBEAT).loggedIn(true).build());
 			}
 		}
+	}
+
+	@Subscribe
+	public void onActorDeath(ActorDeath event)
+	{
+		if (event.getActor() == null || event.getActor() != client.getLocalPlayer() || !isActive())
+		{
+			return;
+		}
+		send(snapshot().type(AlertEvent.DIED).build());
+	}
+
+	void checkBanned()
+	{
+		if (bannedReported || !isActive()
+			|| client.getGameState() != GameState.LOGIN_SCREEN
+			|| client.getLoginIndex() != BANNED_LOGIN_INDEX)
+		{
+			return;
+		}
+		bannedReported = true;
+		deliver(snapshot().type(AlertEvent.BANNED).loggedIn(false).build());
 	}
 
 	public void onScriptError(String loggerName, List<String> frames, String message)
@@ -245,6 +279,7 @@ public class ClientAlertReporter
 		{
 			return;
 		}
+		checkBanned();
 		deliver(snapshot().type(AlertEvent.HEARTBEAT).build());
 	}
 
