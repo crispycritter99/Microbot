@@ -228,14 +228,37 @@ public class MicrobotApi {
         return call;
     }
 
-    public void uploadScreenshot(String token, String requestId, byte[] jpeg)
+    public void uploadScreenshot(String token, String requestId, byte[] jpeg, Runnable onFailed)
     {
         Request request = new Request.Builder()
                 .url(microbotApiUrl + "/alerts/screenshots/" + requestId)
                 .header(ClientLinkToken.HEADER, token)
                 .post(RequestBody.create(JPEG, jpeg))
                 .build();
-        client.newCall(request).enqueue(logOnly("Dashboard screenshot upload"));
+        client.newCall(request).enqueue(new Callback()
+        {
+            @Override
+            public void onFailure(Call call, IOException e)
+            {
+                log.debug("Dashboard screenshot upload failed", e);
+                onFailed.run();
+            }
+
+            @Override
+            public void onResponse(Call call, Response response)
+            {
+                int code = response.code();
+                response.close();
+                if (code >= 300)
+                {
+                    log.debug("Dashboard screenshot upload rejected: HTTP {}", code);
+                }
+                if (code >= 300 && code != 401 && code != 404 && code != 409)
+                {
+                    onFailed.run();
+                }
+            }
+        });
     }
 
     public void failScreenshot(String token, String requestId, String reason)

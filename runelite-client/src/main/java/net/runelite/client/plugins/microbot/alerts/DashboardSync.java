@@ -149,7 +149,7 @@ public class DashboardSync
 		return captured;
 	}
 
-	private void send(String token, JsonObject payload)
+	private synchronized void send(String token, JsonObject payload)
 	{
 		if (!running)
 		{
@@ -190,8 +190,12 @@ public class DashboardSync
 		});
 	}
 
-	private void handle(String token, int code, String body)
+	private synchronized void handle(String token, int code, String body)
 	{
+		if (!running)
+		{
+			return;
+		}
 		if (code == 401)
 		{
 			if (clientLinkToken.reject(token))
@@ -251,7 +255,8 @@ public class DashboardSync
 	{
 		try
 		{
-			microbotApi.uploadScreenshot(token, requestId, DashboardScreenshot.encode(frame));
+			microbotApi.uploadScreenshot(token, requestId, DashboardScreenshot.encode(frame),
+				() -> microbotApi.failScreenshot(token, requestId, "upload_failed"));
 		}
 		catch (IOException | RuntimeException e)
 		{
