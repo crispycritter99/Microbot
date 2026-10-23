@@ -3602,7 +3602,7 @@ public class Rs2Walker {
 
     private static void manageRunEnergy(int pathRemaining) {
         try {
-            Rs2Player.toggleRunEnergy(true);
+            if (Microbot.enableAutoRunOn) Rs2Player.toggleRunEnergy(true);
             if (pathRemaining < STAMINA_MIN_PATH_TILES) return;
             if (Rs2Player.getRunEnergy() >= staminaThreshold()) return;
             if (Rs2Player.hasStaminaBuffActive()) return;
