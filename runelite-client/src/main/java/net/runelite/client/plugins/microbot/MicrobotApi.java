@@ -39,7 +39,6 @@ public class MicrobotApi {
     static final MediaType JPEG = MediaType.parse("image/jpeg");
 
     private final OkHttpClient client;
-    private final OkHttpClient syncClient;
     private final Gson gson;
     private final String pluginTelemetryToken;
     private final ClientLinkToken clientLinkToken;
@@ -48,7 +47,6 @@ public class MicrobotApi {
     @Inject
     MicrobotApi(OkHttpClient client, Gson gson, ClientLinkToken clientLinkToken) {
         this.client = client;
-        this.syncClient = client.newBuilder().readTimeout(SYNC_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS).build();
         this.gson = gson;
         this.clientLinkToken = clientLinkToken;
 
@@ -223,7 +221,7 @@ public class MicrobotApi {
                 .header(ClientLinkToken.HEADER, token)
                 .post(RequestBody.create(RuneLiteAPI.JSON, gson.toJson(payload)))
                 .build();
-        Call call = syncClient.newCall(request);
+        Call call = client.newBuilder().readTimeout(SYNC_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS).build().newCall(request);
         call.enqueue(callback);
         return call;
     }
