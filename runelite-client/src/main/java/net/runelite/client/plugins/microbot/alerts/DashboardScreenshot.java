@@ -14,7 +14,8 @@ import javax.imageio.stream.ImageOutputStream;
 final class DashboardScreenshot
 {
 	static final int MAX_WIDTH = 1280;
-	static final float QUALITY = 0.8f;
+	static final float[] QUALITIES = { 0.8f, 0.6f, 0.4f };
+	static final int MAX_BYTES = 1_000_000;
 
 	private DashboardScreenshot()
 	{
@@ -23,6 +24,20 @@ final class DashboardScreenshot
 	static byte[] encode(BufferedImage frame) throws IOException
 	{
 		BufferedImage image = toRgb(frame);
+		byte[] jpeg = null;
+		for (float quality : QUALITIES)
+		{
+			jpeg = encode(image, quality);
+			if (jpeg.length <= MAX_BYTES)
+			{
+				break;
+			}
+		}
+		return jpeg;
+	}
+
+	private static byte[] encode(BufferedImage image, float quality) throws IOException
+	{
 		ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		try (ImageOutputStream stream = ImageIO.createImageOutputStream(out))
@@ -30,7 +45,7 @@ final class DashboardScreenshot
 			writer.setOutput(stream);
 			ImageWriteParam param = writer.getDefaultWriteParam();
 			param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-			param.setCompressionQuality(QUALITY);
+			param.setCompressionQuality(quality);
 			writer.write(null, new IIOImage(image, null, null), param);
 		}
 		finally

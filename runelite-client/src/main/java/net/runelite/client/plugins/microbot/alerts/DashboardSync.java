@@ -19,7 +19,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
+import net.runelite.api.GameState;
 import net.runelite.client.ClientSessionManager;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.game.ItemManager;
@@ -45,6 +47,7 @@ public class DashboardSync
 	static final long MAX_BACKOFF_MS = 120_000;
 	static final long CAPTURE_TIMEOUT_SECONDS = 5;
 	static final String SCREENSHOT = "screenshot";
+	static final String SCREENSHOT_NOTICE = "The Microbot dashboard took a screenshot of this client.";
 
 	private final MicrobotApi microbotApi;
 	private final ClientLinkToken clientLinkToken;
@@ -57,6 +60,7 @@ public class DashboardSync
 	private final ScheduledExecutorService executor;
 	private final Gson gson;
 	private final XpTracker xpTracker = new XpTracker();
+	private final AtomicBoolean capturing = new AtomicBoolean();
 	private volatile boolean running;
 	private volatile Call inFlight;
 	private ScheduledFuture<?> next;
@@ -212,9 +216,10 @@ public class DashboardSync
 			return;
 		}
 		failures = 0;
-		for (String requestId : screenshotRequests(gson, body))
+		List<String> requests = screenshotRequests(gson, body);
+		if (!requests.isEmpty())
 		{
-			takeScreenshot(token, requestId);
+			takeScreenshot(token, requests.get(0));
 		}
 		schedule(NEXT_SYNC_MS);
 	}
@@ -232,6 +237,10 @@ public class DashboardSync
 			microbotApi.failScreenshot(token, requestId, "disabled");
 			return;
 		}
+		if (!capturing.compareAndSet(false, true))
+		{
+			return;
+		}
 		AtomicBoolean answered = new AtomicBoolean();
 		drawManager.requestNextFrameListener(image ->
 		{
@@ -246,6 +255,7 @@ public class DashboardSync
 		{
 			if (answered.compareAndSet(false, true))
 			{
+				capturing.set(false);
 				microbotApi.failScreenshot(token, requestId, "capture_failed");
 			}
 		}, CAPTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -257,12 +267,29 @@ public class DashboardSync
 		{
 			microbotApi.uploadScreenshot(token, requestId, DashboardScreenshot.encode(frame),
 				() -> microbotApi.failScreenshot(token, requestId, "upload_failed"));
+			notifyPlayer();
 		}
 		catch (IOException | RuntimeException e)
 		{
 			log.debug("Unable to encode the dashboard screenshot", e);
 			microbotApi.failScreenshot(token, requestId, "capture_failed");
 		}
+		finally
+		{
+			capturing.set(false);
+		}
+	}
+
+	private void notifyPlayer()
+	{
+		log.info(SCREENSHOT_NOTICE);
+		clientThread.invoke(() ->
+		{
+			if (client.getGameState() == GameState.LOGGED_IN)
+			{
+				client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", SCREENSHOT_NOTICE, null);
+			}
+		});
 	}
 
 	static JsonObject payload(UUID sessionId, boolean screenshotsAllowed, JsonObject gameState)

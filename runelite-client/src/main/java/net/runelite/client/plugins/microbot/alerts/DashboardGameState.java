@@ -69,7 +69,6 @@ final class DashboardGameState
 			entry.addProperty("name", skill.getName());
 			entry.addProperty("level", client.getRealSkillLevel(skill));
 			entry.addProperty("boostedLevel", client.getBoostedSkillLevel(skill));
-			entry.addProperty("xp", xp);
 			entry.addProperty("xpGained", xpTracker.gained(accountHash, skill, xp));
 			skills.add(entry);
 		}

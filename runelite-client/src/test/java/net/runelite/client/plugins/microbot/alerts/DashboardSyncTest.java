@@ -100,4 +100,20 @@ public class DashboardSyncTest
 		assertEquals(765, decoded.getWidth());
 		assertEquals(503, decoded.getHeight());
 	}
+
+	@Test
+	public void noisyScreenshotsAreShrunkUnderTheUploadLimit() throws Exception
+	{
+		BufferedImage frame = new BufferedImage(1280, 1024, BufferedImage.TYPE_INT_RGB);
+		java.util.Random random = new java.util.Random(42);
+		for (int y = 0; y < frame.getHeight(); y++)
+		{
+			for (int x = 0; x < frame.getWidth(); x++)
+			{
+				frame.setRGB(x, y, random.nextInt());
+			}
+		}
+
+		assertTrue(DashboardScreenshot.encode(frame).length <= DashboardScreenshot.MAX_BYTES);
+	}
 }
