@@ -433,7 +433,7 @@ public class BreakHandlerV2Script extends Script {
 
         // Check if break is over
         if (Instant.now().isAfter(breakEndTime)) {
-            if (config.autoLogin()) {
+            if (canSelfLogin()) {
                 log.info("[BreakHandlerV2] Break ended, requesting login");
                 requestLogin();
             } else {
@@ -448,6 +448,17 @@ public class BreakHandlerV2Script extends Script {
 
     static boolean breakEndsBeforeSchedule(Instant breakEnd, Duration untilSchedule, Instant now) {
         return now.plus(untilSchedule).isAfter(breakEnd.plus(SCHEDULE_EXTENSION_TOLERANCE));
+    }
+
+    private boolean canSelfLogin() {
+        return config.autoLogin() && config.useActiveProfile();
+    }
+
+    private void endBreakWithoutLogin() {
+        log.info("[BreakHandlerV2] Auto-login or active profile login is disabled; ending break without logging in");
+        nextLoginAttemptAt = null;
+        extendedSleepEndsAt = null;
+        transitionToState(BreakHandlerV2State.BREAK_ENDING);
     }
 
     private void requestLogin() {
@@ -475,6 +486,11 @@ public class BreakHandlerV2Script extends Script {
         if (Microbot.isLoggedIn()) {
             log.info("[BreakHandlerV2] Already logged in");
             transitionToState(BreakHandlerV2State.BREAK_ENDING);
+            return;
+        }
+
+        if (!canSelfLogin()) {
+            endBreakWithoutLogin();
             return;
         }
 
@@ -619,6 +635,11 @@ public class BreakHandlerV2Script extends Script {
             return;
         }
 
+        if (!canSelfLogin()) {
+            endBreakWithoutLogin();
+            return;
+        }
+
         log.info("[BreakHandlerV2] Extended sleep over, retrying login");
         extendedSleepEndsAt = null;
         requestLogin();
@@ -726,7 +747,7 @@ public class BreakHandlerV2Script extends Script {
                 unexpectedLogoutDetected = true; // Prevent repeated detections
 
                 // Handle based on configuration
-                if (config.autoLogin()) {
+                if (canSelfLogin()) {
                     log.info("[BreakHandlerV2] Auto-login enabled, attempting to log back in");
                     resumingAfterDisconnect = true;
                     requestLogin();
