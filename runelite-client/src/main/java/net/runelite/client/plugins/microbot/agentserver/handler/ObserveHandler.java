@@ -55,7 +55,7 @@ public class ObserveHandler extends AgentHandler {
 		long errorSince = getLongParam(params, "errorSince");
 		int waitTicks = Math.min(getIntParam(params, "waitTicks", 0), MAX_WAIT_TICKS);
 		int nearby = Math.min(getIntParam(params, "nearby", 0), MAX_NEARBY_DISTANCE);
-		int nearbyLimit = getIntParam(params, "nearbyLimit", DEFAULT_NEARBY_LIMIT);
+		int nearbyLimit = Math.max(0, getIntParam(params, "nearbyLimit", DEFAULT_NEARBY_LIMIT));
 
 		if (waitTicks > 0) {
 			waitForTicks(waitTicks);

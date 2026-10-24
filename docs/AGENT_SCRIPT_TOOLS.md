@@ -114,7 +114,7 @@ The **Agent Server** plugin (port 8081, localhost) must be enabled for any CLI/H
 | `observe --menu-since N` | Menu clicks actually sent, to compare with what the script meant to click |
 | `GET /debug/snapshot` | State machine snapshot — current state, transitions, guard results, trace buffer |
 | `screenshot save --label debug` | Visual state capture for multimodal analysis |
-| Plugin setting *Trace requests* | Every agent request with status and duration in `~/.runelite/agent-trace.jsonl`, to replay what an agent did |
+| Plugin setting *Trace requests* | Every agent request (path, status, duration, body field names) in `~/.runelite/agent-trace.jsonl`, to replay what an agent did |
 
 ---
 

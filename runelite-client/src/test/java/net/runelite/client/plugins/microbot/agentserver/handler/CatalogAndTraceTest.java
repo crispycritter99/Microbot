@@ -119,8 +119,15 @@ public class CatalogAndTraceTest {
 		assertEquals("POST", line.get("method"));
 		assertEquals("/echo?x=1", line.get("uri"));
 		assertEquals(200.0, line.get("status"));
-		assertEquals("{\"name\":\"Banker\"}", line.get("body"));
+		assertEquals(List.of("name"), line.get("fields"));
+		assertFalse(lines.get(0), lines.get(0).contains("Banker"));
 		assertTrue(lines.get(0), lines.get(0).contains("/echo?x=1"));
+		if (java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+			assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+		}
+
+		AgentTrace.delete(file);
+		assertFalse(Files.exists(file));
 	}
 
 	@Test

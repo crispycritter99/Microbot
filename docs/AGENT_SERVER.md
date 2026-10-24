@@ -62,7 +62,7 @@ TCP mode binds to `127.0.0.1` only. UDS mode binds to `~/.runelite/agent/agent.s
 | Auth token | generated | Required in `X-Agent-Token`; stored in `~/.runelite/.agent-token` for CLI use. Clear it to generate a new one |
 | Stealth bind | `false` | Open the socket only while scripts are active |
 | Bind mode | `TCP` | `TCP` on localhost or `UDS` at `~/.runelite/agent/agent.sock` |
-| Trace requests | `false` | Append every authenticated request (method, path, status, duration, request body) to `~/.runelite/agent-trace.jsonl`; rotates to `.1` at 5 MB |
+| Trace requests | `false` | Append every authenticated request (method, path with query, status, duration, and the *names* of JSON body fields) to `~/.runelite/agent-trace.jsonl` (owner-only, rotates to `.1` at 5 MB). Turning it off deletes both files |
 
 CLI environment variables:
 
@@ -500,6 +500,8 @@ Plans a route with the walker's pathfinder without moving the player. Use it to 
 `termination` is one of `TARGET_REACHED`, `SEARCH_EXHAUSTED`, `CUTOFF_REACHED`, `CANCELLED`, `FAILED`. When the target cannot be reached, `endpoint` and `endpointDistanceToTarget` show how close the planner got. The response is `503` while the pathfinder is not initialised and `409` when no start was given and the player position is unknown.
 
 While logged out the planner cannot check transport requirements, so routes that need stairs, doors or teleports can come back `SEARCH_EXHAUSTED` with no tiles. Plan those while logged in.
+
+Planning shares the walker's pathfinder lock, so a `/path` call waits for (and briefly holds up) a walk that is calculating its own route. Avoid polling it while a script is walking.
 
 #### GET /path/active
 
@@ -1093,7 +1095,7 @@ NPC/object/item interaction failures include a `reason` field:
 ## Security
 
 - **Local only.** TCP mode binds to `127.0.0.1`. UDS mode creates `~/.runelite/agent/agent.sock` with `rw-------` and restricts the `~/.runelite/agent` directory to its owner.
-- **Trace file.** With *Trace requests* on, request paths and bodies (which can include names you search for or type) are written to `~/.runelite/agent-trace.jsonl`. The token itself is never written. Turn it off and delete the file when done.
+- **Trace file.** With *Trace requests* on, each request's method, path and query string, status, duration and body field names go to `~/.runelite/agent-trace.jsonl`, created `rw-------`. Body values (typed text, config values, script source, the token) are never written, but query strings are, so names you search for appear in it. Turning the setting off deletes the file and its `.1` rotation.
 - **Token.** Every request needs `X-Agent-Token`. The token is generated on first start, kept in the plugin config and written to `~/.runelite/.agent-token` (`rw-------`) by the client whose server is running; that client deletes it when its server stops. A second client that could not bind leaves the file alone. Clear the token in the plugin settings to rotate it.
 - **Browser and DNS-rebinding protection.** Requests with an `Origin` header, or a `Host` other than `127.0.0.1`, `localhost` or `[::1]`, are rejected.
 - **Opaque failures.** Every pre-auth rejection returns the same plain `404 Not Found` as a missing endpoint, so the API cannot be discovered without the token.

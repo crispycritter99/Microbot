@@ -332,7 +332,8 @@ Anything in the JVM can enumerate:
 Even with UDS and in-config-group tokens, these remain on disk and are reachable via `new File(...).exists()` from inside the JVM:
 - `~/.runelite/.agent-token`
 - `~/.runelite/agent/agent.sock` (UDS mode)
-- `~/.runelite/agent-trace.jsonl` (only while *Trace requests* is on)
+- `~/.runelite/agent/` (UDS mode; removed when the server stops cleanly)
+- `~/.runelite/agent-trace.jsonl` and `.1` (from the first traced request until *Trace requests* is turned off)
 - `~/.runelite/.menu-action-info.properties`
 
 **Mitigation:** fold all three into the standard RuneLite `ConfigManager`-backed config group so they live inside `settings.properties` alongside every other RuneLite setting. A few hours of work, but changes on-disk layout for existing users — needs a migration path.

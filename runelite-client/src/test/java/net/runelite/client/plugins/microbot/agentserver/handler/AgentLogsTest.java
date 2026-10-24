@@ -67,6 +67,7 @@ public class AgentLogsTest {
 		assertEquals(2, all.get(0).get("n"));
 		assertEquals(5L, log.cursor());
 		assertEquals(4, log.since(0, 1).get(0).get("n"));
+		assertTrue(log.since(0, -1).isEmpty());
 	}
 
 	@Test

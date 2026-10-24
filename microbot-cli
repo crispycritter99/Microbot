@@ -209,18 +209,24 @@ fail_http() {
     exit 1
 }
 
-request() {
+http_call() {
     local max="$1" out rc=0
     shift
-    out=$(curl -sS --fail-with-body --max-time "$max" "${SOCKET_ARGS[@]}" "${AUTH_HEADER_ARGS[@]}" "$@" 2>/dev/null) || rc=$?
-    [[ $rc -eq 0 ]] && { printf '%s\n' "$out"; return 0; }
+    out=$(curl -sS --max-time "$max" "${SOCKET_ARGS[@]}" "${AUTH_HEADER_ARGS[@]}" -w '\n%{http_code}' "$@" 2>/dev/null) || rc=$?
     if [[ $rc -eq 7 && -n "$SOCKET_AUTO" ]]; then
         SOCKET_ARGS=() SOCKET_AUTO=""
-        request "$max" "$@"
+        http_call "$max" "$@"
         return
     fi
-    [[ $rc -eq 22 ]] && fail_http "$out"
-    fail_transport "$rc" "$max"
+    [[ $rc -ne 0 ]] && fail_transport "$rc" "$max"
+    HTTP_STATUS="${out##*$'\n'}"
+    HTTP_BODY="${out%$'\n'*}"
+}
+
+request() {
+    http_call "$@"
+    [[ "$HTTP_STATUS" -ge 400 ]] && fail_http "$HTTP_BODY"
+    printf '%s\n' "$HTTP_BODY"
 }
 
 do_get() {
@@ -599,12 +605,10 @@ case "$1" in
                 if [[ -n "$world" ]]; then
                     body="{\"world\":${world},\"timeout\":${login_timeout}}"
                 fi
-                rc=0
-                result=$(curl -s --max-time "$((login_timeout + 5))" "${SOCKET_ARGS[@]}" "${AUTH_HEADER_ARGS[@]}" -X POST -H "Content-Type: application/json" -d "$body" "${BASE}/login" 2>/dev/null) || rc=$?
-                [[ $rc -ne 0 ]] && fail_transport "$rc" "$((login_timeout + 5))"
-                [[ "$result" == "Not Found" ]] && fail_http "$result"
-                echo "$result"
-                echo "$result" | grep -q '"success": *true' || exit 1
+                http_call "$((login_timeout + 5))" -X POST -H "Content-Type: application/json" -d "$body" "${BASE}/login"
+                [[ "$HTTP_BODY" == "Not Found" ]] && fail_http "$HTTP_BODY"
+                echo "$HTTP_BODY"
+                echo "$HTTP_BODY" | grep -q '"success": *true' || exit 1
                 ;;
             *) usage ;;
         esac
@@ -862,12 +866,11 @@ case "$1" in
             q=$(build_query "save" "true" "label" "${label:-screenshot}" "dir" "${dir:-}")
             do_get "${BASE}/screenshot${q}"
         else
-            shot="${1:-screenshot.png}" rc=0
-            curl -sS --fail-with-body --max-time "$TIMEOUT" "${SOCKET_ARGS[@]}" "${AUTH_HEADER_ARGS[@]}" -o "$shot" "${BASE}/screenshot" 2>/dev/null || rc=$?
-            if [[ $rc -eq 22 ]]; then
+            shot="${1:-screenshot.png}"
+            http_call "$TIMEOUT" -o "$shot" "${BASE}/screenshot"
+            if [[ "$HTTP_STATUS" -ge 400 ]]; then
                 body=$(cat "$shot"); rm -f "$shot"; fail_http "$body"
             fi
-            [[ $rc -ne 0 ]] && fail_transport "$rc" "$TIMEOUT"
             echo "{\"success\":true,\"path\":\"$(pwd)/${1:-screenshot.png}\"}"
         fi
         ;;

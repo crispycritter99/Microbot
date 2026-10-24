@@ -315,9 +315,13 @@ public class AgentServerPlugin extends Plugin {
 	}
 
 	private void applyTraceConfig() {
-		AgentTrace.setFile(config.traceRequests()
-				? Paths.get(System.getProperty("user.home"), ".runelite", "agent-trace.jsonl")
-				: null);
+		Path traceFile = Paths.get(System.getProperty("user.home"), ".runelite", "agent-trace.jsonl");
+		if (config.traceRequests()) {
+			AgentTrace.setFile(traceFile);
+		} else {
+			AgentTrace.setFile(null);
+			AgentTrace.delete(traceFile);
+		}
 	}
 
 	private int ensurePort() {
@@ -503,6 +507,10 @@ public class AgentServerPlugin extends Plugin {
 		if (udsServer != null) {
 			udsServer.stop();
 			udsServer = null;
+			try {
+				Files.deleteIfExists(defaultUdsSocketPath().getParent());
+			} catch (IOException ignored) {
+			}
 			log.info("Agent server stopped (UDS)");
 		}
 		if (executor != null) {

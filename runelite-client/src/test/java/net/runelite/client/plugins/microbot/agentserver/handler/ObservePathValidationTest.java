@@ -68,6 +68,7 @@ public class ObservePathValidationTest {
 	public void varChangesRejectsPost() throws IOException {
 		assertEquals(405, status("POST", "/var-changes"));
 		assertEquals(200, status("GET", "/var-changes?since=0"));
+		assertEquals(200, status("GET", "/var-changes?limit=-5"));
 	}
 
 	@Test
