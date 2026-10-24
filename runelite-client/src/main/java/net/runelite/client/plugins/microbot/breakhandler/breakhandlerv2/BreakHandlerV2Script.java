@@ -7,6 +7,7 @@ import net.runelite.client.config.ConfigProfile;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerTickGuard;
 import net.runelite.client.plugins.microbot.breakhandler.BreakPreparation;
 import net.runelite.client.plugins.microbot.util.discord.Rs2Discord;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class BreakHandlerV2Script extends Script {
     private static final long LOCK_DEFERRAL_LOG_INTERVAL_MS = 30_000L;
+    private static final long TICK_STOP_TIMEOUT_MS = 2000L;
 
     // Instance tracking for debugging
     private static int instanceCounter = 0;
@@ -97,13 +99,15 @@ public class BreakHandlerV2Script extends Script {
     private static final int MAX_SAFETY_CHECK_ATTEMPTS = 60;
     private static final int SAFETY_CHECK_DELAY_MS = 5000; // 5 seconds between checks
 
-    public static String version = "2.0.11";
+    public static String version = "2.0.12";
     private boolean restoredPauseNeedsPreparation;
+    private final BreakHandlerTickGuard tickGuard = new BreakHandlerTickGuard();
 
     /**
      * Run the break handler script
      */
     public boolean run(BreakHandlerV2Config config) {
+        tickGuard.start();
         BreakPreparation.finishBreak();
         restoredPauseNeedsPreparation = false;
         this.config = config;
@@ -119,7 +123,7 @@ public class BreakHandlerV2Script extends Script {
         restorePersistedBreakState();
         initializeBreakIfOutsideSchedule();
         originalWindowTitle = ClientUI.getFrame().getTitle();
-        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> tickGuard.runTick(() -> {
             try {
                 BreakHandlerV2State stateBeforeRun = BreakHandlerV2State.getCurrentState();
                 boolean continueWhilePaused = shouldContinueWhenScriptGuardBlocks(
@@ -177,7 +181,7 @@ public class BreakHandlerV2Script extends Script {
             } catch (Exception ex) {
                 log.error("[BreakHandlerV2] Error in main loop", ex);
             }
-        }, 0, 1000, TimeUnit.MILLISECONDS);
+        }), 0, 1000, TimeUnit.MILLISECONDS);
 
         return true;
     }
@@ -927,7 +931,7 @@ public class BreakHandlerV2Script extends Script {
 
 		if (targetWorld == -1) {
 			int currentWorld = getCurrentWorld();
-			if (currentWorld > 0) {
+			if (currentWorld > 0 && (!isWorldListAvailable() || Rs2WorldUtil.canAccessWorld(currentWorld))) {
 				log.warn("[BreakHandlerV2] No world found for mode {}; logging in to the current world {}",
 				         config.worldSelectionMode(), currentWorld);
 				return currentWorld;
@@ -938,6 +942,10 @@ public class BreakHandlerV2Script extends Script {
 		         targetWorld, config.worldSelectionMode(), membersOnly);
 
 		return targetWorld;
+	}
+
+	private static boolean isWorldListAvailable() {
+		return Microbot.getWorldService() != null && Microbot.getWorldService().getWorlds() != null;
 	}
 
 	private static int getCurrentWorld() {
@@ -1382,9 +1390,13 @@ public class BreakHandlerV2Script extends Script {
 
     @Override
     public void shutdown() {
+        tickGuard.stop();
         BreakPreparation.finishBreak();
         super.shutdown();
         log.info("[BreakHandlerV2] Shutting down");
+        if (!tickGuard.awaitIdle(TICK_STOP_TIMEOUT_MS)) {
+            log.warn("[BreakHandlerV2] Main loop still running after {}ms; resetting break state anyway", TICK_STOP_TIMEOUT_MS);
+        }
 
         // Reset state
         BreakHandlerV2State.setState(BreakHandlerV2State.WAITING_FOR_BREAK);
