@@ -75,13 +75,13 @@ public class Rs2WorldUtil {
             ConfigProfile activeProfile = LoginManager.getActiveProfile();            
             if(!Microbot.isLoggedIn() ){
                 if(activeProfile != null){                    
-                    return isWorldAccessible(targetWorld, isMemberAccount, isClientOnSeasonalWorld());
+                    return isAccessibleFromClientWorld(targetWorld, isMemberAccount);
                 }
                 log.warn("Cannot determine world accessibility - not logged in and no active profile");
                 return false;// Cannot determine accessibility if not logged in and no profile
             }
             if(Microbot.getClient() != null &&  Microbot.getClient().getLocalPlayer() != null){                
-                return isWorldAccessible(targetWorld, isMemberAccount, isClientOnSeasonalWorld());
+                return isAccessibleFromClientWorld(targetWorld, isMemberAccount);
             }
             log.warn("Cannot determine world accessibility - client or local player is null");
             return false;                                    
@@ -91,14 +91,26 @@ public class Rs2WorldUtil {
             return false;
         }
     }
-    private static boolean isClientOnSeasonalWorld() {
-        if (Microbot.getClient() == null || Microbot.getClientThread() == null) {
+    private static boolean isAccessibleFromClientWorld(World targetWorld, boolean isMemberAccount) {
+        java.util.Optional<Boolean> isInSeasonalWorld = readClientOnSeasonalWorld();
+        if (!isInSeasonalWorld.isPresent()) {
+            log.warn("Cannot determine accessibility of world {} - client world type could not be read", targetWorld.getId());
             return false;
+        }
+        return isWorldAccessible(targetWorld, isMemberAccount, isInSeasonalWorld.get());
+    }
+
+    private static java.util.Optional<Boolean> readClientOnSeasonalWorld() {
+        if (Microbot.getClient() == null) {
+            return java.util.Optional.of(false);
+        }
+        if (Microbot.getClientThread() == null) {
+            return java.util.Optional.empty();
         }
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             java.util.EnumSet<net.runelite.api.WorldType> worldTypes = Microbot.getClient().getWorldType();
             return worldTypes != null && worldTypes.contains(net.runelite.api.WorldType.SEASONAL);
-        }).orElse(false);
+        });
     }
 
     public static boolean isMemberAccount(){
