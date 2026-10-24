@@ -28,6 +28,7 @@ public class CatalogAndTraceTest {
 
 	private static final Gson GSON = new Gson();
 	private static HttpServer server;
+	private static java.util.concurrent.ExecutorService executor;
 	private static int port;
 
 	static class EchoHandler extends AgentHandler {
@@ -49,7 +50,8 @@ public class CatalogAndTraceTest {
 	@BeforeClass
 	public static void startServer() throws IOException {
 		server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-		server.setExecutor(Executors.newFixedThreadPool(2));
+		executor = Executors.newFixedThreadPool(2);
+		server.setExecutor(executor);
 		EchoHandler echo = new EchoHandler();
 		server.createContext(echo.getPath(), echo);
 		CatalogHandler catalog = new CatalogHandler(GSON, List.of("/echo"));
@@ -61,6 +63,7 @@ public class CatalogAndTraceTest {
 	@AfterClass
 	public static void stopServer() {
 		server.stop(0);
+		executor.shutdownNow();
 	}
 
 	@After

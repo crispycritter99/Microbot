@@ -70,7 +70,7 @@ public class ScriptHandlerPluginLookupTest {
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerScript");
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.other.OtherScript");
 
-		List<Map<String, Object>> health = ScriptHandler.healthFor("a.b.guardkiller.GuardKillerPlugin");
+		List<Map<String, Object>> health = ScriptHandler.healthFor("a.b.guardkiller.GuardKillerPlugin", true);
 
 		assertEquals(1, health.size());
 		assertEquals("a.b.guardkiller.GuardKillerScript", health.get(0).get("scriptClassName"));
@@ -81,7 +81,7 @@ public class ScriptHandlerPluginLookupTest {
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerScript");
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerBankScript");
 
-		assertEquals(2, ScriptHandler.healthFor("a.b.guardkiller.GuardKillerPlugin").size());
+		assertEquals(2, ScriptHandler.healthFor("a.b.guardkiller.GuardKillerPlugin", true).size());
 	}
 
 	@Test
@@ -89,14 +89,26 @@ public class ScriptHandlerPluginLookupTest {
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerScript");
 		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerBankScript");
 
-		List<Map<String, Object>> health = ScriptHandler.healthFor("a.b.guardkiller.GuardKillerScript");
+		List<Map<String, Object>> health = ScriptHandler.healthFor("a.b.guardkiller.GuardKillerScript", false);
 
 		assertEquals(1, health.size());
 		assertEquals("a.b.guardkiller.GuardKillerScript", health.get(0).get("scriptClassName"));
 	}
 
 	@Test
+	public void healthForScriptClassWithoutHeartbeatDoesNotFallBackToSiblings() {
+		ScriptHeartbeatRegistry.recordHeartbeat("a.b.guardkiller.GuardKillerBankScript");
+
+		assertTrue(ScriptHandler.healthFor("a.b.guardkiller.GuardKillerScript", false).isEmpty());
+	}
+
+	@Test
+	public void htmlPrefixedNameFromScriptListResolves() {
+		assertTrue(ScriptHandler.matchPluginByName(plugins, PluginDescriptor.Mocrosoft + "Agility") instanceof MicroAgilityPlugin);
+	}
+
+	@Test
 	public void healthForUnknownPluginIsEmpty() {
-		assertTrue(ScriptHandler.healthFor("a.b.nothing.NothingPlugin").isEmpty());
+		assertTrue(ScriptHandler.healthFor("a.b.nothing.NothingPlugin", true).isEmpty());
 	}
 }

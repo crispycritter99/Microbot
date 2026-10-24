@@ -353,6 +353,7 @@ public class ScriptHandler extends AgentHandler {
 			return;
 		}
 
+		boolean isPlugin;
 		if (className == null || className.isEmpty()) {
 			Plugin plugin = findPluginByName(name);
 			if (plugin == null) {
@@ -360,9 +361,12 @@ public class ScriptHandler extends AgentHandler {
 				return;
 			}
 			className = plugin.getClass().getName();
+			isPlugin = true;
+		} else {
+			isPlugin = getPluginManager() != null && Microbot.getPlugin(className) != null;
 		}
 
-		List<Map<String, Object>> health = healthFor(className);
+		List<Map<String, Object>> health = healthFor(className, isPlugin);
 		if (health.isEmpty()) {
 			Map<String, Object> result = new LinkedHashMap<>();
 			result.put("scriptClassName", className);
@@ -388,13 +392,13 @@ public class ScriptHandler extends AgentHandler {
 		sendJson(exchange, 200, result);
 	}
 
-	static List<Map<String, Object>> healthFor(String className) {
+	static List<Map<String, Object>> healthFor(String className, boolean isPlugin) {
 		Map<String, Object> exact = ScriptHeartbeatRegistry.getHealth(className);
 		if (exact != null) {
 			return List.of(withLastError(exact));
 		}
 		int dot = className.lastIndexOf('.');
-		if (dot < 0) {
+		if (!isPlugin || dot < 0) {
 			return List.of();
 		}
 		String pluginPackage = className.substring(0, dot + 1);
@@ -464,7 +468,7 @@ public class ScriptHandler extends AgentHandler {
 	}
 
 	static Plugin matchPluginByName(Collection<Plugin> plugins, String name) {
-		String wanted = name.trim().toLowerCase();
+		String wanted = plainName(name).toLowerCase();
 		List<Plugin> partial = new ArrayList<>();
 		for (Plugin plugin : plugins) {
 			if (!isMicrobotPlugin(plugin)) continue;

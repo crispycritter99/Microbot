@@ -867,10 +867,13 @@ case "$1" in
             do_get "${BASE}/screenshot${q}"
         else
             shot="${1:-screenshot.png}"
-            http_call "$TIMEOUT" -o "$shot" "${BASE}/screenshot"
+            part="${shot}.part.$$"
+            trap 'rm -f "$part"' EXIT
+            http_call "$TIMEOUT" -o "$part" "${BASE}/screenshot"
             if [[ "$HTTP_STATUS" -ge 400 ]]; then
-                body=$(cat "$shot"); rm -f "$shot"; fail_http "$body"
+                body=$(cat "$part"); rm -f "$part"; fail_http "$body"
             fi
+            mv -f "$part" "$shot"
             echo "{\"success\":true,\"path\":\"$(pwd)/${1:-screenshot.png}\"}"
         fi
         ;;
