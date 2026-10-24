@@ -75,14 +75,13 @@ public class Rs2WorldUtil {
             ConfigProfile activeProfile = LoginManager.getActiveProfile();            
             if(!Microbot.isLoggedIn() ){
                 if(activeProfile != null){                    
-                    return isWorldAccessible(targetWorld, isMemberAccount, false);
+                    return isWorldAccessible(targetWorld, isMemberAccount, isClientOnSeasonalWorld());
                 }
                 log.warn("Cannot determine world accessibility - not logged in and no active profile");
                 return false;// Cannot determine accessibility if not logged in and no profile
             }
             if(Microbot.getClient() != null &&  Microbot.getClient().getLocalPlayer() != null){                
-                boolean isInSeasonalWorld = Microbot.getClient().getWorldType().contains(net.runelite.api.WorldType.SEASONAL);
-                return isWorldAccessible(targetWorld, isMemberAccount, isInSeasonalWorld);                
+                return isWorldAccessible(targetWorld, isMemberAccount, isClientOnSeasonalWorld());
             }
             log.warn("Cannot determine world accessibility - client or local player is null");
             return false;                                    
@@ -92,6 +91,16 @@ public class Rs2WorldUtil {
             return false;
         }
     }
+    private static boolean isClientOnSeasonalWorld() {
+        if (Microbot.getClient() == null || Microbot.getClientThread() == null) {
+            return false;
+        }
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            java.util.EnumSet<net.runelite.api.WorldType> worldTypes = Microbot.getClient().getWorldType();
+            return worldTypes != null && worldTypes.contains(net.runelite.api.WorldType.SEASONAL);
+        }).orElse(false);
+    }
+
     public static boolean isMemberAccount(){
         ConfigProfile activeProfile = LoginManager.getActiveProfile();
          // try to get membership status from cached varplayer data
