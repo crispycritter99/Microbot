@@ -20,6 +20,7 @@ import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 @Slf4j
 public class Rs2Tab {
     private static final int TAB_SWITCH_SCRIPT = 915;
+    private static final long LIVE_TAB_READ_TIMEOUT_MS = 600;
     private static volatile InterfaceTab cachedTab = InterfaceTab.NOTHING_SELECTED;
 
     // Derived from InterfaceTab.varcIntIndex — single source of truth.
@@ -58,7 +59,7 @@ public class Rs2Tab {
             InterfaceTab current = INDEX_TO_TAB.getOrDefault(value, InterfaceTab.NOTHING_SELECTED);
             cachedTab = current;
             return current;
-        }).orElse(cachedTab);
+        }, LIVE_TAB_READ_TIMEOUT_MS).orElse(cachedTab);
     }
 
     public static boolean switchTo(InterfaceTab tab) {

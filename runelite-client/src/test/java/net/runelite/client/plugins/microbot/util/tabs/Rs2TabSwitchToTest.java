@@ -17,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -32,7 +33,7 @@ public class Rs2TabSwitchToTest
 	{
 		client = mock(Client.class);
 		ClientThread clientThread = mock(ClientThread.class);
-		when(clientThread.runOnClientThreadOptional(any())).thenAnswer(inv ->
+		when(clientThread.runOnClientThreadOptional(any(), anyLong())).thenAnswer(inv ->
 		{
 			Callable<?> callable = inv.getArgument(0);
 			return Optional.ofNullable(callable.call());
