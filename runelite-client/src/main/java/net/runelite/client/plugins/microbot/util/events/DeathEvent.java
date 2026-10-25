@@ -46,7 +46,7 @@ public class DeathEvent implements BlockingEvent {
                         .collect(Collectors.toList());
 
                 if (completedDialogueOptions.size() >= 4) {
-                    Microbot.getRs2TileObjectCache().query().withId(DEATHS_PORTAL).interact("Use");
+                    Microbot.getRs2TileObjectCache().query().fromWorldView().withId(DEATHS_PORTAL).interact("Use");
                     return Global.sleepUntil(() -> {
                         WorldPoint location = Rs2Player.getWorldLocation();
                         return location != null && location.getRegionID() != DEATH_DOMAIN_REGION_ID;

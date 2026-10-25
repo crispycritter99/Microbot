@@ -1542,6 +1542,7 @@ public class Rs2Player {
     public static boolean isStandingOnGameObject() {
         WorldPoint playerPoint = getWorldLocation();
         return Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
                 .ofType(TileObjectType.GAME)
                 .where(o -> Objects.equals(playerPoint, o.getRuneLiteWorldLocation()))
                 .firstOnClientThread() != null || isStandingOnGroundItem();
