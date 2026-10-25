@@ -1168,7 +1168,7 @@ public abstract class Rs2Tile implements Tile {
         return Microbot.getRs2TileObjectCache().query()
                 .fromWorldView()
                 .ofType(TileObjectType.WALL)
-                .where(x -> source.equals(x.getRuneLiteWorldLocation()))
+                .where(x -> Objects.equals(source, x.getRuneLiteWorldLocation()))
                 .first() != null;
     }
 
@@ -1193,7 +1193,7 @@ public abstract class Rs2Tile implements Tile {
         Rs2TileObjectModel gameObject = Microbot.getRs2TileObjectCache().query()
                 .fromWorldView()
                 .ofType(TileObjectType.GAME)
-                .where(x -> source.equals(x.getRuneLiteWorldLocation()))
+                .where(x -> Objects.equals(source, x.getRuneLiteWorldLocation()))
                 .first();
         return gameObject != null && "bank booth".equalsIgnoreCase(gameObject.getName());
     }

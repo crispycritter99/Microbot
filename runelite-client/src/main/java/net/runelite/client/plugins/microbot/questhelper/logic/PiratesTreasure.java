@@ -169,7 +169,7 @@ public class PiratesTreasure extends BaseQuest {
 
     private static void pickBananaTree() {
         for (int i = 0; i < 4; i++) { // 4 picks total
-            Microbot.getRs2TileObjectCache().query().fromWorldView().withNameContains("Banana Tree").interact("Pick");
+            Microbot.getRs2TileObjectCache().query().fromWorldView().withNameContains("Banana Tree").withAction("Pick").interact("Pick");
             sleep(800, 1500); // Sleep after each click
         }
     }
