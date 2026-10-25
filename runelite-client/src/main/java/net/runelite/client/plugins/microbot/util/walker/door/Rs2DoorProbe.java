@@ -11,7 +11,8 @@ import net.runelite.api.ObjectComposition;
 import net.runelite.api.TileObject;
 import net.runelite.api.WallObject;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2PathApi;
 import net.runelite.client.plugins.microbot.util.walker.Rs2RouteResult;
@@ -41,10 +42,10 @@ public final class Rs2DoorProbe {
         }
         Map<TileObject, Optional<ObjectComposition>> cache = ctx == null ? null : ctx.compositionCache();
         if (cache == null) {
-            return Rs2GameObject.convertToObjectComposition(object);
+            return Rs2DoorDetection.visibleComposition(object);
         }
         return cache.computeIfAbsent(object,
-                        ignored -> Optional.ofNullable(Rs2GameObject.convertToObjectComposition(object)))
+                        ignored -> Optional.ofNullable(Rs2DoorDetection.visibleComposition(object)))
                 .orElse(null);
     }
 
@@ -231,9 +232,14 @@ public final class Rs2DoorProbe {
             }
             return match;
         }
-        return Rs2GameObject.getAll(o -> isDoorCandidateOnSegment(ctx, ledger, o, o.getWorldLocation(),
-                        playerLoc, fromWp, toWp, doorActions, searchDistance), playerLoc, searchDistance).stream()
-                .min(Comparator.comparingInt(o -> o.getWorldLocation().distanceTo2D(playerLoc)))
+        return Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
+                .within(playerLoc, searchDistance)
+                .where(o -> isDoorCandidateOnSegment(ctx, ledger, o.getTileObject(), o.getRuneLiteWorldLocation(),
+                        playerLoc, fromWp, toWp, doorActions, searchDistance))
+                .toListOnClientThread().stream()
+                .map(Rs2TileObjectModel::getTileObject)
+                .min(Comparator.comparingInt((TileObject o) -> o.getWorldLocation().distanceTo2D(playerLoc)))
                 .orElse(null);
     }
 }
