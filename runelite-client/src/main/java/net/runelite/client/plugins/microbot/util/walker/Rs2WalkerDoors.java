@@ -28,7 +28,6 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -2429,9 +2428,8 @@ final class Rs2WalkerDoors {
 		// Look a little ahead along the path to bias toward the intended door edge.
 		int endIdx = Math.min(path.size() - 1, startIdx + 10);
 
-		for (WallObject w : Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, radiusTiles)) {
+		for (WallObject w : Rs2WalkerSceneObjects.nearInLineOfSight(WallObject.class, playerLoc, radiusTiles)) {
 			if (w == null) continue;
-			if (!new Rs2TileObjectModel(w).hasLineOfSight(playerLoc)) continue;
 
 			ObjectComposition comp = Rs2DoorDetection.resolveCompositionForDoorProbe(w);
 			if (comp == null || Rs2DoorClassifier.isNullOrPlaceholderObjectName(comp.getName())) continue;
@@ -2465,9 +2463,8 @@ final class Rs2WalkerDoors {
 			}
 		}
 
-		for (GameObject g : Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, radiusTiles)) {
+		for (GameObject g : Rs2WalkerSceneObjects.nearInLineOfSight(GameObject.class, playerLoc, radiusTiles)) {
 			if (g == null) continue;
-			if (!new Rs2TileObjectModel(g).hasLineOfSight(playerLoc)) continue;
 
 			ObjectComposition comp = Rs2DoorDetection.resolveCompositionForDoorProbe(g);
 			if (comp == null || Rs2DoorClassifier.isNullOrPlaceholderObjectName(comp.getName())) continue;
