@@ -42,6 +42,7 @@ public final class Rs2BankObjects {
 
     public static Rs2TileObjectModel findBank(int maxSearchRadius) {
         List<Rs2TileObjectModel> candidates = Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
                 .ofType(TileObjectType.GAME)
                 .withIds(BANK_IDS)
                 .within(maxSearchRadius)
@@ -56,6 +57,7 @@ public final class Rs2BankObjects {
 
     public static Rs2TileObjectModel findDepositBox(int maxSearchRadius) {
         List<Rs2TileObjectModel> candidates = Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
                 .ofType(TileObjectType.GAME)
                 .withIds(BANK_IDS)
                 .within(maxSearchRadius)
@@ -70,11 +72,20 @@ public final class Rs2BankObjects {
 
     public static Rs2TileObjectModel findGrandExchangeBooth(int maxSearchRadius) {
         List<Rs2TileObjectModel> candidates = Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
                 .ofType(TileObjectType.WALL)
                 .withIds(GRAND_EXCHANGE_BOOTH_IDS)
                 .within(maxSearchRadius)
                 .toListOnClientThread();
         return nearest(candidates, o -> Rs2Tile.isTileReachable(o.getRuneLiteWorldLocation()));
+    }
+
+    public static String actionFor(Rs2TileObjectModel object, String action) {
+        String own = object.findAction(action);
+        if (own != null) {
+            return own;
+        }
+        return object.hasAction("Use") ? "Use" : "";
     }
 
     public static boolean isUsableBank(WorldPoint location) {

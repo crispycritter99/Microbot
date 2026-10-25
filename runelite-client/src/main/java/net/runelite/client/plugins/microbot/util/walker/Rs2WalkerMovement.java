@@ -27,7 +27,7 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.api.tileobject.models.TileObjectType;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -761,8 +761,12 @@ final class Rs2WalkerMovement {
         }
         int end = Math.min(rawPath.size(), anchor + sceneReach + 1);
         List<TileObject> sceneObjects = new ArrayList<>();
-        sceneObjects.addAll(Rs2GameObject.getWallObjects(o -> true, playerLoc, sceneReach));
-        sceneObjects.addAll(Rs2GameObject.getGameObjects(o -> true, playerLoc, sceneReach));
+        Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
+                .ofType(TileObjectType.WALL, TileObjectType.GAME)
+                .within(playerLoc, sceneReach)
+                .toListOnClientThread()
+                .forEach(object -> sceneObjects.add(object.getTileObject()));
         for (int i = anchor; i < end - 1; i++) {
             WorldPoint from = rawPath.get(i);
             WorldPoint to = rawPath.get(i + 1);
