@@ -28,7 +28,6 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
-import net.runelite.client.plugins.microbot.api.tileobject.models.TileObjectType;
 import net.runelite.client.plugins.microbot.util.input.InputArbiter;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -3379,48 +3378,6 @@ public class Rs2Walker {
         return WalkerState.EXIT;
     }
 
-    private static <T extends TileObject> List<T> nearbySceneObjects(TileObjectType type, Class<T> kind, WorldPoint anchor, int radiusTiles) {
-        if (anchor == null) {
-            return Collections.emptyList();
-        }
-        List<T> found = Microbot.getClientThread().invoke(() -> {
-            Player player = Microbot.getClient().getLocalPlayer();
-            WorldView worldView = player != null ? player.getWorldView() : null;
-            if (worldView == null) {
-                return Collections.<T>emptyList();
-            }
-            LocalPoint anchorLocal = LocalPoint.fromWorld(worldView, anchor);
-            if (anchorLocal == null) {
-                anchorLocal = player.getLocalLocation();
-            }
-            if (anchorLocal == null) {
-                return Collections.<T>emptyList();
-            }
-            LocalPoint origin = anchorLocal;
-            int maxDistance = Math.min(radiusTiles, Constants.SCENE_SIZE) * Perspective.LOCAL_TILE_SIZE;
-            return Microbot.getRs2TileObjectCache().query()
-                    .fromWorldView()
-                    .ofType(type)
-                    .toList().stream()
-                    .map(Rs2TileObjectModel::getTileObject)
-                    .filter(kind::isInstance)
-                    .map(kind::cast)
-                    .filter(o -> o.getLocalLocation() != null && o.getLocalLocation().distanceTo(origin) <= maxDistance)
-                    .sorted(Comparator.comparingInt(o -> o.getLocalLocation().distanceTo(origin)))
-                    .collect(Collectors.toList());
-        });
-        return found != null ? found : Collections.emptyList();
-    }
-
-    private static TileObject sceneObjectAt(TileObjectType type, WorldPoint tile) {
-        Rs2TileObjectModel object = Microbot.getRs2TileObjectCache().query()
-                .fromWorldView()
-                .ofType(type)
-                .where(o -> tile.equals(o.getRuneLiteWorldLocation()))
-                .firstOnClientThread();
-        return object != null ? object.getTileObject() : null;
-    }
-
     public static boolean walkNextTo(GameObject target) {
         Rs2WorldArea gameObjectArea = new Rs2WorldArea(Objects.requireNonNull(new Rs2TileObjectModel(target).getWorldArea()));
         List<WorldPoint> interactablePoints = gameObjectArea.getInteractable();
@@ -4790,8 +4747,8 @@ public class Rs2Walker {
         // radius is a superset of what the per-probe queries could have found.
         final int snapshotRadius = handlerRange + 2;
         long snapshotStartedAt = System.currentTimeMillis();
-        rawScanWallSnapshot = nearbySceneObjects(TileObjectType.WALL, WallObject.class, playerLoc, snapshotRadius);
-        rawScanGameObjectSnapshot = nearbySceneObjects(TileObjectType.GAME, GameObject.class, playerLoc, snapshotRadius);
+        rawScanWallSnapshot = Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, snapshotRadius);
+        rawScanGameObjectSnapshot = Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, snapshotRadius);
         rawScanDoorLocationSnapshot = Microbot.getClientThread()
                 .invoke(Rs2Walker::captureRawScanDoorLocationsOnClientThread);
         snapshotMs = System.currentTimeMillis() - snapshotStartedAt;
@@ -5540,7 +5497,7 @@ public class Rs2Walker {
 			if (!blocked) continue;
 
 			// Scan candidates in loaded scene radius around player.
-			for (WallObject w : nearbySceneObjects(TileObjectType.WALL, WallObject.class, playerLoc, radiusTiles)) {
+			for (WallObject w : Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, radiusTiles)) {
 				if (w == null) continue;
 				WorldPoint objWp = w.getWorldLocation();
 				if (objWp == null) continue;
@@ -5579,7 +5536,7 @@ public class Rs2Walker {
                         edgeDist);
 			}
 
-			for (GameObject g : nearbySceneObjects(TileObjectType.GAME, GameObject.class, playerLoc, radiusTiles)) {
+			for (GameObject g : Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, radiusTiles)) {
 				if (g == null) continue;
 				WorldPoint objWp = g.getWorldLocation();
 				if (objWp == null) continue;
@@ -5671,12 +5628,7 @@ public class Rs2Walker {
 		WorldPoint posBefore = Rs2Player.getWorldLocation();
 		boolean interacted;
 		try {
-			Rs2TileObjectModel door = new Rs2TileObjectModel(best);
-			if (bestAction == null || bestAction.isEmpty() || !door.hasAction(bestAction)) {
-				interacted = door.click();
-			} else {
-				interacted = door.click(bestAction);
-			}
+			interacted = Rs2WalkerSceneObjects.interact(best, bestAction);
 		} catch (Exception ex) {
 			WebWalkLog.spInfo("door_interact_exception | mode=path-adj probe={} from={} to={} ex={}",
 					compactWorldPoint(bestLoc), compactWorldPoint(bestFrom), compactWorldPoint(bestTo), ex.getClass().getSimpleName());
@@ -5854,9 +5806,9 @@ public class Rs2Walker {
 				if (probe.getPlane() != playerLoc.getPlane()) continue;
 				if (probe.distanceTo2D(playerLoc) > radiusTiles) continue;
 
-				TileObject object = sceneObjectAt(TileObjectType.WALL, probe);
+				TileObject object = Rs2WalkerSceneObjects.first(WallObject.class, o -> o.getWorldLocation().equals(probe), probe, 3);
 				if (object == null) {
-					object = sceneObjectAt(TileObjectType.GAME, probe);
+					object = Rs2WalkerSceneObjects.first(GameObject.class, o -> o.getWorldLocation().equals(probe), probe, 3);
 				}
 				if (object == null) continue;
 
