@@ -3672,14 +3672,18 @@ public class Rs2Bank {
     private static Rs2TileObjectModel nearestBankObject(int maxSearchRadius) {
         WorldPoint anchor = Rs2Player.getWorldLocation();
         if (anchor == null) return null;
-        return Stream.of(
-                        Rs2BankObjects.findBank(maxSearchRadius),
-                        Rs2BankObjects.findGrandExchangeBooth(maxSearchRadius)
-                )
-                .filter(Objects::nonNull)
-                .filter(o -> o.getRuneLiteWorldLocation() != null)
-                .min(Comparator.comparingInt(o -> o.getRuneLiteWorldLocation().distanceTo(anchor)))
-                .orElse(null);
+        Rs2TileObjectModel nearest = null;
+        int nearestDistance = Integer.MAX_VALUE;
+        for (Rs2TileObjectModel candidate : new Rs2TileObjectModel[]{
+                Rs2BankObjects.findBank(maxSearchRadius),
+                Rs2BankObjects.findGrandExchangeBooth(maxSearchRadius)}) {
+            WorldPoint location = candidate != null ? candidate.getRuneLiteWorldLocation() : null;
+            if (location != null && location.distanceTo(anchor) < nearestDistance) {
+                nearest = candidate;
+                nearestDistance = location.distanceTo(anchor);
+            }
+        }
+        return nearest;
     }
 
     private static void walkUntilBankReady(BankLocation bankLocation) {

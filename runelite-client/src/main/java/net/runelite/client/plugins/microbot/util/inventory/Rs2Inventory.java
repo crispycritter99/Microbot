@@ -1717,7 +1717,7 @@ public class Rs2Inventory {
     public static boolean useUnNotedItemOnObject(String item, int objectID) {
         if (Rs2Bank.isOpen()) return false;
         useUnNoted(item);
-        Microbot.getRs2TileObjectCache().query().withId(objectID).interact();
+        Microbot.getRs2TileObjectCache().query().fromWorldView().withId(objectID).interact();
         return true;
     }
 
@@ -1748,7 +1748,7 @@ public class Rs2Inventory {
         if (Rs2Bank.isOpen()) return false;
         if (!use(item)) return false;
         sleep(100);
-        return isItemSelected() && Microbot.getRs2TileObjectCache().query().withId(objectID).interact();
+        return isItemSelected() && Microbot.getRs2TileObjectCache().query().fromWorldView().withId(objectID).interact();
     }
 
     /**

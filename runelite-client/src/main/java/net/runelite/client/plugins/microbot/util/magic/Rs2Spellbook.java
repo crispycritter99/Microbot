@@ -301,7 +301,7 @@ public enum Rs2Spellbook {
         
         // Interact with the altar to pray and switch spellbook
         String prayAction = altarObject.findAction("Pray");
-        if (altarObject.click(prayAction != null ? prayAction : "Pray")) {
+        if (altarObject.click(prayAction != null ? prayAction : "")) {
             Rs2Player.waitForAnimation();
             // Wait for spellbook change confirmation
             return sleepUntil(() -> getCurrentSpellbook() == this, 5000);
@@ -446,6 +446,7 @@ public enum Rs2Spellbook {
      */
     private static Rs2TileObjectModel findAltar(Rs2Spellbook spellbook, int maxSearchRadius) {
         return Microbot.getRs2TileObjectCache().query()
+                .fromWorldView()
                 .ofType(TileObjectType.GAME)
                 .withId(spellbook.getGameID())
                 .nearestOnClientThread(maxSearchRadius);
