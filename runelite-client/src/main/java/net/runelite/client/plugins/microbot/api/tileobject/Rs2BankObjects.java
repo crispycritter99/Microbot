@@ -77,6 +77,14 @@ public final class Rs2BankObjects {
         return nearest(candidates, o -> Rs2Tile.isTileReachable(o.getRuneLiteWorldLocation()));
     }
 
+    public static String actionFor(Rs2TileObjectModel object, String action) {
+        String own = object.findAction(action);
+        if (own != null) {
+            return own;
+        }
+        return object.hasAction("Use") ? "Use" : "";
+    }
+
     public static boolean isUsableBank(WorldPoint location) {
         if (location == null) {
             return false;

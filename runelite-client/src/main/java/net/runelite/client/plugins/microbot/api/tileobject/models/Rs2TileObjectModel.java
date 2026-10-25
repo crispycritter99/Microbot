@@ -281,6 +281,35 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return matchesAction(action, false);
     }
 
+    public @Nullable String findAction(String action) {
+        if (action == null || action.isBlank()) {
+            return null;
+        }
+        String[] actions = Microbot.getClientThread().invoke(() -> {
+            ObjectComposition composition = getVisibleObjectComposition();
+            return composition != null ? composition.getActions() : null;
+        });
+        if (actions == null) {
+            return null;
+        }
+        String wanted = Rs2UiHelper.stripColTags(action).trim();
+        String needle = wanted.toLowerCase();
+        String partial = null;
+        for (String candidate : actions) {
+            if (candidate == null) {
+                continue;
+            }
+            String stripped = Rs2UiHelper.stripColTags(candidate);
+            if (stripped.equalsIgnoreCase(wanted)) {
+                return stripped;
+            }
+            if (partial == null && stripped.toLowerCase().contains(needle)) {
+                partial = stripped;
+            }
+        }
+        return partial;
+    }
+
     private boolean matchesAction(String action, boolean exact) {
         if (action == null || action.isEmpty()) {
             return false;
