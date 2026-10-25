@@ -66,6 +66,15 @@ public class LogConsolePanelTest
 	}
 
 	@Test
+	public void bufferCutStartsAtTheNextWholeLine()
+	{
+		assertEquals(0, LogConsolePanel.lineStartAtOrAfter("one\ntwo\n", 0));
+		assertEquals(4, LogConsolePanel.lineStartAtOrAfter("one\ntwo\n", 2));
+		assertEquals(4, LogConsolePanel.lineStartAtOrAfter("one\ntwo\n", 4));
+		assertEquals(2, LogConsolePanel.lineStartAtOrAfter("one two", 2));
+	}
+
+	@Test
 	public void rightClickMenuOffersCopyOnlyForASelection() throws Exception
 	{
 		onEdt(() ->

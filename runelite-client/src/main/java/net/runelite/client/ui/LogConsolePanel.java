@@ -248,7 +248,7 @@ final class LogConsolePanel extends JPanel
 			if (pending.length() > 2 * MAX_CHARACTERS_SCROLLED_UP)
 			{
 				// the oldest buffered lines would be trimmed out of the document on arrival anyway
-				pending.delete(0, pending.length() - MAX_CHARACTERS_SCROLLED_UP);
+				pending.delete(0, lineStartAtOrAfter(pending, pending.length() - MAX_CHARACTERS_SCROLLED_UP));
 			}
 
 			if (flushScheduled)
@@ -259,6 +259,26 @@ final class LogConsolePanel extends JPanel
 		}
 
 		SwingUtilities.invokeLater(this::flushPending);
+	}
+
+	static int lineStartAtOrAfter(CharSequence text, int from)
+	{
+		if (from <= 0)
+		{
+			return 0;
+		}
+		if (text.charAt(from - 1) == '\n')
+		{
+			return from;
+		}
+		for (int i = from; i < text.length(); i++)
+		{
+			if (text.charAt(i) == '\n')
+			{
+				return i + 1;
+			}
+		}
+		return from;
 	}
 
 	private void flushPending()
@@ -273,7 +293,7 @@ final class LogConsolePanel extends JPanel
 			}
 
 			int cap = followTail ? MAX_CHARACTERS : MAX_CHARACTERS_SCROLLED_UP;
-			text = pending.substring(Math.max(0, pending.length() - cap));
+			text = pending.substring(lineStartAtOrAfter(pending, pending.length() - cap));
 			pending.setLength(0);
 		}
 
