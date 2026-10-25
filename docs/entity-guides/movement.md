@@ -591,3 +591,24 @@ return Rs2Tile.fullPathTo(sourceTile, targetTile);
 **Where this applies:** `Rs2WorldPoint.pathTo`, `Rs2Tile.pathTo`, `Rs2Tile.fullPathTo`, and any helper that reads a `Tile` from the scene array.
 
 **Defensive check:** Mock a scene with an empty source or target slot and assert the path is `null`, as in `Rs2WorldPointNullSceneTileTest` and `Rs2TileNullPathEndpointTest`.
+
+## 30. In resizable mode the viewport runs under the side panel, chatbox and minimap
+
+`client.getViewportXOffset/YOffset/Width/Height` covers the whole canvas in the resizable layouts, so a tile that projects inside the viewport can still be drawn under the inventory/side panel, the chatbox or the minimap. A `WALK` menu entry clicks `param0/param1` exactly, so a scene click point under one of those interfaces lands on the interface. Reject scene click points whose click box intersects a visible top-level overlay container and let the caller use the minimap instead.
+
+**Why this matters:** A Discord report on a clean main build showed the walker clicking the inventory while walking. `Rs2WalkerMovement.sceneCanvasPoint` and `Rs2Camera.isTileOnScreen` only tested the viewport rectangle, so `dispatchSceneWalk` clicked a tile point behind the side panel.
+
+**Pattern to follow:**
+
+```java
+// Wrong: viewport bounds alone in resizable mode.
+return isCanvasPointInsideViewport(canvasPoint, viewport) ? canvasPoint : null;
+
+// Right: also reject points covered by a visible side panel, chatbox or minimap container.
+if (!isCanvasPointInsideViewport(canvasPoint, viewport)
+        || isCanvasPointCoveredByInterface(canvasPoint, visibleSceneOverlayBounds())) return null;
+```
+
+**Where this applies:** `Rs2WalkerMovement.sceneCanvasPoint`, `Rs2WalkerMovement.isSceneCanvasClickable`, `Rs2WalkerMovement.dispatchSceneWalk`, and any helper that clicks a projected canvas point with a `WALK` entry.
+
+**Defensive check:** Assert points inside, touching and outside overlay rectangles against `isCanvasPointCoveredByInterface`, as in `Rs2WalkerUnitTest.sceneClickRejectsPointsCoveredByVisibleInterfaces`.
