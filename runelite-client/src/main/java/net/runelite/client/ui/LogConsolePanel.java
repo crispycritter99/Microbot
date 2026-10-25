@@ -31,6 +31,7 @@ import javax.swing.event.PopupMenuListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.DefaultCaret;
+import javax.swing.text.Element;
 import net.runelite.api.Constants;
 
 final class LogConsolePanel extends JPanel
@@ -204,7 +205,7 @@ final class LogConsolePanel extends JPanel
 			// newest line's position from the document itself
 			newestLine = textArea.modelToView2D(end);
 		}
-		catch (BadLocationException ex)
+		catch (BadLocationException | IllegalArgumentException ex)
 		{
 			return;
 		}
@@ -411,9 +412,13 @@ final class LogConsolePanel extends JPanel
 			return;
 		}
 
+		Element lines = document.getDefaultRootElement();
+		int lineEnd = lines.getElement(lines.getElementIndex(excess - 1)).getEndOffset();
+		int cut = lineEnd <= document.getLength() ? lineEnd : excess;
+
 		try
 		{
-			document.remove(0, excess);
+			document.remove(0, cut);
 		}
 		catch (BadLocationException ex)
 		{
