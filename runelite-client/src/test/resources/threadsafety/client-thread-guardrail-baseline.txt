@@ -200,9 +200,6 @@ net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getGroundObje
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getGroundObjects(Predicate, WorldPoint, int): List  ->  net.runelite.api.coords.LocalPoint#fromWorld(WorldView, WorldPoint): LocalPoint
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getGroundObjects(Predicate, int): List  ->  net.runelite.api.Client#getLocalPlayer(): Player
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getObjectComposition(int): ObjectComposition  ->  net.runelite.api.ObjectComposition#getImpostorIds(): int[]
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getSceneObjects(Function): Stream  ->  net.runelite.api.GameObject#getSceneMinLocation(): Point
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getSceneObjects(Function): Stream  ->  net.runelite.api.Tile#getLocalLocation(): LocalPoint
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getSceneObjects(Function): Stream  ->  net.runelite.api.Tile#getSceneLocation(): Point
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getTileObject(Predicate): TileObject  ->  net.runelite.api.Client#getLocalPlayer(): Player
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getTileObject(Predicate, WorldPoint, int): TileObject  ->  net.runelite.api.Client#getLocalPlayer(): Player
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#getTileObject(Predicate, WorldPoint, int): TileObject  ->  net.runelite.api.Player#getLocalLocation(): LocalPoint
@@ -272,13 +269,6 @@ net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$getWal
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$getWallObject$59(Set, WallObject): boolean  ->  net.runelite.api.WallObject#getId(): int
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$getWallObject$60(Set, WallObject): boolean  ->  net.runelite.api.WallObject#getId(): int
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$nameMatches$85(Set, boolean, String, String, TileObject): boolean  ->  net.runelite.api.TileObject#getId(): int
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$0(Tile): Collection  ->  net.runelite.api.Tile#getGameObjects(): GameObject[]
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$1(Tile): Collection  ->  net.runelite.api.Tile#getGroundObject(): GroundObject
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$2(Tile): Collection  ->  net.runelite.api.Tile#getDecorativeObject(): DecorativeObject
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$3(Tile): Collection  ->  net.runelite.api.Tile#getWallObject(): WallObject
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$4(Tile): Collection  ->  net.runelite.api.Tile#getDecorativeObject(): DecorativeObject
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$4(Tile): Collection  ->  net.runelite.api.Tile#getGroundObject(): GroundObject
-net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#lambda$static$4(Tile): Collection  ->  net.runelite.api.Tile#getWallObject(): WallObject
 net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject#localPointFromWorldSafe(WorldPoint): LocalPoint  ->  net.runelite.api.coords.LocalPoint#fromWorld(WorldView, WorldPoint): LocalPoint
 net.runelite.client.plugins.microbot.util.gameobject.Rs2ObjectModel#<init>(TileObject, Tile): void  ->  net.runelite.api.Client#getTickCount(): int
 net.runelite.client.plugins.microbot.util.gameobject.Rs2ObjectModel#<init>(TileObject, Tile): void  ->  net.runelite.api.GameObject#sizeX(): int
