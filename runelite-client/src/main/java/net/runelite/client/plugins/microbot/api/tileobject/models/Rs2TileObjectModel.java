@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
+import java.util.Arrays;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 
@@ -479,18 +480,70 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
     }
 
     /**
-     * Clicks on the specified tile object with no specific action.
+     * Clicks this object with the given action, or with its first option when the action is null or empty.
+     * An action the object does not have is refused rather than replaced by the first option,
+     * unless a widget is selected, in which case the selected item or spell is used on the object.
      * Rs2GameObject.clickObject delegates here.
      *
      * @param action the action to perform (e.g., "Open", "Climb")
-     * @return true if the interaction was successful, false otherwise
+     * @return true if the interaction was sent, false otherwise
      */
     public boolean click(String action) {
+        return click(action, false);
+    }
+
+    /**
+     * Rs2GameObject's old behaviour: sends the first option when the object does not have the action.
+     * Only Rs2GameObject.clickObject should call this; it goes when Rs2GameObject is removed.
+     */
+    @Deprecated(since = "2.6.44", forRemoval = true)
+    public boolean clickOrFirstOption(String action) {
+        return click(action, true);
+    }
+
+    private boolean click(String action, boolean firstOptionIfMissing) {
         try {
             WorldView worldView = getWorldView();
             if (worldView == null) {
                 log.warn("Failed to interact with object {} - object is no longer in a loaded world view", getId());
                 return false;
+            }
+
+            boolean widgetSelected = Microbot.getClient().isWidgetSelected();
+            int index = 0;
+            String objName = "";
+            if (action != null) {
+                //performance improvement to only get compoisiton if action has been specified
+                var objComp = getVisibleObjectComposition();
+                if (objComp == null) {
+                    log.warn("Failed to interact with object {} - object not currently visible", getId());
+                    return false;
+                }
+                String[] actions = objComp.getActions();
+                String wanted = Rs2UiHelper.stripColTags(action).trim();
+
+                if (!wanted.isEmpty()) {
+                    index = -1;
+                    for (int i = 0; i < actions.length; i++) {
+                        if (actions[i] == null) continue;
+                        if (wanted.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index == -1 && !widgetSelected) {
+                        if (!firstOptionIfMissing) {
+                            log.warn("Failed to interact with object {} ({}) - action '{}' not found, actions are {}",
+                                    getId(), objComp.getName(), action, Arrays.toString(actions));
+                            return false;
+                        }
+                        log.warn("Object {} ({}) has no '{}' action, sending its first option; the query API refuses this",
+                                getId(), objComp.getName(), action);
+                        index = 0;
+                    }
+                }
+
+                objName = objComp.getName();
             }
 
             if (!recoverFromCantReach()) {
@@ -533,45 +586,14 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                 param1 = getLocalLocation().getSceneY();
             }
 
-
-            int index = 0;
-            String objName = "";
-            if (action != null) {
-                //performance improvement to only get compoisiton if action has been specified
-                var objComp = getVisibleObjectComposition();
-                if (objComp == null) {
-                    log.warn("Failed to interact with object {} - object not currently visible", getId());
-                    return false;
-                }
-                String[] actions = objComp.getActions();
-
-                for (int i = 0; i < actions.length; i++) {
-                    if (actions[i] == null) continue;
-                    if (action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
-                        index = i;
-                        break;
-                    }
-                }
-
-                if (index == actions.length)
-                    index = 0;
-
-                objName = objComp.getName();
-
-                // both hands must be free before using MINECART
-                if (objComp.getName().toLowerCase().contains("train cart")) {
-                    Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
-                    Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
-                    sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
-                }
+            // both hands must be free before using MINECART
+            if (objName != null && objName.toLowerCase().contains("train cart")) {
+                Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
+                Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
+                sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
             }
 
-            if (index == -1) {
-                log.warn("Failed to interact with object {} - action '{}' not found", getId(), action);
-            }
-
-
-            if (Microbot.getClient().isWidgetSelected()) {
+            if (widgetSelected) {
                 menuAction = MenuAction.WIDGET_TARGET_ON_GAME_OBJECT;
             } else if (index == 0) {
                 menuAction = MenuAction.GAME_OBJECT_FIRST_OPTION;
