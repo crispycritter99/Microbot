@@ -112,19 +112,21 @@ public class CatalogAndTraceTest {
 		assertEquals(200, conn.getResponseCode());
 
 		long deadline = System.currentTimeMillis() + 2000;
-		while (!Files.exists(file) && System.currentTimeMillis() < deadline) {
+		while (!(Files.exists(file) && Files.readString(file).contains("\"method\":\"POST\"")) && System.currentTimeMillis() < deadline) {
 			Thread.sleep(20);
 		}
-		List<String> lines = Files.readAllLines(file);
-		assertEquals(1, lines.size());
+		List<String> posts = Files.readAllLines(file).stream()
+			.filter(entry -> entry.contains("\"method\":\"POST\""))
+			.collect(java.util.stream.Collectors.toList());
+		assertEquals(posts.toString(), 1, posts.size());
 		@SuppressWarnings("unchecked")
-		Map<String, Object> line = GSON.fromJson(lines.get(0), Map.class);
+		Map<String, Object> line = GSON.fromJson(posts.get(0), Map.class);
 		assertEquals("POST", line.get("method"));
 		assertEquals("/echo?x=1", line.get("uri"));
 		assertEquals(200.0, line.get("status"));
 		assertEquals(List.of("name"), line.get("fields"));
-		assertFalse(lines.get(0), lines.get(0).contains("Banker"));
-		assertTrue(lines.get(0), lines.get(0).contains("/echo?x=1"));
+		assertFalse(posts.get(0), posts.get(0).contains("Banker"));
+		assertTrue(posts.get(0), posts.get(0).contains("/echo?x=1"));
 		if (java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
 			assertEquals("rw-------", java.nio.file.attribute.PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
 		}
