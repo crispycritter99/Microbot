@@ -10,6 +10,7 @@ import net.runelite.api.Constants;
 import net.runelite.api.DecorativeObject;
 import net.runelite.api.GameObject;
 import net.runelite.api.GroundObject;
+import net.runelite.api.ObjectComposition;
 import net.runelite.api.Perspective;
 import net.runelite.api.Player;
 import net.runelite.api.TileObject;
@@ -119,6 +120,67 @@ public final class Rs2WalkerSceneObjects {
 
     public static List<TileObject> all() {
         return near(TileObject.class, Rs2Player.getWorldLocation(), Constants.SCENE_SIZE);
+    }
+
+    public static List<TileObject> all(Predicate<? super TileObject> predicate) {
+        return near(TileObject.class, predicate, Rs2Player.getWorldLocation(), Constants.SCENE_SIZE);
+    }
+
+    public static TileObject findById(int id) {
+        List<TileObject> nearby = all();
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            for (TileObject object : nearby) {
+                if (object.getId() == id) {
+                    return object;
+                }
+            }
+            return null;
+        }).orElse(null);
+    }
+
+    public static boolean interact(int id, String action) {
+        return interact(findById(id), action);
+    }
+
+    public static ObjectComposition composition(TileObject object) {
+        if (object == null) {
+            return null;
+        }
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            ObjectComposition comp = Microbot.getClient().getObjectDefinition(object.getId());
+            if (comp == null) {
+                return null;
+            }
+            return comp.getImpostorIds() == null ? comp : comp.getImpostor();
+        }).orElse(null);
+    }
+
+    public static ObjectComposition composition(int id) {
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            ObjectComposition comp = Microbot.getClient().getObjectDefinition(id);
+            if (comp == null) {
+                return null;
+            }
+            return comp.getImpostorIds() == null ? comp : comp.getImpostor();
+        }).orElse(null);
+    }
+
+    public static boolean hasAction(ObjectComposition composition, String action) {
+        if (composition == null) {
+            return false;
+        }
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            String[] actions = composition.getActions();
+            if (actions == null) {
+                return false;
+            }
+            for (String candidate : actions) {
+                if (candidate != null && candidate.equalsIgnoreCase(action)) {
+                    return true;
+                }
+            }
+            return false;
+        }).orElse(false);
     }
 
     public static boolean interact(TileObject object, String action) {
