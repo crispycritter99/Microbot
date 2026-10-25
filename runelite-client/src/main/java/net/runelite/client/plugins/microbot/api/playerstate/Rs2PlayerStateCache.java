@@ -190,10 +190,12 @@ public final class Rs2PlayerStateCache {
 
 	private @Varbit int updateVarbitValue(@Varbit int varbitId) {
 		return clientThread.runOnClientThreadOptional(() -> {
-			if (client.getVarps() == null) {
+			int value;
+			try {
+				value = client.getVarbitValue(varbitId);
+			} catch (NullPointerException e) {
 				return 0;
 			}
-			int value = client.getVarbitValue(varbitId);
 			// Only cache while logged in: before the initial varp sync completes the client
 			// returns default/stale values, and a wrong entry for a varp the server never
 			// re-sends (zero-valued ones) would stick until the next flush.

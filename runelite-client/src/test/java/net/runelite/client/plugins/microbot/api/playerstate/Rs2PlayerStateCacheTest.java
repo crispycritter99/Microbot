@@ -63,19 +63,18 @@ public class Rs2PlayerStateCacheTest
 	}
 
 	@Test
-	public void varbitReturnsZeroWithoutReadingClientBeforeVarpsLoad()
+	public void varbitReturnsZeroWithoutCachingWhileVarbitTableIsUnloaded()
 	{
-		when(client.getVarps()).thenReturn(null);
 		when(client.getGameState()).thenReturn(GameState.LOGGED_IN);
+		when(client.getVarbitValue(VARBIT_ID))
+			.thenThrow(new NullPointerException())
+			.thenReturn(6);
 
 		assertEquals(0, cache.getVarbitValue(VARBIT_ID));
-
-		verify(client, never()).getVarbitValue(anyInt());
-
-		when(client.getVarps()).thenReturn(new int[VARP_COUNT]);
-		when(client.getVarbitValue(VARBIT_ID)).thenReturn(6);
-
 		assertEquals(6, cache.getVarbitValue(VARBIT_ID));
+		assertEquals(6, cache.getVarbitValue(VARBIT_ID));
+
+		verify(client, times(2)).getVarbitValue(VARBIT_ID);
 	}
 
 	@Test
