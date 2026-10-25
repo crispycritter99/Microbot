@@ -42,7 +42,7 @@ public class PathHandler extends AgentHandler {
 		}
 
 		Map<String, String> params = parseQuery(exchange.getRequestURI());
-		boolean full = "true".equalsIgnoreCase(params.get("full")) || "1".equals(params.get("full"));
+		boolean full = params.containsKey("full") && parseBoolean("full", params.get("full"));
 		String sub = getSubPath(exchange, BASE_PATH);
 		switch (sub) {
 			case "":
@@ -74,7 +74,7 @@ public class PathHandler extends AgentHandler {
 		Rs2RouteRequest request = Rs2RouteRequest.to(start, target);
 		String bankItems = params.get("bankItems");
 		if (bankItems != null) {
-			request = request.withBankItems(Boolean.parseBoolean(bankItems));
+			request = request.withBankItems(parseBoolean("bankItems", bankItems));
 		}
 
 		Rs2RouteResult route;
@@ -172,6 +172,13 @@ public class PathHandler extends AgentHandler {
 		map.put("y", point.getY());
 		map.put("plane", point.getPlane());
 		return map;
+	}
+
+	static boolean parseBoolean(String key, String val) {
+		String v = val.trim().toLowerCase();
+		if (v.equals("true") || v.equals("1")) return true;
+		if (v.equals("false") || v.equals("0")) return false;
+		throw new BadRequestException("Parameter '" + key + "' must be true or false");
 	}
 
 	static int requiredInt(Map<String, String> params, String key) {

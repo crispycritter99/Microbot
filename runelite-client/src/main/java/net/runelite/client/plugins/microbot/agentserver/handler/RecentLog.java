@@ -40,6 +40,9 @@ public final class RecentLog {
 
 	public synchronized List<Map<String, Object>> since(long afterSeq, int limit, Predicate<Map<String, Object>> filter) {
 		List<Map<String, Object>> newer = new ArrayList<>();
+		if (limit <= 0) {
+			return newer;
+		}
 		for (Map<String, Object> entry : entries) {
 			if ((long) entry.get("seq") > afterSeq && filter.test(entry)) {
 				newer.add(entry);

@@ -17,12 +17,14 @@ import static org.junit.Assert.assertEquals;
 public class ObservePathValidationTest {
 
 	private static HttpServer server;
+	private static java.util.concurrent.ExecutorService executor;
 	private static int port;
 
 	@BeforeClass
 	public static void startServer() throws IOException {
 		server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-		server.setExecutor(Executors.newFixedThreadPool(2));
+		executor = Executors.newFixedThreadPool(2);
+		server.setExecutor(executor);
 		Gson gson = new Gson();
 		for (AgentHandler handler : new AgentHandler[]{new ObserveHandler(gson, null), new PathHandler(gson), new VarChangesHandler(gson), new TileHandler(gson)}) {
 			server.createContext(handler.getPath(), handler);
@@ -34,6 +36,7 @@ public class ObservePathValidationTest {
 	@AfterClass
 	public static void stopServer() {
 		server.stop(0);
+		executor.shutdownNow();
 	}
 
 	@Test
@@ -65,9 +68,16 @@ public class ObservePathValidationTest {
 	}
 
 	@Test
+	public void pathRejectsNonBooleanFlags() throws IOException {
+		assertEquals(400, status("GET", "/path?x=1&y=1&fromX=1&fromY=1&bankItems=maybe"));
+		assertEquals(400, status("GET", "/path?x=1&y=1&fromX=1&fromY=1&full=yes"));
+	}
+
+	@Test
 	public void varChangesRejectsPost() throws IOException {
 		assertEquals(405, status("POST", "/var-changes"));
 		assertEquals(200, status("GET", "/var-changes?since=0"));
+		assertEquals(200, status("GET", "/var-changes?limit=-5"));
 	}
 
 	@Test
