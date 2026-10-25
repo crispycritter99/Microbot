@@ -5,8 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.util.math.Rs2Random;
+import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.util.walker.recovery.CantReachTargetRecovery;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.api.IEntity;
@@ -46,8 +51,11 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
     }
 
     public Rs2TileObjectModel(TileObject tileObject) {
-        this.tileObject = tileObject;
-        this.tileObjectType = typeOf(tileObject);
+        TileObject unwrapped = tileObject instanceof Rs2TileObjectModel
+                ? ((Rs2TileObjectModel) tileObject).getTileObject()
+                : tileObject;
+        this.tileObject = unwrapped;
+        this.tileObjectType = typeOf(unwrapped);
     }
 
     static TileObjectType typeOf(TileObject tileObject) {
@@ -66,8 +74,11 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return TileObjectType.GENERIC;
     }
 
+    static final int MAX_INTERACT_DISTANCE = 51;
+
     @Getter
     private final TileObjectType tileObjectType;
+    @Getter
     private final TileObject tileObject;
     private String[] actions;
 
@@ -205,6 +216,77 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         });
     }
 
+    public int sizeX() {
+        if (!(tileObject instanceof GameObject)) {
+            return 1;
+        }
+        GameObject gameObject = (GameObject) tileObject;
+        Integer size = Microbot.getClientThread().invoke(() -> gameObject.sizeX());
+        return size != null ? size : 1;
+    }
+
+    public int sizeY() {
+        if (!(tileObject instanceof GameObject)) {
+            return 1;
+        }
+        GameObject gameObject = (GameObject) tileObject;
+        Integer size = Microbot.getClientThread().invoke(() -> gameObject.sizeY());
+        return size != null ? size : 1;
+    }
+
+    public @Nullable WorldArea getWorldArea() {
+        WorldPoint southWest = getWorldLocation();
+        if (southWest == null) {
+            return null;
+        }
+        return new WorldArea(southWest, sizeX(), sizeY());
+    }
+
+    public boolean occupies(WorldPoint point) {
+        if (point == null) {
+            return false;
+        }
+        WorldPoint southWest = getWorldLocation();
+        if (southWest == null || southWest.getPlane() != point.getPlane()) {
+            return false;
+        }
+        int dx = point.getX() - southWest.getX();
+        int dy = point.getY() - southWest.getY();
+        return dx >= 0 && dx < sizeX() && dy >= 0 && dy < sizeY();
+    }
+
+    public boolean hasAction(String action) {
+        return matchesAction(action, true);
+    }
+
+    public boolean hasActionContaining(String action) {
+        return matchesAction(action, false);
+    }
+
+    private boolean matchesAction(String action, boolean exact) {
+        if (action == null || action.isEmpty()) {
+            return false;
+        }
+        String[] actions = Microbot.getClientThread().invoke(() -> {
+            ObjectComposition composition = getObjectComposition();
+            return composition != null ? composition.getActions() : null;
+        });
+        if (actions == null) {
+            return false;
+        }
+        String needle = action.toLowerCase();
+        for (String candidate : actions) {
+            if (candidate == null) {
+                continue;
+            }
+            String stripped = Rs2UiHelper.stripColTags(candidate);
+            if (exact ? stripped.equalsIgnoreCase(action) : stripped.toLowerCase().contains(needle)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean isReachable() {
         WorldView objectWorldView = getWorldView();
@@ -244,9 +326,60 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return click("");
     }
 
+    private boolean recoverFromCantReach() {
+        if (!CantReachTargetRecovery.shouldStart(
+                Microbot.isCantReachTargetDetectionEnabled, Microbot.cantReachTarget)) {
+            return true;
+        }
+        if (CantReachTargetRecovery.retryExhausted(
+                Microbot.cantReachTargetRetries, Rs2Random.between(3, 5))) {
+            Microbot.pauseAllScripts.compareAndSet(false, true);
+            Microbot.showMessage("Your bot tried to interact with an object for "
+                    + Microbot.cantReachTargetRetries + " times but failed. Please take a look at what is happening.");
+            return false;
+        }
+        WorldPoint objectLocation = rawWorldLocation();
+        if (objectLocation == null) {
+            return false;
+        }
+        Microbot.cantReachTargetRetries++;
+        Microbot.log("[Interact] can't-reach recovery: walking to object " + getId()
+                + " at " + objectLocation + " (attempt " + Microbot.cantReachTargetRetries + ")");
+        if (!CantReachTargetRecovery.walkTo(objectLocation, 2)) {
+            return false;
+        }
+        Microbot.pauseAllScripts.compareAndSet(true, false);
+        Microbot.cantReachTarget = false;
+        Microbot.cantReachTargetRetries = 0;
+        return true;
+    }
+
+    private WorldPoint rawWorldLocation() {
+        return Microbot.getClientThread().invoke(() -> tileObject.getWorldLocation());
+    }
+
+    int distanceToPlayer() {
+        LocalPoint objectLocal = tileObject.getLocalLocation();
+        LocalPoint playerLocal = Microbot.getClientThread().invoke(() -> {
+            Player player = Microbot.getClient().getLocalPlayer();
+            return player != null ? player.getLocalLocation() : null;
+        });
+        if (playerLocal != null && objectLocal != null && objectLocal.isInScene()) {
+            int dx = playerLocal.getSceneX() - objectLocal.getSceneX();
+            int dy = playerLocal.getSceneY() - objectLocal.getSceneY();
+            return Math.max(Math.abs(dx), Math.abs(dy));
+        }
+        WorldPoint playerWorld = Rs2Player.getWorldLocation();
+        WorldPoint objectWorld = rawWorldLocation();
+        if (playerWorld == null || objectWorld == null) {
+            return -1;
+        }
+        return playerWorld.distanceTo(objectWorld);
+    }
+
     /**
      * Clicks on the specified tile object with no specific action.
-     * Delegates to Rs2GameObject.clickObject.
+     * Rs2GameObject.clickObject delegates here.
      *
      * @param action the action to perform (e.g., "Open", "Climb")
      * @return true if the interaction was successful, false otherwise
@@ -256,6 +389,20 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
             WorldView worldView = getWorldView();
             if (worldView == null) {
                 log.warn("Failed to interact with object {} - object is no longer in a loaded world view", getId());
+                return false;
+            }
+
+            if (!recoverFromCantReach()) {
+                return false;
+            }
+
+            int distance = distanceToPlayer();
+            if (distance < 0) {
+                return false;
+            }
+            if (distance > MAX_INTERACT_DISTANCE) {
+                Microbot.log("Object with id " + getId() + " is not close enough to interact with. Walking to the object....");
+                Rs2Walker.walkTo(rawWorldLocation());
                 return false;
             }
 
