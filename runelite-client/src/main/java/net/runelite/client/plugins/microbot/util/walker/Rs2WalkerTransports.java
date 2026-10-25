@@ -2568,7 +2568,11 @@ final class Rs2WalkerTransports {
 
             if (dropdownBtn.getSpriteId() != DROPDOWN_SELECTED_SPRITE_ID) {
                 Rs2Widget.clickWidget(dropdownBtn);
-                sleepUntil(() -> Rs2Widget.findWidget(DROPDOWN_SELECTED_SPRITE_ID, List.of(Rs2Widget.getWidget(DROPDOWN_BUTTON_COMPONENT_ID))) != null);
+                sleepUntil(() -> {
+                    Widget currentDropdownBtn = Rs2Widget.getWidget(DROPDOWN_BUTTON_COMPONENT_ID);
+                    return currentDropdownBtn != null
+                            && Rs2Widget.findWidget(DROPDOWN_SELECTED_SPRITE_ID, List.of(currentDropdownBtn)) != null;
+                });
             }
 
             Widget minigameWidgetParent = Rs2Widget.getWidget(MINIGAME_LIST);
@@ -2590,7 +2594,8 @@ final class Rs2WalkerTransports {
                     .forceLeftClick(false);
 
             Microbot.doInvoke(destinationMenuEntry, new Rectangle(1, 1));
-            sleepUntil(() -> Rs2Widget.getWidget(SELECTED_MINIGAME).getText().equalsIgnoreCase(destination));
+            boolean selected = sleepUntil(() -> widgetTextMatches(Rs2Widget.getWidget(SELECTED_MINIGAME), destination));
+            if (!selected) return false;
         }
 
         Widget teleportBtn = Rs2Widget.getWidget(TELEPORT_BUTTON);
@@ -2604,6 +2609,12 @@ final class Rs2WalkerTransports {
 
         sleepUntil(Rs2Player::isAnimating);
         return sleepUntilTrue(() -> !Rs2Player.isAnimating() && teleportGraphics.stream().noneMatch(Rs2Player::hasSpotAnimation), 100, 20000);
+    }
+
+    static boolean widgetTextMatches(Widget widget, String text) {
+        if (widget == null) return false;
+        String widgetText = widget.getText();
+        return widgetText != null && widgetText.equalsIgnoreCase(text);
     }
 
     static int canoeMapMainComponentId(int stationObjectId) {
