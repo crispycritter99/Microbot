@@ -54,7 +54,7 @@ public class RomeoAndJuliet extends BaseQuest {
         }
 
         if (playerLocation.distanceTo2D(JULIET_STAIR_ORIGIN) > 0) {
-            Rs2Walker.walkFastCanvas(JULIET_STAIR_ORIGIN);
+            Rs2Walker.walkTo(JULIET_STAIR_ORIGIN, 0);
             return false;
         }
 
@@ -78,7 +78,7 @@ public class RomeoAndJuliet extends BaseQuest {
         }
 
         if (playerLocation.distanceTo2D(JULIET_TOP_STAIR) > 4) {
-            Rs2Walker.walkFastCanvas(JULIET_TOP_STAIR);
+            Rs2Walker.walkTo(JULIET_TOP_STAIR, 4);
             return false;
         }
 
