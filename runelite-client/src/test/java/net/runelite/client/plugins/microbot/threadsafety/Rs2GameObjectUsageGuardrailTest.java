@@ -24,15 +24,7 @@ public class Rs2GameObjectUsageGuardrailTest
 		MICROBOT + "util/tileobject/Rs2TileObjectModel"
 	);
 
-	private static final Set<String> PENDING_MIGRATION = Set.of(
-		MICROBOT + "util/poh/PohTeleports",
-		MICROBOT + "util/poh/data/PohPortal",
-		MICROBOT + "util/poh/data/MountedXerics",
-		MICROBOT + "util/poh/data/MountedDigsite",
-		MICROBOT + "util/poh/data/MountedMythical",
-		MICROBOT + "util/poh/data/MountedGlory",
-		MICROBOT + "util/poh/data/JewelleryBoxType"
-	);
+	private static final Set<String> PENDING_MIGRATION = Set.of();
 
 	@Test
 	public void noNewRs2GameObjectReferences() throws IOException
