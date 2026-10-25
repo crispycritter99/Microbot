@@ -1019,15 +1019,17 @@ final class Rs2WalkerMovement {
     }
 
     private static List<Rectangle> visibleSceneOverlayBounds() {
-        Client client = Microbot.getClient();
-        List<Rectangle> bounds = new ArrayList<>();
-        for (int componentId : SCENE_OVERLAY_COMPONENTS) {
-            Widget widget = client.getWidget(componentId);
-            if (widget != null && !widget.isHidden()) {
-                bounds.add(widget.getBounds());
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Client client = Microbot.getClient();
+            List<Rectangle> bounds = new ArrayList<>();
+            for (int componentId : SCENE_OVERLAY_COMPONENTS) {
+                Widget widget = client.getWidget(componentId);
+                if (widget != null && !widget.isHidden()) {
+                    bounds.add(widget.getBounds());
+                }
             }
-        }
-        return bounds;
+            return bounds;
+        }).orElseGet(ArrayList::new);
     }
 
     static LocalPoint localPointForWorld(WorldPoint worldPoint) {
