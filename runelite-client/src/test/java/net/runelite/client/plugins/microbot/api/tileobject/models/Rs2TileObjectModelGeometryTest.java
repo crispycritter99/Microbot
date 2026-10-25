@@ -131,6 +131,18 @@ public class Rs2TileObjectModelGeometryTest {
     }
 
     @Test
+    public void hasActionIsFalseWhenTheImpostorIsHidden() {
+        GameObject object = gameObject(1, 1);
+        when(object.getId()).thenReturn(8550);
+        ObjectComposition base = mock(ObjectComposition.class);
+        when(base.getImpostorIds()).thenReturn(new int[]{1, 2});
+        when(base.getActions()).thenReturn(new String[]{"Rake", null, null, null, null});
+        when(client.getObjectDefinition(8550)).thenReturn(base);
+
+        assertFalse(new Rs2TileObjectModel(object).hasAction("Rake"));
+    }
+
+    @Test
     public void compositionOfResolvesTheImpostorUnlessAskedNotTo() {
         ObjectComposition base = mock(ObjectComposition.class);
         ObjectComposition impostor = mock(ObjectComposition.class);

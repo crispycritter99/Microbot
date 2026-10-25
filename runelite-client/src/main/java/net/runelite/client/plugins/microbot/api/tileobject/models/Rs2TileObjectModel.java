@@ -285,7 +285,7 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
             return false;
         }
         String[] actions = Microbot.getClientThread().invoke(() -> {
-            ObjectComposition composition = getObjectComposition();
+            ObjectComposition composition = getVisibleObjectComposition();
             return composition != null ? composition.getActions() : null;
         });
         if (actions == null) {
