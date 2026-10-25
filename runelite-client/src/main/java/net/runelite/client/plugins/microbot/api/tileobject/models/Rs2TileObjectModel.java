@@ -509,6 +509,43 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                 return false;
             }
 
+            boolean widgetSelected = Microbot.getClient().isWidgetSelected();
+            int index = 0;
+            String objName = "";
+            if (action != null) {
+                //performance improvement to only get compoisiton if action has been specified
+                var objComp = getVisibleObjectComposition();
+                if (objComp == null) {
+                    log.warn("Failed to interact with object {} - object not currently visible", getId());
+                    return false;
+                }
+                String[] actions = objComp.getActions();
+                String wanted = Rs2UiHelper.stripColTags(action).trim();
+
+                if (!wanted.isEmpty()) {
+                    index = -1;
+                    for (int i = 0; i < actions.length; i++) {
+                        if (actions[i] == null) continue;
+                        if (wanted.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
+                            index = i;
+                            break;
+                        }
+                    }
+                    if (index == -1 && !widgetSelected) {
+                        if (!firstOptionIfMissing) {
+                            log.warn("Failed to interact with object {} ({}) - action '{}' not found, actions are {}",
+                                    getId(), objComp.getName(), action, Arrays.toString(actions));
+                            return false;
+                        }
+                        log.warn("Object {} ({}) has no '{}' action, sending its first option; the query API refuses this",
+                                getId(), objComp.getName(), action);
+                        index = 0;
+                    }
+                }
+
+                objName = objComp.getName();
+            }
+
             if (!recoverFromCantReach()) {
                 return false;
             }
@@ -549,48 +586,11 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                 param1 = getLocalLocation().getSceneY();
             }
 
-
-            boolean widgetSelected = Microbot.getClient().isWidgetSelected();
-            int index = 0;
-            String objName = "";
-            if (action != null) {
-                //performance improvement to only get compoisiton if action has been specified
-                var objComp = getVisibleObjectComposition();
-                if (objComp == null) {
-                    log.warn("Failed to interact with object {} - object not currently visible", getId());
-                    return false;
-                }
-                String[] actions = objComp.getActions();
-
-                if (!action.isEmpty()) {
-                    index = -1;
-                    for (int i = 0; i < actions.length; i++) {
-                        if (actions[i] == null) continue;
-                        if (action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[i]))) {
-                            index = i;
-                            break;
-                        }
-                    }
-                    if (index == -1 && !widgetSelected) {
-                        if (!firstOptionIfMissing) {
-                            log.warn("Failed to interact with object {} ({}) - action '{}' not found, actions are {}",
-                                    getId(), objComp.getName(), action, Arrays.toString(actions));
-                            return false;
-                        }
-                        log.warn("Object {} ({}) has no '{}' action, sending its first option; the query API refuses this",
-                                getId(), objComp.getName(), action);
-                        index = 0;
-                    }
-                }
-
-                objName = objComp.getName();
-
-                // both hands must be free before using MINECART
-                if (objComp.getName().toLowerCase().contains("train cart")) {
-                    Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
-                    Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
-                    sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
-                }
+            // both hands must be free before using MINECART
+            if (objName != null && objName.toLowerCase().contains("train cart")) {
+                Rs2Equipment.unEquip(EquipmentInventorySlot.WEAPON);
+                Rs2Equipment.unEquip(EquipmentInventorySlot.SHIELD);
+                sleepUntil(() -> Rs2Equipment.get(EquipmentInventorySlot.WEAPON) == null && Rs2Equipment.get(EquipmentInventorySlot.SHIELD) == null);
             }
 
             if (widgetSelected) {

@@ -29,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
@@ -42,8 +43,10 @@ public class Rs2TileObjectModelClickActionTest {
     private MockedStatic<Rs2Walker> walker;
     private MockedStatic<Rs2Camera> camera;
     private Client client;
+    private ObjectComposition composition;
     private TileObject object;
     private boolean savedCantReach;
+    private boolean savedDetection;
 
     private static LocalPoint scene(int x, int y) {
         return new LocalPoint(x * 128 + 64, y * 128 + 64, -1);
@@ -52,10 +55,12 @@ public class Rs2TileObjectModelClickActionTest {
     @Before
     public void setUp() {
         savedCantReach = Microbot.cantReachTarget;
+        savedDetection = Microbot.isCantReachTargetDetectionEnabled;
         Microbot.cantReachTarget = false;
+        Microbot.isCantReachTargetDetectionEnabled = true;
 
         client = mock(Client.class);
-        ObjectComposition composition = mock(ObjectComposition.class);
+        composition = mock(ObjectComposition.class);
         when(composition.getActions()).thenReturn(new String[]{"Climb-up", "<col=ff9040>Climb-down</col>", null, null, null});
         when(composition.getName()).thenReturn("Staircase");
         when(client.getObjectDefinition(OBJECT_ID)).thenReturn(composition);
@@ -87,6 +92,7 @@ public class Rs2TileObjectModelClickActionTest {
         walker.close();
         microbot.close();
         Microbot.cantReachTarget = savedCantReach;
+        Microbot.isCantReachTargetDetectionEnabled = savedDetection;
     }
 
     private NewMenuEntry sentEntry() {
@@ -110,6 +116,49 @@ public class Rs2TileObjectModelClickActionTest {
     }
 
     @Test
+    public void refusesBeforeRecoveringOrWalking() {
+        Microbot.cantReachTarget = true;
+
+        assertFalse(new Rs2TileObjectModel(object).click("Bottom-floor"));
+
+        walker.verify(() -> Rs2Walker.walkTo(any(WorldPoint.class), anyInt()), never());
+        walker.verify(() -> Rs2Walker.walkTo(any(WorldPoint.class)), never());
+        camera.verify(() -> Rs2Camera.turnTo(any(TileObject.class)), never());
+        assertTrue(Microbot.cantReachTarget);
+    }
+
+    @Test
+    public void ignoresColourTagsInTheRequestedAction() {
+        assertTrue(new Rs2TileObjectModel(object).click("<col=ff9040>Climb-down</col>"));
+
+        assertEquals(MenuAction.GAME_OBJECT_SECOND_OPTION, sentEntry().getType());
+    }
+
+    @Test
+    public void matchesTheVisibleImpostorsActions() {
+        ObjectComposition impostor = mock(ObjectComposition.class);
+        when(impostor.getActions()).thenReturn(new String[]{"Inspect", null, "Take", null, null});
+        when(impostor.getName()).thenReturn("Bar dispenser");
+        when(composition.getImpostorIds()).thenReturn(new int[]{1, 2});
+        when(composition.getImpostor()).thenReturn(impostor);
+
+        assertFalse(new Rs2TileObjectModel(object).click("Climb-up"));
+        assertTrue(new Rs2TileObjectModel(object).click("Take"));
+
+        assertEquals(MenuAction.GAME_OBJECT_THIRD_OPTION, sentEntry().getType());
+    }
+
+    @Test
+    public void sendsTheFirstOptionForANullOrBlankAction() {
+        assertTrue(new Rs2TileObjectModel(object).click((String) null));
+        assertTrue(new Rs2TileObjectModel(object).click("  "));
+
+        ArgumentCaptor<NewMenuEntry> entries = ArgumentCaptor.forClass(NewMenuEntry.class);
+        microbot.verify(() -> Microbot.doInvoke(entries.capture(), any(Rectangle.class)), Mockito.times(2));
+        entries.getAllValues().forEach(e -> assertEquals(MenuAction.GAME_OBJECT_FIRST_OPTION, e.getType()));
+    }
+
+    @Test
     public void sendsTheFirstOptionWhenNoActionIsGiven() {
         assertTrue(new Rs2TileObjectModel(object).click());
 
@@ -130,6 +179,15 @@ public class Rs2TileObjectModelClickActionTest {
         assertTrue(Rs2GameObject.clickObject(object, "Bottom-floor"));
 
         assertEquals(MenuAction.GAME_OBJECT_FIRST_OPTION, sentEntry().getType());
+    }
+
+    @Test
+    public void rs2GameObjectUsesTheSelectedWidgetOnTheObject() {
+        when(client.isWidgetSelected()).thenReturn(true);
+
+        assertTrue(Rs2GameObject.clickObject(object, "Use"));
+
+        assertEquals(MenuAction.WIDGET_TARGET_ON_GAME_OBJECT, sentEntry().getType());
     }
 
     @Test
