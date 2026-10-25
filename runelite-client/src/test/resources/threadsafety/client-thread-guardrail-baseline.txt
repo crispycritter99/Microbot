@@ -540,7 +540,6 @@ net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$getLocalPlayer
 net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$getLocalPlayer$32(Rs2PlayerModel): boolean  ->  net.runelite.api.Player#getId(): int
 net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$getPlayers$21(boolean, Rs2PlayerModel): boolean  ->  net.runelite.api.Client#getLocalPlayer(): Player
 net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$isInMemberWorld$8(World): boolean  ->  net.runelite.api.Client#getWorld(): int
-net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$isStandingOnGameObject$47(WorldPoint, GameObject): boolean  ->  net.runelite.api.GameObject#getWorldLocation(): WorldPoint
 net.runelite.client.plugins.microbot.util.player.Rs2Player#lambda$waitForXpDrop$2(int, Skill, boolean): boolean  ->  net.runelite.api.Client#getSkillExperience(Skill): int
 net.runelite.client.plugins.microbot.util.player.Rs2Player#logoutWithoutAutoLogin(): Rs2Player$TerminalLogoutState  ->  net.runelite.api.Client#isClientThread(): boolean
 net.runelite.client.plugins.microbot.util.player.Rs2Player#waitForXpDrop(Skill, int, boolean): boolean  ->  net.runelite.api.Client#getSkillExperience(Skill): int
