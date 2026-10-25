@@ -198,10 +198,32 @@ public class BreakHandlerV2LoginRecoveryTest {
         assertEquals(0, getField("loginRetryCount"));
 
         hold.onGameStateChanged(gameState(GameState.LOGGED_IN));
+        assertFalse(hold.isActive());
         loggedIn = true;
         invoke("handleLoginRequested");
 
         assertEquals(BreakHandlerV2State.BREAK_ENDING, BreakHandlerV2State.getCurrentState());
+    }
+
+    @Test
+    public void terminalLogoutIsNotTreatedAsADisconnect() throws Exception {
+        TerminalLogoutHold hold = new TerminalLogoutHold();
+        hold.onAutoLoginSuppressionRequest(new AutoLoginSuppressionRequest());
+        hold.onGameStateChanged(gameState(GameState.LOGIN_SCREEN));
+        setField("terminalLogoutHold", hold);
+        setField("nextBreakTime", Instant.now().plus(Duration.ofMinutes(30)));
+        when(client.getGameState()).thenReturn(GameState.LOGIN_SCREEN);
+        BreakHandlerV2State.setState(BreakHandlerV2State.WAITING_FOR_BREAK);
+
+        invoke("detectUnexpectedLogout");
+
+        assertEquals(BreakHandlerV2State.WAITING_FOR_BREAK, BreakHandlerV2State.getCurrentState());
+        assertFalse((Boolean) getField("resumingAfterDisconnect"));
+
+        hold.release();
+        invoke("detectUnexpectedLogout");
+
+        assertEquals(BreakHandlerV2State.LOGIN_REQUESTED, BreakHandlerV2State.getCurrentState());
     }
 
     private static GameStateChanged gameState(GameState state) {

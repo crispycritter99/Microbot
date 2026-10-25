@@ -24,6 +24,10 @@ public class TerminalLogoutHold {
         return suppression.isSuppressed();
     }
 
+    public void release() {
+        suppression.clear();
+    }
+
     @Subscribe
     public void onAutoLoginSuppressionRequest(AutoLoginSuppressionRequest event) {
         if (event.isRenewal()) {

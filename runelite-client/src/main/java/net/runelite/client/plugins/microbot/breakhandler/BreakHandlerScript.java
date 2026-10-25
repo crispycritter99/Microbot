@@ -878,6 +878,9 @@ public class BreakHandlerScript extends Script {
             String title = originalWindowTitle + " - " + breakType + ": " +
                            formatDuration(Duration.ofSeconds(Math.max(0, breakDuration)));
             SwingUtilities.invokeLater(() -> ClientUI.getFrame().setTitle(title));
+        } else if (state == BreakHandlerState.LOGIN_REQUESTED && holdingForManualLogin) {
+            String title = originalWindowTitle + " - Logged out on purpose";
+            SwingUtilities.invokeLater(() -> ClientUI.getFrame().setTitle(title));
         } else if (isBreakActive()) {
             String title = originalWindowTitle + " - " + state.toString().replace("_", " ");
             SwingUtilities.invokeLater(() -> ClientUI.getFrame().setTitle(title));

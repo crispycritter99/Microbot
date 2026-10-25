@@ -499,6 +499,11 @@ public class BreakHandlerV2Script extends Script {
             return;
         }
 
+        if (!canSelfLogin()) {
+            endBreakWithoutLogin();
+            return;
+        }
+
         if (terminalLogoutHold.isActive()) {
             if (!holdingForManualLogin) {
                 log.info("[BreakHandlerV2] Not logging back in: the account was logged out on purpose. Log in by hand to continue.");
@@ -507,11 +512,6 @@ public class BreakHandlerV2Script extends Script {
             return;
         }
         holdingForManualLogin = false;
-
-        if (!canSelfLogin()) {
-            endBreakWithoutLogin();
-            return;
-        }
 
         if (waitForLoginLockout()) {
             return;
@@ -758,7 +758,7 @@ public class BreakHandlerV2Script extends Script {
         boolean genuinelyLoggedOut = gameState == GameState.LOGIN_SCREEN || gameState == GameState.CONNECTION_LOST;
 
         // Check if player is logged out unexpectedly
-        if (genuinelyLoggedOut && !unexpectedLogoutDetected) {
+        if (genuinelyLoggedOut && !unexpectedLogoutDetected && !terminalLogoutHold.isActive()) {
             long secondsUntilBreak = Instant.now().until(nextBreakTime, ChronoUnit.SECONDS);
 
             if (secondsUntilBreak > 0) {

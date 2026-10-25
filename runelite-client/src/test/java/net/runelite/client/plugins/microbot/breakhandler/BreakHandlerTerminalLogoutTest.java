@@ -11,6 +11,7 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.accountselector.AutoLoginSuppressionRequest;
 import net.runelite.client.plugins.microbot.accountselector.TerminalLogoutHold;
 import net.runelite.client.plugins.microbot.util.security.LoginManager;
+import net.runelite.client.plugins.microbot.util.world.WorldSelectionMode;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,11 +24,16 @@ public class BreakHandlerTerminalLogoutTest {
     private BreakHandlerScript script;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         microbot = Mockito.mockStatic(Microbot.class, Mockito.CALLS_REAL_METHODS);
         microbot.when(Microbot::isLoggedIn).thenReturn(false);
         loginManager = Mockito.mockStatic(LoginManager.class);
         script = new BreakHandlerScript();
+        Field config = BreakHandlerScript.class.getDeclaredField("config");
+        config.setAccessible(true);
+        BreakHandlerConfig breakHandlerConfig = Mockito.mock(BreakHandlerConfig.class);
+        Mockito.when(breakHandlerConfig.worldSelectionMode()).thenReturn(WorldSelectionMode.CURRENT_PREFERRED_WORLD);
+        config.set(script, breakHandlerConfig);
     }
 
     @After
@@ -55,6 +61,11 @@ public class BreakHandlerTerminalLogoutTest {
         loginManager.verify(LoginManager::login, never());
         loginManager.verify(() -> LoginManager.login(Mockito.anyInt()), never());
         assertEquals(BreakHandlerState.LOGIN_REQUESTED, BreakHandlerScript.getCurrentState());
+
+        hold.release();
+        handle.invoke(script);
+
+        loginManager.verify(LoginManager::login);
     }
 
     @SuppressWarnings("unchecked")
