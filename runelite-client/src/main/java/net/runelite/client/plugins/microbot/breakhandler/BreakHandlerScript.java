@@ -3,6 +3,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
+import net.runelite.client.plugins.microbot.accountselector.TerminalLogoutHold;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.discord.Rs2Discord;
 import net.runelite.client.plugins.microbot.util.events.PluginPauseEvent;
@@ -13,6 +14,7 @@ import net.runelite.client.plugins.microbot.util.security.LoginManager;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.world.Rs2WorldUtil;
 import net.runelite.client.ui.ClientUI;
+import javax.inject.Inject;
 import javax.swing.SwingUtilities;
 import java.time.Duration;
 import java.time.Instant;
@@ -49,7 +51,11 @@ import net.runelite.api.GameState;
  */
 @Slf4j
 public class BreakHandlerScript extends Script {
-    public static String version = "2.1.2";
+    public static String version = "2.1.3";
+
+    @Inject
+    TerminalLogoutHold terminalLogoutHold = new TerminalLogoutHold();
+    private boolean holdingForManualLogin = false;
     
     // ban detection constants  
     private static final int BANNED_LOGIN_INDEX = 14;
@@ -499,9 +505,20 @@ public class BreakHandlerScript extends Script {
         if (Microbot.isLoggedIn()) {
             log.debug("Already logged in, proceeding to break ending");
             loginWatchdogStartTime = null; // reset watchdog
+            holdingForManualLogin = false;
             transitionToState(BreakHandlerState.BREAK_ENDING);
             return;
         }
+
+        if (terminalLogoutHold.isActive()) {
+            if (!holdingForManualLogin) {
+                log.info("Not logging back in: the account was logged out on purpose. Log in by hand to continue.");
+                holdingForManualLogin = true;
+            }
+            loginWatchdogStartTime = null;
+            return;
+        }
+        holdingForManualLogin = false;
         
         // initialize login watchdog timer
         if (loginWatchdogStartTime == null) {
