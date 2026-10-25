@@ -2562,7 +2562,7 @@ final class Rs2WalkerTransports {
 
         Widget selectedWidget = Rs2Widget.getWidget(SELECTED_MINIGAME);
         if (selectedWidget == null) return false;
-        if (!selectedWidget.getText().equalsIgnoreCase(destination)) {
+        if (!widgetTextMatches(selectedWidget, destination)) {
             Widget dropdownBtn = Rs2Widget.getWidget(DROPDOWN_BUTTON_COMPONENT_ID);
             if (dropdownBtn == null) return false;
 

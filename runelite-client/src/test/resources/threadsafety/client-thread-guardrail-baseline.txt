@@ -833,7 +833,6 @@ net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleMinig
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleMinigameTeleport(Transport): boolean  ->  net.runelite.api.widgets.Widget#getIndex(): int
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleMinigameTeleport(Transport): boolean  ->  net.runelite.api.widgets.Widget#getOnOpListener(): Object[]
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleMinigameTeleport(Transport): boolean  ->  net.runelite.api.widgets.Widget#getSpriteId(): int
-net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleMinigameTeleport(Transport): boolean  ->  net.runelite.api.widgets.Widget#getText(): String
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleObject(Transport, TileObject, String): boolean  ->  net.runelite.api.TileObject#getId(): int
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleObjectExceptions(Transport, TileObject): boolean  ->  net.runelite.api.TileObject#getId(): int
 net.runelite.client.plugins.microbot.util.walker.Rs2WalkerTransports#handleObjectExceptions(Transport, TileObject): boolean  ->  net.runelite.api.TileObject#getWorldLocation(): WorldPoint
