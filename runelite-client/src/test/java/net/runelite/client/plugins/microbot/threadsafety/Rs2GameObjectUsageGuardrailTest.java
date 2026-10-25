@@ -19,9 +19,9 @@ public class Rs2GameObjectUsageGuardrailTest
 	private static final String MICROBOT = "net/runelite/client/plugins/microbot/";
 	private static final byte[] RS2_GAME_OBJECT = (MICROBOT + "util/gameobject/Rs2GameObject").getBytes(StandardCharsets.UTF_8);
 
-	private static final Set<String> OWN_PACKAGES = Set.of(
+	private static final Set<String> ALLOWED = Set.of(
 		MICROBOT + "util/gameobject/",
-		MICROBOT + "util/tileobject/"
+		MICROBOT + "util/tileobject/Rs2TileObjectModel"
 	);
 
 	private static final Set<String> PENDING_MIGRATION = Set.of(
@@ -47,7 +47,7 @@ public class Rs2GameObjectUsageGuardrailTest
 			for (Path file : files.filter(f -> f.toString().endsWith(".class")).collect(Collectors.toList()))
 			{
 				String className = classes.relativize(file).toString().replace('\\', '/').replace(".class", "");
-				if (OWN_PACKAGES.stream().noneMatch(className::startsWith) && contains(Files.readAllBytes(file), RS2_GAME_OBJECT))
+				if (ALLOWED.stream().noneMatch(className::startsWith) && contains(Files.readAllBytes(file), RS2_GAME_OBJECT))
 				{
 					referencing.add(topLevel(className));
 				}
@@ -93,12 +93,12 @@ public class Rs2GameObjectUsageGuardrailTest
 		Path current = Paths.get("").toAbsolutePath();
 		while (current != null)
 		{
-			if (Files.isDirectory(current.resolve("runelite-client")))
+			if (Files.isDirectory(current.resolve("runelite-api")) && Files.isDirectory(current.resolve("runelite-client")))
 			{
 				return current;
 			}
 			current = current.getParent();
 		}
-		return Paths.get("").toAbsolutePath();
+		throw new IllegalStateException("Could not find the repository root from " + Paths.get("").toAbsolutePath());
 	}
 }
