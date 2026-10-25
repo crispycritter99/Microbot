@@ -8,6 +8,8 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.api.player.models.Rs2PlayerModel;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
@@ -206,6 +208,21 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         });
     }
 
+    public static @Nullable ObjectComposition compositionOf(int objectId) {
+        return compositionOf(objectId, false);
+    }
+
+    public static @Nullable ObjectComposition compositionOf(int objectId, boolean ignoreImpostor) {
+        return Microbot.getClientThread().invoke(() -> {
+            ObjectComposition composition = Microbot.getClient().getObjectDefinition(objectId);
+            if (composition == null || ignoreImpostor || composition.getImpostorIds() == null) {
+                return composition;
+            }
+            ObjectComposition impostor = composition.getImpostor();
+            return impostor != null ? impostor : composition;
+        });
+    }
+
     private ObjectComposition getVisibleObjectComposition() {
         return Microbot.getClientThread().invoke(() -> {
             ObjectComposition composition = Microbot.getClient().getObjectDefinition(tileObject.getId());
@@ -287,6 +304,90 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return false;
     }
 
+    public boolean hasLineOfSight() {
+        return hasLineOfSight(new Rs2PlayerModel().getWorldLocation());
+    }
+
+    public boolean hasLineOfSight(WorldPoint from) {
+        if (from == null) {
+            return false;
+        }
+        WorldView worldView = getWorldView();
+        if (worldView == null) {
+            return false;
+        }
+        WorldArea objectArea;
+        WorldArea fromArea;
+        if (tileObject instanceof GameObject) {
+            objectArea = getWorldArea();
+            fromArea = from.toWorldArea();
+        } else {
+            WorldPoint location = getRuneLiteWorldLocation();
+            if (location == null) {
+                return false;
+            }
+            objectArea = new WorldArea(location, 2, 2);
+            fromArea = new WorldArea(from.getX(), from.getY(), 2, 2, from.getPlane());
+        }
+        if (objectArea == null) {
+            return false;
+        }
+        WorldArea target = objectArea;
+        return Microbot.getClientThread()
+                .runOnClientThreadOptional(() -> target.hasLineOfSightTo(worldView, fromArea))
+                .orElse(false);
+    }
+
+    public boolean canWalkTo(int distance) {
+        WorldArea objectArea = templateArea();
+        WorldPoint playerLocation = Rs2Player.getWorldLocation();
+        if (objectArea == null || playerLocation == null) {
+            return false;
+        }
+        for (WorldPoint tile : Rs2Tile.getReachableTilesFromTile(playerLocation, distance).keySet()) {
+            if (tile.distanceTo(objectArea) < 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private @Nullable WorldArea templateArea() {
+        if (!(tileObject instanceof GameObject)) {
+            WorldPoint location = getRuneLiteWorldLocation();
+            return location != null ? new WorldArea(location, 2, 2) : null;
+        }
+        WorldPoint southWest = getWorldLocation();
+        WorldView worldView = getWorldView();
+        if (southWest == null || worldView == null) {
+            return null;
+        }
+        WorldPoint template = Microbot.getClientThread().invoke(() -> {
+            if (!Microbot.getClient().isInInstancedRegion()) {
+                return southWest;
+            }
+            LocalPoint local = LocalPoint.fromWorld(worldView, southWest);
+            return local != null ? WorldPoint.fromLocalInstance(Microbot.getClient(), local) : southWest;
+        });
+        return new WorldArea(template != null ? template : southWest, sizeX(), sizeY());
+    }
+
+    public boolean hover() {
+        if (!Rs2AntibanSettings.naturalMouse) {
+            if (Rs2AntibanSettings.devDebug) {
+                Microbot.log("Natural mouse is not enabled, can't hover");
+            }
+            return false;
+        }
+        Rectangle clickbox = Rs2UiHelper.getObjectClickbox(tileObject);
+        if (Rs2UiHelper.isFallbackRectangle(clickbox)) {
+            return false;
+        }
+        Point point = Rs2UiHelper.getClickingPoint(clickbox, true);
+        Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
+        return true;
+    }
+
     @Override
     public boolean isReachable() {
         WorldView objectWorldView = getWorldView();
@@ -338,7 +439,7 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                     + Microbot.cantReachTargetRetries + " times but failed. Please take a look at what is happening.");
             return false;
         }
-        WorldPoint objectLocation = rawWorldLocation();
+        WorldPoint objectLocation = getRuneLiteWorldLocation();
         if (objectLocation == null) {
             return false;
         }
@@ -354,7 +455,7 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return true;
     }
 
-    private WorldPoint rawWorldLocation() {
+    public WorldPoint getRuneLiteWorldLocation() {
         return Microbot.getClientThread().invoke(() -> tileObject.getWorldLocation());
     }
 
@@ -370,7 +471,7 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
             return Math.max(Math.abs(dx), Math.abs(dy));
         }
         WorldPoint playerWorld = Rs2Player.getWorldLocation();
-        WorldPoint objectWorld = rawWorldLocation();
+        WorldPoint objectWorld = getRuneLiteWorldLocation();
         if (playerWorld == null || objectWorld == null) {
             return -1;
         }
@@ -402,7 +503,7 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
             }
             if (distance > MAX_INTERACT_DISTANCE) {
                 Microbot.log("Object with id " + getId() + " is not close enough to interact with. Walking to the object....");
-                Rs2Walker.walkTo(rawWorldLocation());
+                Rs2Walker.walkTo(getRuneLiteWorldLocation());
                 return false;
             }
 

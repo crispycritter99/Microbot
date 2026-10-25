@@ -129,4 +129,45 @@ public class Rs2TileObjectModelGeometryTest {
 
         assertTrue(new Rs2TileObjectModel(object).hasAction("Rake"));
     }
+
+    @Test
+    public void compositionOfResolvesTheImpostorUnlessAskedNotTo() {
+        ObjectComposition base = mock(ObjectComposition.class);
+        ObjectComposition impostor = mock(ObjectComposition.class);
+        when(base.getImpostorIds()).thenReturn(new int[]{1, 2});
+        when(base.getImpostor()).thenReturn(impostor);
+        when(client.getObjectDefinition(8550)).thenReturn(base);
+
+        assertSame(impostor, Rs2TileObjectModel.compositionOf(8550));
+        assertSame(base, Rs2TileObjectModel.compositionOf(8550, true));
+    }
+
+    @Test
+    public void compositionOfFallsBackToTheBaseWhenTheImpostorIsHidden() {
+        ObjectComposition base = mock(ObjectComposition.class);
+        when(base.getImpostorIds()).thenReturn(new int[]{1, 2});
+        when(client.getObjectDefinition(8550)).thenReturn(base);
+
+        assertSame(base, Rs2TileObjectModel.compositionOf(8550));
+    }
+
+    @Test
+    public void hasLineOfSightIsFalseWithoutAPointOrWorldView() {
+        GameObject object = gameObject(1, 1);
+        Rs2TileObjectModel model = new Rs2TileObjectModel(object);
+
+        assertFalse(model.hasLineOfSight(null));
+        assertFalse(model.hasLineOfSight(SOUTH_WEST.dx(2)));
+    }
+
+    @Test
+    public void hoverDoesNothingWithoutNaturalMouse() {
+        boolean saved = net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings.naturalMouse;
+        net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings.naturalMouse = false;
+        try {
+            assertFalse(new Rs2TileObjectModel(gameObject(1, 1)).hover());
+        } finally {
+            net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings.naturalMouse = saved;
+        }
+    }
 }

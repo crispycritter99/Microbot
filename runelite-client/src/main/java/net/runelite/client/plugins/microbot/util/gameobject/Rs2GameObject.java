@@ -5,17 +5,14 @@ import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
+import net.runelite.client.plugins.microbot.api.tileobject.Rs2BankObjects;
 import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.api.playerstate.Rs2PlayerStateCache;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
-import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
 import net.runelite.client.plugins.microbot.util.coords.Rs2LocalPoint;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
-import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
@@ -394,30 +391,9 @@ public class Rs2GameObject {
 
     public static GameObject findBank(int maxSearchRadius) {
         Predicate<GameObject> bankableFilter = gameObject -> {
-            WorldPoint loc = gameObject.getWorldLocation();
-
-            //cooks guild (exception)
-            if ((loc.equals(new WorldPoint(3147, 3449, 0)) || loc.equals(new WorldPoint(3148, 3449, 0))) && !BankLocation.COOKS_GUILD.hasRequirements()) {
+            if (!Rs2BankObjects.isUsableBank(gameObject.getWorldLocation())) {
                 return false;
             }
-
-            //farming guild (exception)
-            //At the farming guild there’s 2 banks, one in the southern half of the guild and one northern part of the guild which requires a certain higher farming level to enter
-            if ((loc.equals(new WorldPoint(1248, 3759, 0)) || loc.equals(new WorldPoint(1249, 3759, 0))) && !Rs2Player.getSkillRequirement(Skill.FARMING, 85, true)) {
-                return false;
-            }
-
-			// Lunar Isle (exception)
-			// There is a bank booth @ Lunar Isle that is only accessible when Dream Mentor is completed
-			if (loc.equals(new WorldPoint(2099, 3920, 0)) && Rs2Player.getQuestState(Quest.DREAM_MENTOR) != QuestState.FINISHED) {
-				return false;
-			}
-
-			// Lunar Isle (additional exception to not use these banks if no seal of passage)
-			if ((loc.equals(new WorldPoint(2098, 3920, 0)) || loc.equals(new WorldPoint(2097, 3920, 0))) &&
-				!(Rs2Inventory.hasItem(ItemID.LUNAR_SEAL_OF_PASSAGE) || Rs2Equipment.isWearing(ItemID.LUNAR_SEAL_OF_PASSAGE))) {
-				return false;
-			}
 
             ObjectComposition comp = convertToObjectComposition(gameObject);
             if (comp == null) return false;

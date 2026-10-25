@@ -386,6 +386,12 @@ obj.occupies(point)        // true when the footprint covers the tile
 obj.hasAction("Open")      // exact action match, colour tags stripped
 obj.hasActionContaining("Chop")
 obj.getTileObject()        // the underlying RuneLite GameObject, WallObject, ...
+obj.getRuneLiteWorldLocation() // the tile RuneLite reports (the centre tile for multi-tile objects)
+obj.isReachable()          // a tile beside the object can be walked to
+obj.hasLineOfSight()       // from the player; hasLineOfSight(point) from any tile
+obj.canWalkTo(25)          // a reachable tile within 25 steps is next to the object
+obj.hover()                // move the natural mouse over the object
+Rs2TileObjectModel.compositionOf(id) // object definition, impostor resolved
 obj.click("Chop down")     // Interact with object
 obj.click("Mine")          // Interact with a specific action
 ```
@@ -920,6 +926,15 @@ Rs2TileObjectModel nearest = tileObjectCache.query()
 | `findObjectByImposter(id, action)` | `query().withId(id).withAction(action).firstOnClientThread()` |
 | `interact(id)` / `interact(name, action)` | `query().withId(id).interact()` / `query().withNameContains(name).interact(action)` |
 | `interact(tileObject, action)` / `clickObject(tileObject, action)` | `new Rs2TileObjectModel(tileObject).click(action)` |
+| `findObjectComposition(id)` / `convertToObjectComposition(id)` / `getObjectComposition(id)` | `Rs2TileObjectModel.compositionOf(id)` |
+| `convertToObjectComposition(id, true)` | `Rs2TileObjectModel.compositionOf(id, true)` |
+| `isReachable(gameObject)` / `canReach(object.getWorldLocation(), ...)` | `model.isReachable()` |
+| `canReach(tile)` for a tile that isn't an object | `Rs2Tile.isTileReachable(tile)` |
+| `hasLineOfSight(object)` / `hasLineOfSight(point, object)` | `model.hasLineOfSight()` / `model.hasLineOfSight(point)` |
+| `canWalkTo(object, distance)` | `model.canWalkTo(distance)` |
+| `hoverOverObject(object)` | `model.hover()` |
+| `getWorldArea(gameObject)` | `model.getWorldArea()` |
+| `findBank()` / `findDepositBox()` / `findGrandExchangeBooth()` | `Rs2BankObjects.findBank()` / `findDepositBox()` / `findGrandExchangeBooth()` |
 
 Locations differ for objects bigger than one tile: the old API reports RuneLite's centre tile, the model reports the south-west tile. Use `at(point)` or `occupies(point)` rather than comparing `getWorldLocation()` with a hardcoded tile.
 
