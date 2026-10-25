@@ -33,6 +33,8 @@ public class Rs2BankObjectsTest {
     private static final int GE_BOOTH = 10060;
     private static final WorldPoint PLAYER = new WorldPoint(3185, 3440, 0);
 
+    private static WorldView playerWorldView;
+
     private MockedStatic<Microbot> microbot;
     private Rs2TileObjectCache cache;
 
@@ -42,6 +44,8 @@ public class Rs2BankObjectsTest {
         Player player = mock(Player.class);
         WorldView worldView = mock(WorldView.class);
         when(worldView.isTopLevel()).thenReturn(true);
+        when(worldView.getId()).thenReturn(-1);
+        playerWorldView = worldView;
         when(player.getWorldView()).thenReturn(worldView);
         when(player.getWorldLocation()).thenReturn(PLAYER);
         when(client.getLocalPlayer()).thenReturn(player);
@@ -71,6 +75,7 @@ public class Rs2BankObjectsTest {
         when(model.getTileObjectType()).thenReturn(type);
         when(model.getWorldLocation()).thenReturn(location);
         when(model.getRuneLiteWorldLocation()).thenReturn(location);
+        when(model.getWorldView()).thenReturn(playerWorldView);
         when(model.hasActionContaining(anyString())).thenAnswer(inv -> {
             String wanted = ((String) inv.getArgument(0)).toLowerCase();
             for (String action : actions) {
@@ -91,6 +96,18 @@ public class Rs2BankObjectsTest {
         scene(far, closedBooth, near);
 
         assertSame(near, Rs2BankObjects.findBank());
+    }
+
+    @Test
+    public void findBankIgnoresBoothsInAnotherWorldView() {
+        Rs2TileObjectModel onBoat = booth(BANK_BOOTH, TileObjectType.GAME, PLAYER.dx(1), "Bank");
+        WorldView boat = mock(WorldView.class);
+        when(boat.getId()).thenReturn(7);
+        when(onBoat.getWorldView()).thenReturn(boat);
+        Rs2TileObjectModel ashore = booth(BANK_BOOTH, TileObjectType.GAME, PLAYER.dx(5), "Bank");
+        scene(onBoat, ashore);
+
+        assertSame(ashore, Rs2BankObjects.findBank());
     }
 
     @Test
