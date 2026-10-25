@@ -15,6 +15,8 @@ import net.runelite.client.plugins.worldmap.TeleportLocationData;
 
 import static net.runelite.client.plugins.microbot.util.Global.sleepUntil;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 
 
 @Getter
@@ -57,7 +59,8 @@ public enum MountedXerics implements PohTeleport {
     public static final Integer[] IDS = {ObjectID.POH_AMULET_XERIC, ObjectID.POH_AMULET_XERIC_LOOKOUT, ObjectID.POH_AMULET_XERIC_GLADE, ObjectID.POH_AMULET_XERIC_INFERNO, ObjectID.POH_AMULET_XERIC_HEART, ObjectID.POH_AMULET_XERIC_HONOUR};
 
     public static DecorativeObject getObject() {
-        return Rs2WalkerSceneObjects.firstNearPlayer(DecorativeObject.class, o -> Arrays.asList(IDS).contains(o.getId()));
+        Set<Integer> ids = new HashSet<>(Arrays.asList(IDS));
+        return Rs2WalkerSceneObjects.firstNearPlayer(DecorativeObject.class, o -> ids.contains(o.getId()));
     }
 
     public static boolean isMountedXerics(DecorativeObject go) {

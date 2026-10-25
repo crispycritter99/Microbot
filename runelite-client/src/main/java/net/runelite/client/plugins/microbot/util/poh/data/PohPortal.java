@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 
 @Getter
 public enum PohPortal implements PohTeleport {
@@ -150,7 +152,8 @@ public enum PohPortal implements PohTeleport {
     private final int duration = 4;
 
     public GameObject getPortal() {
-        return Rs2WalkerSceneObjects.firstNearPlayer(GameObject.class, o -> Arrays.asList(objectIds).contains(o.getId()));
+        Set<Integer> ids = new HashSet<>(Arrays.asList(objectIds));
+        return Rs2WalkerSceneObjects.firstNearPlayer(GameObject.class, o -> ids.contains(o.getId()));
     }
 
     @Override
