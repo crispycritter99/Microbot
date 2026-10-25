@@ -34,6 +34,8 @@ A door attempt that ends on the near side is a refusal, not a traversal: [moveme
 
 A missing scene tile means no path: [movement gotcha 29](movement.md#29-null-check-a-scene-tile-before-pathing-from-or-to-it).
 
+Scene walk clicks must not land under the side panel, chatbox or minimap: [movement gotcha 30](movement.md#30-in-resizable-mode-the-viewport-runs-under-the-side-panel-chatbox-and-minimap).
+
 ## Format
 
 Each entity guide is a numbered list of gotchas. Each entry follows this structure:
