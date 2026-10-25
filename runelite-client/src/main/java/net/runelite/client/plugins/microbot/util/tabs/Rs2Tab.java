@@ -52,8 +52,17 @@ public class Rs2Tab {
         return getCurrentTab() == tab;
     }
 
+    private static InterfaceTab readCurrentTab() {
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            int value = Microbot.getClient().getVarcIntValue(VarClientID.TOPLEVEL_PANEL);
+            InterfaceTab current = INDEX_TO_TAB.getOrDefault(value, InterfaceTab.NOTHING_SELECTED);
+            cachedTab = current;
+            return current;
+        }).orElse(cachedTab);
+    }
+
     public static boolean switchTo(InterfaceTab tab) {
-        if (isCurrentTab(tab)) return true;
+        if (readCurrentTab() == tab) return true;
 
         if (tab == InterfaceTab.NOTHING_SELECTED && Microbot.getVarbitValue(VarbitID.RESIZABLE_STONE_ARRANGEMENT) == 0)
             return false;
@@ -73,7 +82,7 @@ public class Rs2Tab {
             Rs2Keyboard.keyPress(hotkey);
         }
 
-        return sleepUntil(() -> isCurrentTab(tab));
+        return sleepUntil(() -> readCurrentTab() == tab);
     }
 
     @Deprecated(since = "Use switchTo")
