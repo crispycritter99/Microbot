@@ -1,5 +1,6 @@
 package net.runelite.client.plugins.microbot.util.walker;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -15,11 +16,12 @@ import net.runelite.api.TileObject;
 import net.runelite.api.WallObject;
 import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.api.tileobject.Rs2TileObjectQueryable;
 import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.api.tileobject.models.TileObjectType;
+import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 
 public final class Rs2WalkerSceneObjects {
@@ -46,20 +48,52 @@ public final class Rs2WalkerSceneObjects {
             }
             LocalPoint origin = anchorLocal;
             int maxDistance = Math.min(radiusTiles, Constants.SCENE_SIZE) * Perspective.LOCAL_TILE_SIZE;
-            Rs2TileObjectQueryable query = Microbot.getRs2TileObjectCache().query().fromWorldView();
+            List<Rs2TileObjectModel> models = Microbot.getRs2TileObjectCache().query().fromWorldView().toList();
             TileObjectType type = typeOf(kind);
             if (type != null) {
-                query = query.ofType(type);
+                return sortedNear(models, type, kind, origin, maxDistance);
             }
-            return query.toList().stream()
-                    .map(Rs2TileObjectModel::getTileObject)
-                    .filter(kind::isInstance)
-                    .map(kind::cast)
-                    .filter(o -> o.getLocalLocation() != null && o.getLocalLocation().distanceTo(origin) <= maxDistance)
-                    .sorted(Comparator.comparingInt(o -> o.getLocalLocation().distanceTo(origin)))
-                    .collect(Collectors.toList());
+            List<T> objects = new ArrayList<>(sortedNear(models, TileObjectType.GAME, kind, origin, maxDistance));
+            objects.addAll(sortedNear(models, null, kind, origin, maxDistance));
+            return objects;
         });
         return found != null ? found : Collections.emptyList();
+    }
+
+    private static <T extends TileObject> List<T> sortedNear(List<Rs2TileObjectModel> models, TileObjectType type,
+                                                             Class<T> kind, LocalPoint origin, int maxDistance) {
+        return models.stream()
+                .filter(m -> type != null ? m.getTileObjectType() == type : m.getTileObjectType() != TileObjectType.GAME)
+                .map(Rs2TileObjectModel::getTileObject)
+                .filter(kind::isInstance)
+                .map(kind::cast)
+                .filter(o -> o.getLocalLocation() != null && isWithin(origin, o.getLocalLocation(), maxDistance))
+                .sorted(Comparator.comparingInt(o -> o.getLocalLocation().distanceTo(origin)))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean isWithin(LocalPoint anchor, LocalPoint location, int maxDistance) {
+        if (maxDistance == 0) {
+            int dx = Math.abs(anchor.getX() - location.getX());
+            int dy = Math.abs(anchor.getY() - location.getY());
+            return (dx == Perspective.LOCAL_TILE_SIZE && dy == 0) || (dy == Perspective.LOCAL_TILE_SIZE && dx == 0);
+        }
+        return location.distanceTo(anchor) <= maxDistance;
+    }
+
+    public static boolean hasLineOfSight(WorldPoint point, TileObject object) {
+        if (point == null || object == null) {
+            return false;
+        }
+        return Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            WorldView topLevel = Microbot.getClient().getTopLevelWorldView();
+            if (object instanceof GameObject) {
+                WorldArea area = new Rs2TileObjectModel(object).getWorldArea();
+                return area != null && area.hasLineOfSightTo(topLevel, point.toWorldArea());
+            }
+            return new WorldArea(object.getWorldLocation(), 2, 2)
+                    .hasLineOfSightTo(topLevel, new WorldArea(point.getX(), point.getY(), 2, 2, point.getPlane()));
+        }).orElse(false);
     }
 
     public static <T extends TileObject> List<T> near(Class<T> kind, Predicate<? super T> predicate, WorldPoint anchor, int radiusTiles) {
@@ -79,7 +113,8 @@ public final class Rs2WalkerSceneObjects {
             return false;
         }
         Rs2TileObjectModel model = new Rs2TileObjectModel(object);
-        if (action == null || action.isEmpty() || !model.hasAction(action)) {
+        String wanted = action == null ? "" : Rs2UiHelper.stripColTags(action).trim();
+        if (wanted.isEmpty() || !model.hasAction(wanted)) {
             return model.click();
         }
         return model.click(action);

@@ -5501,12 +5501,11 @@ public class Rs2Walker {
 				if (w == null) continue;
 				WorldPoint objWp = w.getWorldLocation();
 				if (objWp == null) continue;
-				if (!new Rs2TileObjectModel(w).hasLineOfSight(playerLoc)) continue;
-                if (wasStationaryDoorOpenedRecently(objWp)) continue;
-
 				if (objWp.distanceTo2D(from) > pathEdgeDoorMaxDist && objWp.distanceTo2D(to) > pathEdgeDoorMaxDist) {
 					continue;
 				}
+				if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, w)) continue;
+                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (!Rs2DoorGeometry.isDoorOnSegment(w, from, to)) {
 					continue;
 				}
@@ -5540,11 +5539,11 @@ public class Rs2Walker {
 				if (g == null) continue;
 				WorldPoint objWp = g.getWorldLocation();
 				if (objWp == null) continue;
-				if (!new Rs2TileObjectModel(g).hasLineOfSight(playerLoc)) continue;
-                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (objWp.distanceTo2D(from) > pathEdgeDoorMaxDist && objWp.distanceTo2D(to) > pathEdgeDoorMaxDist) {
 					continue;
 				}
+				if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, g)) continue;
+                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (!Rs2DoorGeometry.isDoorOnSegment(g, from, to)) {
 					continue;
 				}
