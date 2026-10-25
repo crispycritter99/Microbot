@@ -1,7 +1,9 @@
 package net.runelite.client.plugins.microbot.util.walker.door;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -232,14 +234,23 @@ public final class Rs2DoorProbe {
             }
             return match;
         }
-        return Microbot.getRs2TileObjectCache().query()
-                .fromWorldView()
-                .within(playerLoc, searchDistance)
-                .where(o -> isDoorCandidateOnSegment(ctx, ledger, o.getTileObject(), o.getRuneLiteWorldLocation(),
+        Map<TileObject, WorldPoint> nearby = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+            Map<TileObject, WorldPoint> found = new LinkedHashMap<>();
+            for (Rs2TileObjectModel object : Microbot.getRs2TileObjectCache().query()
+                    .fromWorldView()
+                    .within(playerLoc, searchDistance)
+                    .toList()) {
+                WorldPoint location = object.getRuneLiteWorldLocation();
+                if (location != null) {
+                    found.put(object.getTileObject(), location);
+                }
+            }
+            return found;
+        }).orElse(Collections.emptyMap());
+        return nearby.keySet().stream()
+                .filter(o -> isDoorCandidateOnSegment(ctx, ledger, o, nearby.get(o),
                         playerLoc, fromWp, toWp, doorActions, searchDistance))
-                .toListOnClientThread().stream()
-                .map(Rs2TileObjectModel::getTileObject)
-                .min(Comparator.comparingInt((TileObject o) -> o.getWorldLocation().distanceTo2D(playerLoc)))
+                .min(Comparator.comparingInt(o -> nearby.get(o).distanceTo2D(playerLoc)))
                 .orElse(null);
     }
 }
