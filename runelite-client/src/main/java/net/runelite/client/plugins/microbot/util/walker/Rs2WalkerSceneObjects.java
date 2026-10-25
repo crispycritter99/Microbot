@@ -85,15 +85,28 @@ public final class Rs2WalkerSceneObjects {
         if (point == null || object == null) {
             return false;
         }
+        return !inLineOfSight(point, Collections.singletonList(object)).isEmpty();
+    }
+
+    private static <T extends TileObject> List<T> inLineOfSight(WorldPoint point, List<T> candidates) {
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             WorldView topLevel = Microbot.getClient().getTopLevelWorldView();
-            if (object instanceof GameObject) {
-                WorldArea area = new Rs2TileObjectModel(object).getWorldArea();
-                return area != null && area.hasLineOfSightTo(topLevel, point.toWorldArea());
+            List<T> visible = new ArrayList<>();
+            for (T object : candidates) {
+                boolean seen;
+                if (object instanceof GameObject) {
+                    WorldArea area = new Rs2TileObjectModel(object).getWorldArea();
+                    seen = area != null && area.hasLineOfSightTo(topLevel, point.toWorldArea());
+                } else {
+                    seen = new WorldArea(object.getWorldLocation(), 2, 2)
+                            .hasLineOfSightTo(topLevel, new WorldArea(point.getX(), point.getY(), 2, 2, point.getPlane()));
+                }
+                if (seen) {
+                    visible.add(object);
+                }
             }
-            return new WorldArea(object.getWorldLocation(), 2, 2)
-                    .hasLineOfSightTo(topLevel, new WorldArea(point.getX(), point.getY(), 2, 2, point.getPlane()));
-        }).orElse(false);
+            return visible;
+        }).orElse(Collections.emptyList());
     }
 
     public static <T extends TileObject> List<T> near(Class<T> kind, Predicate<? super T> predicate, WorldPoint anchor, int radiusTiles) {
