@@ -17,7 +17,6 @@ import net.runelite.client.plugins.microbot.util.misc.Rs2UiHelper;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
-import org.apache.commons.lang3.tuple.Triple;
 
 import javax.annotation.Nullable;
 import java.awt.Rectangle;
@@ -38,62 +37,20 @@ import java.util.stream.Stream;
 public class Rs2GameObject {
 	private static final Map<String, List<Integer>> NAME_TO_IDS_CACHE = new ConcurrentHashMap<>();
 
-	/**
-	 * Extracts all {@link GameObject}s located on a given {@link Tile}.
-	 *
-	 * @see Tile#getGameObjects()
-	 * @param tile the tile from which to extract game objects
-	 * @return a {@link List} of {@link GameObject} instances on the tile (never null)
-	 */
-	private static final Function<Tile, Collection<? extends GameObject>> GAMEOBJECT_EXTRACTOR =
-		tile -> Arrays.asList(tile.getGameObjects());
+	private static final Function<TileObject, GameObject> GAMEOBJECT_EXTRACTOR =
+		o -> o instanceof GameObject ? (GameObject) o : null;
 
-	/**
-	 * Extracts the {@link GroundObject} located on a given {@link Tile}.
-	 *
-	 * @see Tile#getGroundObject()
-	 * @param tile the tile from which to extract the ground object
-	 * @return a singleton {@link List} containing the {@link GroundObject},
-	 *         or a list with a single null element if none is present
-	 */
-	private static final Function<Tile, Collection<? extends GroundObject>> GROUNDOBJECT_EXTRACTOR =
-		tile -> Collections.singletonList(tile.getGroundObject());
+	private static final Function<TileObject, GroundObject> GROUNDOBJECT_EXTRACTOR =
+		o -> o instanceof GroundObject ? (GroundObject) o : null;
 
-	/**
-	 * Extracts the {@link DecorativeObject} located on a given {@link Tile}.
-	 *
-	 * @see Tile#getDecorativeObject()
-	 * @param tile the tile from which to extract the decorative object
-	 * @return a singleton {@link List} containing the {@link DecorativeObject},
-	 *         or a list with a single null element if none is present
-	 */
-	private static final Function<Tile, Collection<? extends DecorativeObject>> DECORATIVEOBJECT_EXTRACTOR =
-		tile -> Collections.singletonList(tile.getDecorativeObject());
+	private static final Function<TileObject, DecorativeObject> DECORATIVEOBJECT_EXTRACTOR =
+		o -> o instanceof DecorativeObject ? (DecorativeObject) o : null;
 
-	/**
-	 * Extracts the {@link WallObject} located on a given {@link Tile}.
-	 *
-	 * @see Tile#getWallObject()
-	 * @param tile the tile from which to extract the wall object
-	 * @return a singleton {@link List} containing the {@link WallObject},
-	 *         or a list with a single null element if none is present
-	 */
-	private static final Function<Tile, Collection<? extends WallObject>> WALLOBJECT_EXTRACTOR =
-		tile -> Collections.singletonList(tile.getWallObject());
+	private static final Function<TileObject, WallObject> WALLOBJECT_EXTRACTOR =
+		o -> o instanceof WallObject ? (WallObject) o : null;
 
-	/**
-	 * Extracts all types of {@link TileObject} (decorative, ground, wall) from a given {@link Tile}.
-	 *
-	 * @param tile the tile from which to extract all tile objects
-	 * @return a {@link List} containing the {@link DecorativeObject}, {@link GroundObject},
-	 *         and {@link WallObject} (some entries may be null if that object is not present)
-	 */
-	private static final Function<Tile, Collection<? extends TileObject>> TILEOBJECT_EXTRACTOR =
-		tile -> Arrays.asList(
-			tile.getDecorativeObject(),
-			tile.getGroundObject(),
-			tile.getWallObject()
-		);
+	private static final Function<TileObject, TileObject> TILEOBJECT_EXTRACTOR =
+		o -> o instanceof GameObject ? null : o;
 
 
     public static boolean interact(WorldPoint worldPoint) {
@@ -1509,65 +1466,33 @@ public class Rs2GameObject {
     }
 
     // private methods
-    private static <T extends TileObject> Stream<T> getSceneObjects(Function<Tile, Collection<? extends T>> extractor) {
-        var triple = Microbot.getClientThread().invoke(() -> {
+    private static <T extends TileObject> Stream<T> getSceneObjects(Function<TileObject, ? extends T> extractor) {
+        List<T> objects = Microbot.getClientThread().invoke(() -> {
             Player player = Microbot.getClient().getLocalPlayer();
-            if (player == null || player.getWorldView() == null) {
-                return Triple.of(null, null, 0);
+            WorldView playerWorldView = player != null ? player.getWorldView() : null;
+            if (playerWorldView == null) {
+                return Collections.<T>emptyList();
             }
-
-            Scene scene = player.getWorldView().getScene();
-
-            Tile[][][] tiles = scene.getTiles();
-            if (tiles == null) {
-                return Triple.of(null, null, 0);
-            }
-
-            int z = player.getWorldView().getPlane();
-
-            return Triple.of(scene, tiles, z);
-        });
-
-        var result = new ArrayList<T>();
-        Tile[][][] tiles = (Tile[][][]) triple.getMiddle();
-        int z = triple.getRight();
-        if (tiles == null) {
-            return result.stream();
-        }
-
-        int sizeX = tiles[z].length;
-        int sizeY = sizeX > 0 ? tiles[z][0].length : 0;
-
-        for (int x = 0; x < sizeX; x++) {
-            for (int y = 0; y < sizeY; y++) {
-                for (int h = 0; h <= z; h++) {
-                    Tile tile = tiles[h][x][y];
-                    if (tile == null) continue;
-
-                    Collection<? extends T> objs = extractor.apply(tile);
-                    if (objs != null) {
-                        for (T obj : objs) {
-                            if (obj == null) continue;
-
-                            if (obj instanceof GameObject) {
-                                GameObject gameObject = (GameObject) obj;
-                                if (gameObject.getSceneMinLocation().equals(tile.getSceneLocation())) {
-                                    result.add(obj);
-                                }
-                            } else {
-                                if (obj.getLocalLocation().equals(tile.getLocalLocation())) {
-                                    result.add(obj);
-                                }
-                            }
-                        }
-                    }
+            int worldViewId = playerWorldView.getId();
+            List<T> found = new ArrayList<>();
+            Iterator<Rs2TileObjectModel> models = Microbot.getRs2TileObjectCache().getStream().iterator();
+            while (models.hasNext()) {
+                Rs2TileObjectModel model = models.next();
+                WorldView worldView = model.getWorldView();
+                if (worldView == null || worldView.getId() != worldViewId) {
+                    continue;
+                }
+                T object = extractor.apply(model.getTileObject());
+                if (object != null) {
+                    found.add(object);
                 }
             }
-        }
-        return result.stream();
+            return found;
+        });
+        return objects != null ? objects.stream() : Stream.empty();
     }
 
-    private static <T extends TileObject> List<T> getSceneObjects(Function<Tile, Collection<? extends T>> extractor, Predicate<T> predicate, LocalPoint anchorLocal, int distance) {
+    private static <T extends TileObject> List<T> getSceneObjects(Function<TileObject, ? extends T> extractor, Predicate<T> predicate, LocalPoint anchorLocal, int distance) {
         if (distance > Rs2LocalPoint.worldToLocalDistance(Constants.SCENE_SIZE)) {
             distance = Rs2LocalPoint.worldToLocalDistance(Constants.SCENE_SIZE);
         }
@@ -1579,7 +1504,7 @@ public class Rs2GameObject {
                 .collect(Collectors.toList());
     }
 
-    private static <T extends TileObject> T getSceneObject(Function<Tile, Collection<? extends T>> extractor, Predicate<T> predicate, LocalPoint anchorLocal, int distance) {
+    private static <T extends TileObject> T getSceneObject(Function<TileObject, ? extends T> extractor, Predicate<T> predicate, LocalPoint anchorLocal, int distance) {
         return getSceneObjects(extractor, predicate, anchorLocal, distance)
                 .stream()
                 .findFirst()
