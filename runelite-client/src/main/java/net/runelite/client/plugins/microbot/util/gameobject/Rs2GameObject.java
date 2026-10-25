@@ -1685,7 +1685,7 @@ public class Rs2GameObject {
 
     public static boolean clickObject(TileObject object, String action) {
         if (object == null) return false;
-        return new Rs2TileObjectModel(object).click(action);
+        return new Rs2TileObjectModel(object).clickOrFirstOption(action);
     }
 
     public static boolean hasLineOfSight(TileObject tileObject) {
