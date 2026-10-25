@@ -118,6 +118,14 @@ public final class Rs2WalkerSceneObjects {
         return near(kind, anchor, radiusTiles).stream().filter(predicate).findFirst().orElse(null);
     }
 
+    public static <T extends TileObject> T firstNearPlayer(Class<T> kind, Predicate<? super T> predicate) {
+        return first(kind, predicate, Rs2Player.getWorldLocation(), Constants.SCENE_SIZE / 2);
+    }
+
+    public static <T extends TileObject> List<T> nearPlayer(Class<T> kind, Predicate<? super T> predicate) {
+        return near(kind, predicate, Rs2Player.getWorldLocation(), Constants.SCENE_SIZE / 2);
+    }
+
     public static List<TileObject> all() {
         return near(TileObject.class, Rs2Player.getWorldLocation(), Constants.SCENE_SIZE);
     }
