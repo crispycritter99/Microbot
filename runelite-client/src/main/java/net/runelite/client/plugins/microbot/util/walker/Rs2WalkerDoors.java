@@ -2428,8 +2428,9 @@ final class Rs2WalkerDoors {
 		// Look a little ahead along the path to bias toward the intended door edge.
 		int endIdx = Math.min(path.size() - 1, startIdx + 10);
 
-		for (WallObject w : Rs2WalkerSceneObjects.nearInLineOfSight(WallObject.class, playerLoc, radiusTiles)) {
+		for (WallObject w : Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, radiusTiles)) {
 			if (w == null) continue;
+			if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, w)) continue;
 
 			ObjectComposition comp = Rs2DoorDetection.resolveCompositionForDoorProbe(w);
 			if (comp == null || Rs2DoorClassifier.isNullOrPlaceholderObjectName(comp.getName())) continue;
@@ -2463,8 +2464,9 @@ final class Rs2WalkerDoors {
 			}
 		}
 
-		for (GameObject g : Rs2WalkerSceneObjects.nearInLineOfSight(GameObject.class, playerLoc, radiusTiles)) {
+		for (GameObject g : Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, radiusTiles)) {
 			if (g == null) continue;
+			if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, g)) continue;
 
 			ObjectComposition comp = Rs2DoorDetection.resolveCompositionForDoorProbe(g);
 			if (comp == null || Rs2DoorClassifier.isNullOrPlaceholderObjectName(comp.getName())) continue;

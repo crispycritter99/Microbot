@@ -88,11 +88,6 @@ public final class Rs2WalkerSceneObjects {
         return !inLineOfSight(point, Collections.singletonList(object)).isEmpty();
     }
 
-    public static <T extends TileObject> List<T> nearInLineOfSight(Class<T> kind, WorldPoint anchor, int radiusTiles) {
-        List<T> candidates = near(kind, anchor, radiusTiles);
-        return candidates.isEmpty() ? candidates : inLineOfSight(anchor, candidates);
-    }
-
     private static <T extends TileObject> List<T> inLineOfSight(WorldPoint point, List<T> candidates) {
         return Microbot.getClientThread().runOnClientThreadOptional(() -> {
             WorldView topLevel = Microbot.getClient().getTopLevelWorldView();
