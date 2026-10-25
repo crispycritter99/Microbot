@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import net.runelite.api.Client;
 import net.runelite.api.Player;
+import net.runelite.api.WorldView;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.plugins.microbot.Microbot;
@@ -39,6 +40,9 @@ public class Rs2BankObjectsTest {
     public void setUp() {
         Client client = mock(Client.class);
         Player player = mock(Player.class);
+        WorldView worldView = mock(WorldView.class);
+        when(worldView.isTopLevel()).thenReturn(true);
+        when(player.getWorldView()).thenReturn(worldView);
         when(player.getWorldLocation()).thenReturn(PLAYER);
         when(client.getLocalPlayer()).thenReturn(player);
         ClientThread clientThread = mock(ClientThread.class);
