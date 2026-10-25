@@ -19,6 +19,7 @@ import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.MicrobotApi;
 import net.runelite.client.plugins.microbot.MicrobotConfig;
+import net.runelite.client.plugins.microbot.accountselector.AutoLoginSuppressionRequest;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.util.RunnableExceptionLogger;
 
@@ -29,7 +30,7 @@ public class DashboardControl
 	static final String STOP_SCRIPTS = "stop_scripts";
 	static final String LOGOUT = "logout";
 	static final String STOP_NOTICE = "The Microbot dashboard stopped your scripts.";
-	static final String LOGOUT_NOTICE = "The Microbot dashboard logged this account out.";
+	static final String LOGOUT_NOTICE = "The Microbot dashboard is logging this account out.";
 
 	private final MicrobotApi microbotApi;
 	private final MicrobotConfig config;
@@ -77,9 +78,9 @@ public class DashboardControl
 	{
 		boolean succeeded = run(LOGOUT.equals(type) ? this::stopScriptsAndLogout : this::stopScripts);
 		microbotApi.reportCommandResult(token, commandId, succeeded, succeeded ? null : "failed");
-		if (succeeded)
+		if (succeeded && STOP_SCRIPTS.equals(type))
 		{
-			notifyPlayer(LOGOUT.equals(type) ? LOGOUT_NOTICE : STOP_NOTICE);
+			notifyPlayer(STOP_NOTICE);
 		}
 	}
 
@@ -102,7 +103,13 @@ public class DashboardControl
 		{
 			return false;
 		}
-		return Rs2Player.logoutWithoutAutoLogin() == Rs2Player.TerminalLogoutState.LOGGED_OUT;
+		notifyPlayer(LOGOUT_NOTICE);
+		if (Rs2Player.logoutWithoutAutoLogin() != Rs2Player.TerminalLogoutState.LOGGED_OUT)
+		{
+			return false;
+		}
+		Microbot.getEventBus().post(AutoLoginSuppressionRequest.loggedOut());
+		return true;
 	}
 
 	private boolean stopScripts()
@@ -127,12 +134,11 @@ public class DashboardControl
 
 	private boolean stopRunningScripts()
 	{
-		boolean stopped = true;
 		for (Plugin plugin : runningScripts())
 		{
-			stopped &= Microbot.stopPlugin(plugin);
+			Microbot.stopPlugin(plugin);
 		}
-		return stopped;
+		return runningScripts().isEmpty();
 	}
 
 	private List<Plugin> runningScripts()
