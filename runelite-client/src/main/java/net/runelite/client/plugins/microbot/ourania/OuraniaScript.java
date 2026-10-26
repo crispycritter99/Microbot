@@ -157,8 +157,8 @@ public class OuraniaScript extends Script
 								double LOG_MEAN = 0.05; double LOG_STD = 0.34;
 								Random r = new Random();double gaussian = r.nextGaussian();
 								double value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
-								sleep((int) value*200);
-								Rs2Inventory.waitForInventoryChanges(600);
+								sleep((int) value*600);
+//								Rs2Inventory.waitForInventoryChanges(600);
 							}
 							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_CRACKED_CENTER_ALTAR).interact("craft-rune");
 							Rs2Player.waitForXpDrop(Skill.RUNECRAFT);

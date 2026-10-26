@@ -1974,7 +1974,7 @@ public class Rs2Walker {
                     i -> hasExplicitTransportStep(rawPath, i))) {
                 clearInterimTarget("arrived-near-route-end");
                 return settleReachedPathEndpoint(target, dst, walkLoop.playerLoc, distance, processWalkTail);
-                return WalkerState.ARRIVED;
+//                return WalkerState.ARRIVED;
             }
 
             boolean shouldIssueActiveRouteIdleNudge = shouldIssueActiveRouteIdleNudge();
