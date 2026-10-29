@@ -1,14 +1,13 @@
 package net.runelite.client.plugins.microbot.util.depositbox;
 
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.GameObject;
 import net.runelite.api.MenuAction;
-import net.runelite.api.TileObject;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2BankID;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.api.tileobject.Rs2BankID;
+import net.runelite.client.plugins.microbot.api.tileobject.Rs2BankObjects;
+import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
@@ -93,10 +92,10 @@ public class Rs2DepositBox {
                 Microbot.getMouse().click();
             // Assuming interaction logic with a nearby deposit box
             if (isOpen()) return true;
-            GameObject depositBox = Rs2GameObject.findDepositBox();
+            Rs2TileObjectModel depositBox = Rs2BankObjects.findDepositBox();
             boolean action = false;
             if (depositBox != null) {
-                action = Rs2GameObject.interact(depositBox, "Deposit");
+                action = depositBox.click(Rs2BankObjects.actionFor(depositBox, "Deposit"));
             }
             if (action) {
                 sleepUntil(Rs2DepositBox::isOpen, 2500);
@@ -114,8 +113,9 @@ public class Rs2DepositBox {
     public static void depositAll() {
         Microbot.status = "Depositing all items";
         if (Rs2Inventory.isEmpty()) return;
-        if (!isOpen()) return;
-        Widget depositAllWidget = Rs2Widget.findWidget("Deposit Inventory", List.of(getDepositBoxWidget()), false);
+        Widget depositBoxWidget = getDepositBoxWidget();
+        if (depositBoxWidget == null) return;
+        Widget depositAllWidget = Rs2Widget.findWidget("Deposit Inventory", List.of(depositBoxWidget), false);
         Widget emptyContainerWidget = Rs2Widget.findWidget("Empty containers", List.of(getDepositBoxWidget()), false);
         if (depositAllWidget == null) return;
 //        if (Rs2Inventory.contains("Open gem sack")||Rs2Inventory.contains("Open fish barrel")) {
@@ -343,8 +343,9 @@ public class Rs2DepositBox {
      * Deposits all equipment into the deposit box.
      */
     public static void depositEquipment() {
-        if (!isOpen()) return;
-        Widget depositWornItems = Rs2Widget.findWidget("Deposit worn items", List.of(getDepositBoxWidget()), false);
+        Widget depositBoxWidget = getDepositBoxWidget();
+        if (depositBoxWidget == null) return;
+        Widget depositWornItems = Rs2Widget.findWidget("Deposit worn items", List.of(depositBoxWidget), false);
         if (depositWornItems == null) return;
 
         Rs2Widget.clickWidget(depositWornItems);
@@ -474,18 +475,19 @@ public class Rs2DepositBox {
         }
 
         if (Objects.equals(Rs2Player.getWorldLocation(), worldPoint)) {
-            GameObject depositBoxObj = Rs2GameObject.findDepositBox(maxObjectSearchRadius);
-            List<TileObject> bankObjs = depositBoxObj != null ? List.of(depositBoxObj) : List.of();
+            Rs2TileObjectModel depositBoxObj = Rs2BankObjects.findDepositBox(maxObjectSearchRadius);
+            WorldPoint depositBoxLocation = depositBoxObj != null ? depositBoxObj.getRuneLiteWorldLocation() : null;
+            List<WorldPoint> bankObjs = depositBoxLocation != null ? List.of(depositBoxLocation) : List.of();
 
             Optional<DepositBoxLocation> byObject = bankObjs.stream()
                     .map(obj -> {
                         DepositBoxLocation closest = accessibleDepositBoxes.stream()
-                                .min(Comparator.comparingInt(b -> obj.getWorldLocation().distanceTo(b.getWorldPoint())))
+                                .min(Comparator.comparingInt(b -> obj.distanceTo(b.getWorldPoint())))
                                 .orElse(null);
 
                         int dist = closest == null
                                 ? Integer.MAX_VALUE
-                                : obj.getWorldLocation().distanceTo(closest.getWorldPoint());
+                                : obj.distanceTo(closest.getWorldPoint());
 
                         return new AbstractMap.SimpleEntry<>(closest, dist);
                     })

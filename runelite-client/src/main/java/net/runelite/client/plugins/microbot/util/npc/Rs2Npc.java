@@ -655,9 +655,10 @@ public class Rs2Npc {
                 // never prints can't-reach, so every trigger here genuinely needs adjacency.
                 if (CantReachTargetRecovery.retryExhausted(
                         Microbot.cantReachTargetRetries, Rs2Random.between(3, 5))) {
+                    int retries = CantReachTargetRecovery.giveUp();
                     Microbot.pauseAllScripts.compareAndSet(false, true);
                     Microbot.showMessage("Your bot tried to interact with an NPC for "
-                            + Microbot.cantReachTargetRetries + " times but failed. Please take a look at what is happening.");
+                            + retries + " times but failed. Please take a look at what is happening.");
                     return false;
                 }
                 final WorldPoint npcWorldPoint = npc.getWorldLocation();
@@ -1328,7 +1329,11 @@ public class Rs2Npc {
 
     // Walks to the nearest NPC location with the given name
     public static boolean walkToNearestMonster(String name, int minClustering, boolean avoidWilderness) {
-        WorldPoint nearestNpcLocation = Rs2NpcManager.getClosestLocation(name,minClustering,avoidWilderness).getClosestToCenter();
+        MonsterLocation nearestLocation = Rs2NpcManager.getClosestLocation(name, minClustering, avoidWilderness);
+        if (nearestLocation == null) {
+            return false;
+        }
+        WorldPoint nearestNpcLocation = nearestLocation.getClosestToCenter();
         if (nearestNpcLocation == null) {
             return false;
         }

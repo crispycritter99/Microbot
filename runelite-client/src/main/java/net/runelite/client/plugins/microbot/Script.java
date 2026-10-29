@@ -12,6 +12,7 @@ import net.runelite.client.plugins.microbot.util.keyboard.Rs2Keyboard;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.walker.Rs2PathApi;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
+import net.runelite.client.plugins.microbot.util.walker.recovery.CantReachTargetRecovery;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Slf4j
 public abstract class Script extends Global implements IScript {
+    static final long EXECUTOR_KEEP_ALIVE_SECONDS = 60;
     private final AtomicBoolean startAnnounced = new AtomicBoolean();
 
     private void announceStart() {
@@ -47,6 +49,12 @@ public abstract class Script extends Global implements IScript {
                 return t;
             }
         }) {
+            {
+                setKeepAliveTime(EXECUTOR_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS);
+                allowCoreThreadTimeOut(true);
+                setRemoveOnCancelPolicy(true);
+            }
+
             @Override
             public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay,
                     long delay, TimeUnit unit) {
@@ -92,6 +100,7 @@ public abstract class Script extends Global implements IScript {
             // most scripts catch-and-continue without reaching here.
             Rs2Keyboard.releaseHeldKeys();
             Microbot.pauseAllScripts.set(false);
+            CantReachTargetRecovery.reset();
             Rs2Walker.disableTeleports = false;
             Microbot.getSpecialAttackConfigs().reset();
         }

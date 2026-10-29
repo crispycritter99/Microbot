@@ -27,7 +27,7 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.coords.Rs2WorldPoint;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
-import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
+import net.runelite.client.plugins.microbot.api.tileobject.models.Rs2TileObjectModel;
 import net.runelite.client.plugins.microbot.util.input.InputArbiter;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
@@ -2795,7 +2795,7 @@ public class Rs2Walker {
                                             distance, FINAL_ADJACENT_CANVAS_NUDGE_CHEBYSHEV,
                                             DOOR_OPEN_CANVAS_NUDGE_MAX_FROM_PLAYER)
                                     && Rs2Tile.isTileReachable(recoverTarget)
-                                    && walkFastCanvas(recoverTarget)) {
+                                    && walkFastCanvasWithAutoRun(recoverTarget)) {
                                 clicked = true;
                                 clickedRecoveryTarget = recoverTarget;
                                 log.debug("[Walker] unreachable recovery: scene click -> {}", recoverTarget);
@@ -3220,7 +3220,7 @@ public class Rs2Walker {
                             finalClick = clickRouteBackedShortWalk(rawPath, canvasClickWp, finalPlayerLoc,
                                     normalMinimapReach() - 1, rawAnchorIndex);
                         } else {
-                            finalClick = Rs2Walker.walkFastCanvas(canvasClickWp);
+                            finalClick = walkFastCanvasWithAutoRun(canvasClickWp);
                         }
                         if (finalClick) {
                             waitUntilIdleAfterSceneWalk(target, POST_SCENE_WALK_IDLE_WAIT_MS_MAX, target, finishTh);
@@ -3381,7 +3381,7 @@ public class Rs2Walker {
     }
 
     public static boolean walkNextTo(GameObject target) {
-        Rs2WorldArea gameObjectArea = new Rs2WorldArea(Objects.requireNonNull(Rs2GameObject.getWorldArea(target)));
+        Rs2WorldArea gameObjectArea = new Rs2WorldArea(Objects.requireNonNull(new Rs2TileObjectModel(target).getWorldArea()));
         List<WorldPoint> interactablePoints = gameObjectArea.getInteractable();
 
         if (interactablePoints.isEmpty()) {
@@ -3401,7 +3401,7 @@ public class Rs2Walker {
     }
 
     public static void walkNextToInstance(GameObject target) {
-        Rs2WorldArea gameObjectArea = new Rs2WorldArea(Objects.requireNonNull(Rs2GameObject.getWorldArea(target)));
+        Rs2WorldArea gameObjectArea = new Rs2WorldArea(Objects.requireNonNull(new Rs2TileObjectModel(target).getWorldArea()));
         List<WorldPoint> interactablePoints = gameObjectArea.getInteractable();
 
         if (interactablePoints.isEmpty()) {
@@ -3604,7 +3604,7 @@ public class Rs2Walker {
 
     private static void manageRunEnergy(int pathRemaining) {
         try {
-            Rs2Player.toggleRunEnergy(true);
+            requestAutoRun();
             if (pathRemaining < STAMINA_MIN_PATH_TILES) return;
             if (Rs2Player.getRunEnergy() >= staminaThreshold()) return;
             if (Rs2Player.hasStaminaBuffActive()) return;
@@ -3847,7 +3847,7 @@ public class Rs2Walker {
             if (target != null && playerLoc.distanceTo2D(target) <= INTERIM_CLOSE_TILES
                     && clickTarget.getPlane() == target.getPlane()
                     && clickTarget.distanceTo2D(target) <= 1
-                    && walkFastCanvas(clickTarget)) {
+                    && walkFastCanvasWithAutoRun(clickTarget)) {
                 clickedTarget = clickTarget;
                 clicked = true;
             } else {
@@ -3983,11 +3983,24 @@ public class Rs2Walker {
 
 
     public static boolean walkFastCanvas(WorldPoint worldPoint, boolean toggleRun) {
+        if (worldPoint != null) Rs2Player.toggleRunEnergy(toggleRun);
+        return dispatchCanvasWalk(worldPoint);
+    }
+
+    static boolean walkFastCanvasWithAutoRun(WorldPoint worldPoint) {
+        if (worldPoint != null) requestAutoRun();
+        return dispatchCanvasWalk(worldPoint);
+    }
+
+    static void requestAutoRun() {
+        if (Microbot.enableAutoRunOn) Rs2Player.toggleRunEnergy(true);
+    }
+
+    private static boolean dispatchCanvasWalk(WorldPoint worldPoint) {
         if (worldPoint == null) {
             log.debug("[Walker] walkFastCanvas rejected: null worldPoint");
             return false;
         }
-        Rs2Player.toggleRunEnergy(toggleRun);
         LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient().getTopLevelWorldView(), worldPoint);
 
         if (Microbot.getClient().getTopLevelWorldView().isInstance() && localPoint == null) {
@@ -4770,8 +4783,8 @@ public class Rs2Walker {
         // radius is a superset of what the per-probe queries could have found.
         final int snapshotRadius = handlerRange + 2;
         long snapshotStartedAt = System.currentTimeMillis();
-        rawScanWallSnapshot = Rs2GameObject.getWallObjects(o -> true, playerLoc, snapshotRadius);
-        rawScanGameObjectSnapshot = Rs2GameObject.getGameObjects(o -> true, playerLoc, snapshotRadius);
+        rawScanWallSnapshot = Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, snapshotRadius);
+        rawScanGameObjectSnapshot = Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, snapshotRadius);
         rawScanDoorLocationSnapshot = Microbot.getClientThread()
                 .invoke(Rs2Walker::captureRawScanDoorLocationsOnClientThread);
         snapshotMs = System.currentTimeMillis() - snapshotStartedAt;
@@ -5524,16 +5537,15 @@ public class Rs2Walker {
 			if (!blocked) continue;
 
 			// Scan candidates in loaded scene radius around player.
-			for (WallObject w : Rs2GameObject.getWallObjects(o -> true, playerLoc, radiusTiles)) {
+			for (WallObject w : Rs2WalkerSceneObjects.near(WallObject.class, playerLoc, radiusTiles)) {
 				if (w == null) continue;
 				WorldPoint objWp = w.getWorldLocation();
 				if (objWp == null) continue;
-				if (!Rs2GameObject.hasLineOfSight(playerLoc, w)) continue;
-                if (wasStationaryDoorOpenedRecently(objWp)) continue;
-
 				if (objWp.distanceTo2D(from) > pathEdgeDoorMaxDist && objWp.distanceTo2D(to) > pathEdgeDoorMaxDist) {
 					continue;
 				}
+				if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, w)) continue;
+                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (!Rs2DoorGeometry.isDoorOnSegment(w, from, to)) {
 					continue;
 				}
@@ -5563,15 +5575,15 @@ public class Rs2Walker {
                         edgeDist);
 			}
 
-			for (GameObject g : Rs2GameObject.getGameObjects(o -> true, playerLoc, radiusTiles)) {
+			for (GameObject g : Rs2WalkerSceneObjects.near(GameObject.class, playerLoc, radiusTiles)) {
 				if (g == null) continue;
 				WorldPoint objWp = g.getWorldLocation();
 				if (objWp == null) continue;
-				if (!Rs2GameObject.hasLineOfSight(playerLoc, g)) continue;
-                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (objWp.distanceTo2D(from) > pathEdgeDoorMaxDist && objWp.distanceTo2D(to) > pathEdgeDoorMaxDist) {
 					continue;
 				}
+				if (!Rs2WalkerSceneObjects.hasLineOfSight(playerLoc, g)) continue;
+                if (wasStationaryDoorOpenedRecently(objWp)) continue;
 				if (!Rs2DoorGeometry.isDoorOnSegment(g, from, to)) {
 					continue;
 				}
@@ -5655,11 +5667,7 @@ public class Rs2Walker {
 		WorldPoint posBefore = Rs2Player.getWorldLocation();
 		boolean interacted;
 		try {
-			if (bestAction == null || bestAction.isEmpty()) {
-				interacted = Rs2GameObject.interact(best);
-			} else {
-				interacted = Rs2GameObject.interact(best, bestAction);
-			}
+			interacted = Rs2WalkerSceneObjects.interact(best, bestAction);
 		} catch (Exception ex) {
 			WebWalkLog.spInfo("door_interact_exception | mode=path-adj probe={} from={} to={} ex={}",
 					compactWorldPoint(bestLoc), compactWorldPoint(bestFrom), compactWorldPoint(bestTo), ex.getClass().getSimpleName());
@@ -5837,10 +5845,10 @@ public class Rs2Walker {
 				if (probe.getPlane() != playerLoc.getPlane()) continue;
 				if (probe.distanceTo2D(playerLoc) > radiusTiles) continue;
 
-				WallObject wall = Rs2GameObject.getWallObject(o -> o.getWorldLocation().equals(probe), probe, 3);
-				TileObject object = (wall != null)
-						? wall
-						: Rs2GameObject.getGameObject(o -> o.getWorldLocation().equals(probe), probe, 3);
+				TileObject object = Rs2WalkerSceneObjects.first(WallObject.class, o -> o.getWorldLocation().equals(probe), probe, 3);
+				if (object == null) {
+					object = Rs2WalkerSceneObjects.first(GameObject.class, o -> o.getWorldLocation().equals(probe), probe, 3);
+				}
 				if (object == null) continue;
 
 				ObjectComposition comp = Rs2DoorDetection.resolveCompositionForDoorProbe(object);
