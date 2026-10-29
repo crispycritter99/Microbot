@@ -102,6 +102,37 @@ public class Rs2TileObjectModelClickActionTest {
     }
 
     @Test
+    public void sendsSubmenuChildUsingParentOpcodeAndObjectWorldView() {
+        net.runelite.api.EntityOps ops = mock(net.runelite.api.EntityOps.class);
+        net.runelite.api.EntityOps children = mock(net.runelite.api.EntityOps.class);
+        when(composition.getActions()).thenReturn(new String[]{"Zanaris", "Configure", "Last-destination", "Favourites"});
+        when(composition.getOps()).thenReturn(ops);
+        when(ops.getNumOps()).thenReturn(3);
+        when(ops.getSubOps(3)).thenReturn(children);
+        when(children.getNumOps()).thenReturn(2);
+        when(children.getOp(1)).thenReturn("DKP");
+        when(object.getWorldView().getId()).thenReturn(7);
+        when(client.isWidgetSelected()).thenReturn(true);
+
+        assertTrue(new Rs2TileObjectModel(object).click("Favourites", "DKP"));
+
+        NewMenuEntry entry = sentEntry();
+        assertEquals(MenuAction.GAME_OBJECT_FOURTH_OPTION, entry.getType());
+        assertEquals((OBJECT_ID & 0xFFFF) | (1 << 16), entry.getIdentifier());
+        assertEquals(7, entry.getWorldViewId());
+        assertEquals("DKP", entry.getOption());
+    }
+
+    @Test
+    public void missingSubmenuChildDoesNotSendFirstOption() {
+        when(composition.getActions()).thenReturn(new String[]{"Favourites"});
+        when(composition.getOps()).thenReturn(mock(net.runelite.api.EntityOps.class));
+
+        assertFalse(new Rs2TileObjectModel(object).click("Favourites", "DKP"));
+        microbot.verify(() -> Microbot.doInvoke(any(NewMenuEntry.class), any(Rectangle.class)), never());
+    }
+
+    @Test
     public void sendsTheMatchingOption() {
         assertTrue(new Rs2TileObjectModel(object).click("climb-down"));
 

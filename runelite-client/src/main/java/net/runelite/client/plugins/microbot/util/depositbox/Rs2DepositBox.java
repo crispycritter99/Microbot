@@ -575,9 +575,9 @@ public class Rs2DepositBox {
                 depositBoxLocation.getWorldPoint(),
                 5,
                 () -> {
-                    GameObject depositBox = Rs2GameObject.findDepositBox(8);
+                    Rs2TileObjectModel depositBox = Rs2BankObjects.findDepositBox(8);
                     return depositBox != null
-                            && Rs2GameObject.canWalkTo(depositBox, 8);
+                            && depositBox.canWalkTo(8);
                 });
 
         if (!depositBoxReady) {

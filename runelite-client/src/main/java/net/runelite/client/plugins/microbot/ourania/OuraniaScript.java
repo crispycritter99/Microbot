@@ -188,7 +188,7 @@ public class OuraniaScript extends Script
 
 						if (Rs2Inventory.hasDegradedPouch() && Rs2Magic.hasRequiredRunes(Rs2Spells.NPC_CONTACT))
 						{
-							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_ENTRANCE).interact("Climb");
+//							Microbot.getRs2TileObjectCache().query().withId(ObjectID.RC_ZMI_DUNGEON_ENTRANCE).interact("Climb");
 							 LOG_MEAN = 0.05;  LOG_STD = 0.34;
 							r = new Random(); gaussian = r.nextGaussian();
 							value = Math.exp(LOG_MEAN + LOG_STD * gaussian);
@@ -227,6 +227,7 @@ public class OuraniaScript extends Script
 						}
 							else{
 								sleepUntil(this::isNearEniola, 20000);
+
 							}
 						}
 						else

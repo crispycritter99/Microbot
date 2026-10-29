@@ -22,3 +22,15 @@ Check names against the game cache (or `observe --nearby` in the CLI) before har
 **Where this applies:** `Rs2TileObjectModel.click`, every `Rs2TileObjectQueryable.interact` overload, and any migration from `Rs2GameObject` to the query API (Rs2GameObject retirement M3/M4).
 
 **Defensive check:** `Rs2TileObjectModelClickActionTest` covers refusal, first option, colour tags, impostors and the selected-widget path.
+
+## 2. Preserve submenu parent slots and child indices when migrating object clicks
+
+Use `Rs2TileObjectModel.click(parentAction, childAction)` for object submenus. Resolve the parent from the visible composition's action slots, even when its index exceeds `EntityOps.getNumOps()`, then inspect `getSubOps(parentIndex)`. Preserve child index zero and encode `(objectId & 0xFFFF) | (childIndex << 16)` with the parent's menu opcode. A missing parent or child must return false without clicking the first option.
+
+**Why this matters:** fairy-ring Favourites can occupy slot 3 while the live parent reports only three ops. Losing that slot or falling back to a normal click selects the wrong action during transport migration.
+
+**Pattern to follow:** `ring.click("Favourites", destinationCode)`; if it returns false, open Configure instead.
+
+**Where this applies:** `Rs2TileObjectModel`, legacy `Rs2GameObject.clickObject` wrappers and fairy-ring transports.
+
+**Defensive check:** `ObjectSubmenuActionTest` covers index encoding; `Rs2TileObjectModelClickActionTest` checks dispatch, worldview, selected widgets and refusal.

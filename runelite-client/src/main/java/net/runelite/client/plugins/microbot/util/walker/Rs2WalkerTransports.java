@@ -3339,15 +3339,15 @@ final class Rs2WalkerTransports {
         }
 
         String lastDestinationAction = Microbot.getClientThread().runOnClientThreadOptional(() -> {
-            ObjectComposition live = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+            ObjectComposition live = Rs2WalkerSceneObjects.composition(fairyRingObject);
             return fairyRingLastDestinationAction(live == null ? null : live.getOps(), transport.getDisplayInfo());
         }).orElse(null);
-        ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+        ObjectComposition composition = Rs2WalkerSceneObjects.composition(fairyRingObject);
         if (composition == null) return false;
         // Prefer the verified live destination; otherwise resolve Favourites through its submenu.
         if (lastDestinationAction != null) {
-            if (!Rs2GameObject.interact(fairyRingObject, lastDestinationAction)) return false;
-        } else if (Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo())) {
+            if (!new Rs2TileObjectModel(fairyRingObject).click(lastDestinationAction)) return false;
+        } else if (new Rs2TileObjectModel(fairyRingObject).click("Favourites", transport.getDisplayInfo())) {
             // The requested favourite was dispatched.
         } else {
             // We have to configure fairy rings through the interface

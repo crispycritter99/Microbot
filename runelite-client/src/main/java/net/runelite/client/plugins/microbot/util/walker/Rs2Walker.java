@@ -7393,11 +7393,11 @@ public class Rs2Walker {
 
         Rs2ItemModel startingWeapon = null;
 
-        TileObject fairyRingObject = PohTeleports.isInHouse() ? PohTeleports.getFairyRings() : Rs2GameObject.getAll(o -> Objects.equals(o.getWorldLocation(), transport.getOrigin())).stream().findFirst().orElse(null);
+        TileObject fairyRingObject = PohTeleports.isInHouse() ? PohTeleports.getFairyRings() : Rs2WalkerSceneObjects.all(o -> Objects.equals(o.getWorldLocation(), transport.getOrigin())).stream().findFirst().orElse(null);
         if (fairyRingObject == null) return false;
 
         if (!PohTeleports.isInHouse()
-                && !Rs2GameObject.canWalkTo(fairyRingObject, FAIRY_RING_DISPATCH_MAX_DISTANCE)) return false;
+                && !new Rs2TileObjectModel(fairyRingObject).canWalkTo(FAIRY_RING_DISPATCH_MAX_DISTANCE)) return false;
 
         boolean hasLumbridgeElite = Microbot.getVarbitValue(VarbitID.LUMBRIDGE_DIARY_ELITE_COMPLETE) == 1;
 
@@ -7420,22 +7420,22 @@ public class Rs2Walker {
         }
 
         String lastDestinationAction = Microbot.getClientThread().runOnClientThreadOptional(() -> {
-            ObjectComposition live = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+            ObjectComposition live = Rs2WalkerSceneObjects.composition(fairyRingObject);
             return Rs2WalkerTransports.fairyRingLastDestinationAction(live == null ? null : live.getOps(), transport.getDisplayInfo());
         }).orElse(null);
-        ObjectComposition composition = Rs2GameObject.convertToObjectComposition(fairyRingObject);
+        ObjectComposition composition = Rs2WalkerSceneObjects.composition(fairyRingObject);
         if (composition == null) return false;
         // Prefer the verified live destination; otherwise resolve Favourites through its submenu.
         if (lastDestinationAction != null) {
-            if (!Rs2GameObject.interact(fairyRingObject, lastDestinationAction)) return false;
-        } else if (Rs2GameObject.clickObject(fairyRingObject, "Favourites", transport.getDisplayInfo())) {
+            if (!new Rs2TileObjectModel(fairyRingObject).click(lastDestinationAction)) return false;
+        } else if (new Rs2TileObjectModel(fairyRingObject).click("Favourites", transport.getDisplayInfo())) {
             // The requested favourite was dispatched.
         } else {
             // We have to configure fairy rings through the interface
-            if (Rs2GameObject.hasAction(composition, "Configure", true)) {
-                Rs2GameObject.interact(fairyRingObject, "Configure");
-            } else if (Rs2GameObject.hasAction(composition, "Ring-configure", true)) {
-                Rs2GameObject.interact(fairyRingObject, "Ring-configure");
+            if (Rs2WalkerSceneObjects.hasAction(composition, "Configure")) {
+                new Rs2TileObjectModel(fairyRingObject).click("Configure");
+            } else if (Rs2WalkerSceneObjects.hasAction(composition, "Ring-configure")) {
+                new Rs2TileObjectModel(fairyRingObject).click("Ring-configure");
             }
             sleepUntil(() -> Rs2Player.isMoving()
                     || !Rs2Widget.isHidden(ComponentID.FAIRY_RING_TELEPORT_BUTTON), 2000);

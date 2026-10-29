@@ -18,7 +18,6 @@ import net.runelite.client.plugins.microbot.util.coords.Rs2WorldArea;
 import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.api.IEntity;
 import net.runelite.client.plugins.microbot.api.boat.Rs2BoatCache;
-import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.equipment.Rs2Equipment;
 import net.runelite.client.plugins.microbot.util.menu.NewMenuEntry;
@@ -542,7 +541,37 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return click(action, true);
     }
 
+    public static int[] resolveSubmenuAction(String[] actions, EntityOps ops, String action, String subAction) {
+        if (actions == null || ops == null || action == null || subAction == null) return null;
+        // Static actions can include Favourites beyond the live parent op count.
+        for (int parent = 0; parent < Math.min(actions.length, 5); parent++) {
+            if (actions[parent] == null || !action.equalsIgnoreCase(Rs2UiHelper.stripColTags(actions[parent]))) continue;
+            EntityOps subOps = ops.getSubOps(parent);
+            if (subOps == null) continue;
+            for (int sub = 0; sub < subOps.getNumOps(); sub++) {
+                String option = subOps.getOp(sub);
+                if (option != null && subAction.equalsIgnoreCase(Rs2UiHelper.stripColTags(option))) {
+                    return new int[]{parent, sub};
+                }
+            }
+        }
+        return null;
+    }
+
+    public static int objectSubmenuIdentifier(int objectId, int subIndex) {
+        return (objectId & 0xFFFF) | (subIndex << 16);
+    }
+
+    /** Click a named submenu child; missing parents or children dispatch nothing. */
+    public boolean click(String action, String subAction) {
+        return click(action, subAction, false);
+    }
+
     private boolean click(String action, boolean firstOptionIfMissing) {
+        return click(action, null, firstOptionIfMissing);
+    }
+
+    private boolean click(String action, String subAction, boolean firstOptionIfMissing) {
         try {
             WorldView worldView = getWorldView();
             if (worldView == null) {
@@ -550,10 +579,11 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                 return false;
             }
 
-            boolean widgetSelected = Microbot.getClient().isWidgetSelected();
+            boolean widgetSelected = subAction == null && Microbot.getClient().isWidgetSelected();
+            int identifier = getId();
             int index = 0;
             String objName = "";
-            if (action != null) {
+            if (action != null || subAction != null) {
                 //performance improvement to only get compoisiton if action has been specified
                 var objComp = getVisibleObjectComposition();
                 if (objComp == null) {
@@ -561,9 +591,17 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                     return false;
                 }
                 String[] actions = objComp.getActions();
-                String wanted = Rs2UiHelper.stripColTags(action).trim();
+                String wanted = action == null ? "" : Rs2UiHelper.stripColTags(action).trim();
 
-                if (!wanted.isEmpty()) {
+                if (subAction != null) {
+                    int[] submenu = Microbot.getClientThread().runOnClientThreadOptional(() -> {
+                        ObjectComposition live = getVisibleObjectComposition();
+                        return live == null ? null : resolveSubmenuAction(live.getActions(), live.getOps(), action, subAction);
+                    }).orElse(null);
+                    if (submenu == null) return false;
+                    index = submenu[0];
+                    identifier = objectSubmenuIdentifier(getId(), submenu[1]);
+                } else if (!wanted.isEmpty()) {
                     index = -1;
                     for (int i = 0; i < actions.length; i++) {
                         if (actions[i] == null) continue;
@@ -657,9 +695,9 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
                             .param0(param0)
                             .param1(param1)
                             .opcode(menuAction.getId())
-                            .identifier(getId())
+                            .identifier(identifier)
                             .itemId(-1)
-                            .option(action)
+                            .option(subAction == null ? action : subAction)
                             .target(objName)
                             .setWorldViewId(worldView.getId())
                             .gameObject(tileObject)
@@ -676,23 +714,4 @@ public class Rs2TileObjectModel implements TileObject, IEntity {
         return true;
     }
 
-    public boolean hover(){
-        try {
-            if (!Rs2AntibanSettings.naturalMouse) {
-                if (Rs2AntibanSettings.devDebug)
-                    Microbot.log("Natural mouse is not enabled, can't hover");
-                return false;
-            }
-            Point point = Rs2UiHelper.getClickingPoint(Rs2UiHelper.getObjectClickbox(tileObject), true);
-            // if the point is 1,1 then the object is not on screen and we should return false
-            if (point.getX() == 1 && point.getY() == 1) {
-                return false;
-            }
-            Microbot.getNaturalMouse().moveTo(point.getX(), point.getY());
-        } catch (Exception ex) {
-            log.error("Failed to hover over object: ", ex);
-        }
-
-        return true;
-    }
 }
